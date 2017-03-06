@@ -2,9 +2,9 @@
 
 **Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh), is Perl-6-like
 language and compiler for producing modular, dynamic and testable
-shell scripts. Its purpose is to specify and test configuration and
-procedures for modern UNIX-like systems. **It's very new and
-experimental and doesn't do a lot yet**.
+shell scripts. Its purpose is to specify and test configurations for
+modern UNIX-like systems. **It's very new and experimental and doesn't
+do a lot yet**.
 
 
 ## Where it fits
@@ -31,7 +31,7 @@ To get a picture of where Spit is going take a look at this code:
 ok Cmd<nc>,"nc command exists now"; # test the nc command is there
 
 ```
-We compile this for centos with:
+You can compile this for CentOS with:
 
 ``` shell
 spit --os=centos eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"'
@@ -79,8 +79,8 @@ constant Pkg $nc = (given $*os {
 ok Cmd<nc>,"nc command exists now";
 ```
 
-And now that should work on both the RHEL and Debian families of
-linux distributions.
+And now it should work on both the RHEL and Debian families of
+Linux distributions.
 
 ```
 spit --in-docker=ubuntu:latest compile install-nc.spt
@@ -125,7 +125,8 @@ There's a lot to do before Spit becomes a genuinely useful tool.
 
 * If you like grammars and abstract syntax trees you can
   help develop the compiler
-* You can add support for it by writing Spit code that passes the [spec tests](spec)
+* You can add support for an operating system/userland by writing Spit
+  code that passes the [spec tests](spec)
 * Try it out, provide bug reports, useful criticism and feature ideas under the
   issues github tab
-* Figure out how this thing actually works and write documentation
+* Figure out how it works and write documentation
