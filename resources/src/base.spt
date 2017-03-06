@@ -1,0 +1,19 @@
+class Any is primitive {}
+class Str  is Any is primitive {}
+class Int  is Str is primitive {}
+class Bool is Str is primitive {}
+class List[Elem-Type] is Str is primitive {}
+class EnumClass is Str is primitive {}
+class Regex is Str  {}
+
+class FD is Int { }
+class File { }
+
+enum-class OS { }
+
+#| Internal routine to echo values in junction. **dont' use this**
+sub ef($str --> Str) is native  { }
+#| Internal routine to echo values in junction. **dont' use this**
+sub et($str --> Str)  is native { }
+#| Joins arguments on a `\n` creating a `List`.
+sub list(*@list --> List) is native { }

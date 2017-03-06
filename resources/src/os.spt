@@ -1,0 +1,58 @@
+#| Anything UNIXish. Right now everything is a child of this.
+enum-class UNIXish is OS { }
+#| For OS's that that conform to The Open Group's latest "Base
+#| Specifications" for the shell enironment.
+#| See: http://pubs.opengroup.org/onlinepubs/9699919799/
+enum-class POSIX is UNIXish { }
+#| Alpine linux distribution: https://alpinelinux.org/
+enum-class Alpine is UNIXish { }
+#| For OS's that have [GNU core utilities](https://www.gnu.org/software/coreutils/coreutils.html)
+#| installed by default.
+enum-class GNU is POSIX { }
+
+#| For OS's based on the [Debian linux distribution](https://www.debian.org/)
+enum-class Debian is GNU { }
+
+#| For OS's based on the [Fedora linux distribution](https://getfedora.org/)
+enum-class Fedora is GNU { }
+#| For OS's based on the [Redhat Enterprise Linux distribution](https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux)
+enum-class RHEL is Fedora { }
+
+#| CentOS linux distribution [CentOS](https://www.centos.org/)
+enum-class CentOS is RHEL { }
+#| For OS's based on the [Ubuntu linux distribution](https://www.ubuntu.com/)
+enum-class Ubuntu is Debian { }
+
+#| For OS's that are variants of the Berkely Software Distribution.
+#| See: [wikipedia](https://en.wikipedia.org/wiki/Berkeley_Software_Distribution).
+#| **note**: No BSD based OS is tested or working at all atm.
+enum-class BSD is POSIX { }
+
+# enum-class OSX is BSD { }
+# enum-class FreeBSD is BSD { }
+# enum-class OpenBSD is BSD { }
+
+#| The operating system the script is being compiled for. This isn't
+#| the OS the script is running on (There is currently no way of knowing that).
+#| It is always known at script composition time. So a script like this:
+#|{
+    given $*os {
+        say "I wonder what kind of OS I'm on...?";
+        when Debian {
+            say "It's some kind of Debian:";
+            say (
+                when Ubuntu { "It's some other kind of Ubuntu XD"}
+                default { "nope just plain ol Debian!" }
+            )
+        }
+        when RHEL   { say "Redhat!"}
+        when BSD { say "oooh a BSD" }
+    }
+}
+#| Will be optimized down to something like this:
+#|{
+    say "I wonder what kind of OS I'm on...?"
+    say "It's some kind of Debian:"
+    say "It's some other kind of Ubuntu XD"
+}
+constant OS $*os = Debian;

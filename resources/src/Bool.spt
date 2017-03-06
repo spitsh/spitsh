@@ -1,0 +1,17 @@
+#| Bool refers to the Boolean type. They can be used as values but
+#| more often represent whether a shell command exited
+#| successfully. In [Str](Str.md) context a Bool will be '1' if true
+#| and "" (they empty string) if false.
+#|{
+    if False.  {
+        say ("foo" eq "bar").WHAT; #-> Bool
+        say "foo" eq "bar"; #-> ""
+        say "foo" eq "foo"; #-> 1
+    }
+}
+augment Bool {
+    #| In Int context, Bools become a 1 if True or a 0 if False.
+    method +Int { self ?? 1 !! 0 }
+    #| .gist returns "True" or "False".
+    method ~gist { self ?? "True" !! "False" }
+}

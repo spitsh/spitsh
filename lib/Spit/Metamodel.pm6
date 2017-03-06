@@ -1,0 +1,133 @@
+need Spit::Exceptions;
+need Spit::Constants;
+need DispatchMap;
+
+# Role for parameterized types like List[Str]
+role Spit::Parameterized[*@params] {
+    method params { @params }
+}
+
+class Spit::Metamodel::EnumClass {...}
+
+role Spit::Type {
+    # Make Spit::Types true so we can use them in if statements
+    method Bool { self === Spit::Type ?? False !! True }
+    method name { self.^name }
+    method primitive { self.^primitive }
+    method parameterized { so self ~~ Spit::Parameterized && self.params }
+    method enum-type {  so self.HOW ~~ Spit::Metamodel::EnumClass }
+}
+
+class Spit::Metamodel::Type is Metamodel::ClassHOW {
+    has Mu $!primitive;
+    has $!dispatcher = DispatchMap.new;
+    has $!num-params = 0;
+    has @!placeholder-params;
+    has $!declaration;
+
+    method new_type(|) {
+        my \type = callsame;
+        type.^add_role(Spit::Type);
+        type;
+    }
+
+    method dispatcher(Mu $) { $!dispatcher }
+
+    method add-spit-method(Mu $type,$sast-routine) {
+        $!dispatcher.override(|($sast-routine.name => $sast-routine.os-candidates));
+        $!dispatcher.ns-meta($sast-routine.name) = $sast-routine;
+        $sast-routine;
+    }
+
+    method find-spit-method(Mu $type,Str:D $name,:$match) {
+        $!dispatcher.ns-meta($name) || ($match && SX::MethodNotFound.new(:$name,:$type,:$match).throw);
+    }
+
+    method find-spit-method-on-os(Mu $type,Str:D $name,$os) {
+        $!dispatcher.get($name,$os);
+    }
+
+    method spit-methods(Mu $t) {
+        $!dispatcher.namespaces.map({$!dispatcher.ns-meta($_) || Empty}).list;
+    }
+
+    method parameterize(Mu \type, *@params) {
+        if @params {
+            my $what := type.^mixin(Spit::Parameterized[|@params]);
+            $what.^set_name("{type.^name}[{@params.map(*.name).join(", ")}]");
+            $what.^compose; # dunno why but I have to do this
+            $what;
+        } else {
+            type;
+        }
+    }
+
+    method primitive(Mu $type) { $!primitive  }
+    method set-primitive(Mu $,Mu $primitive) { $!primitive = $primitive }
+    method declaration(Mu $) { $!declaration }
+    method set-declaration(Mu $,Mu $declaration) { $!declaration = $declaration }
+    method placeholder-params(Mu $) { @!placeholder-params }
+
+    method add_parent(Mu $type,Mu $parent) {
+        $!dispatcher.add-parent($parent.^dispatcher) if $parent.HOW ~~ Spit::Metamodel::Type;
+        if $parent ~~ Spit::Type and $parent.primitive {
+            if $!primitive {
+                if $!primitive === $parent.primitive or $!primitive ~~ $parent.primitive {
+                    $!primitive = $parent.primitive;
+                } else {
+                    die "Incompatible primitive types in inheritence";
+                }
+            } else {
+                $!primitive = $parent.primitive;
+            }
+        }
+        callsame;
+    }
+
+    method compose(Mu $type){
+        $!dispatcher.compose;
+        die "Primitive not set on {$type.^name} at composition time" if $!primitive.WHAT =:= Mu;
+        callsame;
+    }
+
+}
+
+# metaclass for placeholder types like
+# class List[PlaceHolderType] {
+#     method foo(-->PlaceHolderType) {...}
+# }
+class Spit::Metamodel::Placeholder is Spit::Metamodel::Type {
+    has $!param-pos;
+    has Spit::Type $!param-of;
+    method set-param-of(Mu $,Mu $!param-of,Int:D $!param-pos) { }
+    method param-pos(Mu $) { $!param-pos }
+    method reify(Mu $,Spit::Type $class) {
+        $class.params[$!param-pos]
+    }
+}
+
+class Spit::Metamodel::EnumClass is Spit::Metamodel::Type {
+    has @!children;
+
+    method add_parent(Mu $type,Mu $parent) {
+        callsame;
+        if $parent.HOW ~~ Spit::Metamodel::EnumClass {
+            $parent.^add_child($type);
+        }
+    }
+
+    method add_child(Mu $,Mu $child) {
+        @!children.push($child);
+        Nil;
+    }
+
+    method types-in-enum(Mu $type) { $type, |@!children.map(*.^types-in-enum).flat }
+
+    method prmitive(Mu $type) { $type }
+
+    method lookup-by-str(Mu $type,Str $str) {
+        $type.^types-in-enum.first: { .^name.lc ~~ $str.lc };
+    }
+
+    method children(Mu $) { @!children.list }
+}

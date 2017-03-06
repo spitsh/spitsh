@@ -1,0 +1,111 @@
+#!/usr/bin/env perl6
+use Spit::Compile;
+use Spit::OptsParser;
+need Spit::Repo;
+
+sub USAGE {
+    print q:to/END/;
+    Spook in the Shell Script compiler v0.0.1;
+    Usage: spit [OPTIONS] COMMAND [arg...]
+
+    Options:
+       --debug             Output debugging information + timings for each compilation stage.
+
+       --in-docker=IMAGE   Pipes script it into a docker container made from IMAGE. Docker is
+                           run like: "docker run -i --rm $IMAGE sh". This automatically sets
+                           the OS for you unless you specify another with --os.
+
+       --no-inline         Turns inlining of routine calls.
+
+       --os=debian         Which operating system to compile for.
+
+       --opts=json         A json object where the keys are the option names and the values
+                           the option values. If a value starts with '$:' the rest is evaluated
+                           as a Spit expression in the context of the option's declaration.
+
+       --target=STAGE      Sets the compilation stage to finish at:  Can be any of:
+                             - parse:   A .gist of the match object from parsing the program.
+                             - stage1:  A .gist of the SAST tree after parsing.
+                             - stage2:  A .gist of the SAST tree after contextualisation.
+                             - stage3:  A .gist of the SAST tree after composition.
+                             - compile: The compiled shell script (default)
+
+    Commands:
+       compile FILE        Compiles a file as Spit-sh e.g. spit compile src/cfg.spt
+       eval SRC            Compiles a string as Spit-sh  e.g. spit eval 'say "hello world"'
+
+
+    END
+}
+
+proto MAIN(
+    Str $cmd,*@,
+    :$in-docker,
+    Bool :$*debug,
+    Str  :$*target = 'compile',
+    Bool :$no-inline,
+    :$opts,
+    Str :$os,
+    :@*repos = [
+           Spit::Repo::File.new,
+           Spit::Repo::Core.new
+       ]
+) {
+    note "run starting { now - (BEGIN now)}" if $*debug;
+
+    my $mangle-os = ($os || ($in-docker &&  $in-docker.split(':')[0]) andthen "\$:OS<$_>");
+
+    my %*opts = parse-opts $opts,mangle => %(|(os => $mangle-os if $mangle-os));
+
+    my ($docker,$promise) =  ($in-docker andthen .&start-docker);
+
+    my $res = try { {*} };
+
+    if $! {
+        note $!.gist;
+        exit 1;
+    }
+
+    if $in-docker {
+        write-docker $docker,$promise,$res;
+    } else {
+        print $res
+    }
+    note "run finished { now - INIT now }" if $*debug;
+};
+
+multi MAIN("eval",Str $program,*%_) {
+    compile(
+        $program,
+        name => 'eval',
+        |%_,
+        :%*opts,
+    ).gist;
+}
+
+multi MAIN("compile",Str $file,*%_) {
+    do if $file.IO.e {
+        compile($file.IO.slurp,name => $file,|%_,:%*opts).gist;
+    } else {
+        die "couldn't find '$file'";
+    }
+}
+
+sub start-docker($image is copy) {
+    $image = 'alpine' if $image === True;
+    my @args = 'docker','run','-i','--rm',$image,'sh';
+    note "starting docker with {@args[1..*].gist}" if $*debug;
+    my $docker = Proc::Async.new(|@args,:w);
+    ($docker,$docker.start);
+}
+
+
+sub write-docker($docker,$p,$shell) {
+    my \before = now;
+    note "writing output to docker.." if $*debug;
+    $docker.write($shell.encode('utf8'));
+    sleep 0.1; # RT#122722
+    $docker.close-stdin;
+    await $p;
+    note("writing output to docker ✔ {now - before}") if $*debug;
+}

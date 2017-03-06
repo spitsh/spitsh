@@ -1,0 +1,19 @@
+#| EnumClass is the base class used to create hierarchical enums. The only
+#| example in Spitsh of this is the OS EnumClass which stores the
+#| relationships between Operating Systems.
+augment EnumClass {
+
+    #| Returns the name of the enum class.
+    method ~name { self.$(cut '-f1','-d|') }
+
+    #| Returns true if the argument string exactly matches a member of
+    #| the enum class. `~~` will call this method internally.
+    #|{
+        say Debian.has-member('Ubuntu'); # true
+        say RHEL.has-member('Ubuntu'); # false
+        say Ubuntu ~~ Debian; # true
+    }
+    method has-member(#|[A string to match against the enum's members] $enum) {
+        re-match($enum,'^(' ~ self ~ ')$' )
+    }
+}

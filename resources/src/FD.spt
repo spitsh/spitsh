@@ -1,0 +1,86 @@
+#|File descriptor connected to the STDOUT of the script by default.
+#|{ $*OUT.write("hello world") # same as print("hello world") }
+constant $*OUT = {
+    FD<3>.open-w(1);
+    FD<3>;
+}
+
+#| File descriptor connected to the STDERR of the script.  '!' is a
+#| short alias for `$*ERR` in `$(..)` commands.
+#|{
+    $*ERR.write("something to script's stderr");
+    $(printf "allo earth" :> $*ERR);
+    $(printf "allo earth" :>!); #shorthand
+    $(ls '/I/dont/exist', :!> $*OUT); #redirect STDERR to script's STDOUT
+    my $error = $(ls '/I/dont/exist', :!>~); # capture STDERR into return value of cmd
+}
+constant FD $*ERR = 2;
+#|File descriptor used to represent the STDOUT of a cmd inside the
+#|script rather than the script itself. '~' is a short alias for
+#|`$?CAP` in `$(..)` commands.
+#|{
+    # captures both the STDOUT and STDERR of ls into $res
+    my $res = $(ls '/etc','/I/dont/exist' ::>~);
+    say "ls returned $res";
+}
+constant FD $?CAP = 1;
+
+#|File descriptor redirected to '/dev/null' by default. 'X' is a short
+#|alias for `$*NULL` in `$(..)` commands.
+#|{
+    if $(command '-v','perl',:>X) {
+        say "perl exists";
+    }
+}
+constant $*NULL = {
+    FD<4>.open-file-w("/dev/null");
+    FD<4>;
+}
+
+#|FD wraps an integer representing a file descriptor. Usually you
+#|don't create these directly but get them through calling other methods
+#|like `File.open-w()`.
+augment FD {
+
+    my $fd-count = 4;
+
+    #|Gets the next free file descriptor.
+    #|**note:** This only kinda works.
+    method next-free(-->FD) {
+        ++$fd-count;
+    }
+
+    #|Redirects output from the invocant file descriptor to the
+    #|argument file descriptor.
+    method open-w(#|[The file descriptor to redirect to] FD $dst) {
+        $(exec :(self)>$dst);
+    }
+
+    #|Redirects output from the invocant file descriptor to the file.
+    method open-file-w(#|[The file to redirect to]File $file) {
+        $(exec :(self)>$file)
+    }
+
+    #| Closes redirection for this file descriptor.
+    method close-w() {
+        $(exec :(self)> FD{-1});
+    }
+    #| Returns if the file descriptor is writable.
+    method ?writable {
+        quietly { $(true :>self) }
+    }
+    #| Writes to the file descriptor.
+    method write(#|[The data to write to the file descriptor]$data) {
+        $data.$( :> self);
+    }
+
+    # No tests yet
+    method ~read { self.$(cat) }
+
+    #| Returns whether this file descriptor is linked to a terminal.
+    #|{
+        say $*OUT.tty;  #probably true
+        say FD<42>.tty; #probably false
+    }
+    method ?tty { $(test '-t', self) }
+}

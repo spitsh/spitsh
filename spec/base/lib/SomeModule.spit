@@ -1,0 +1,19 @@
+sub ~exported-sub is export { "foo" }
+
+class Exported-Class {
+    method ~doit { "foo" }
+}
+
+constant $exported-scalar is export = "exported scalar";
+
+constant $assign-to-block is export = {
+    my $tmp = "assign to block";
+    $tmp;
+};
+
+my $inline-canary is export = "lose";
+
+constant $assign-to-block-inlineable is export  = {
+    $inline-canary = "win";
+    "inlineable assignment";
+}

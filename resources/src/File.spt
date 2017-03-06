@@ -1,0 +1,162 @@
+#| File is string representing a filesystem path (relative or absolute).
+#|{
+    my $outdated = 'foo1.myorg.com';
+    if File</etc/foo.conf>.contains($outdated) {
+        note "$outdated exists in $_...fixing!";
+        .copy-to('/etc/foo.conf.bak');
+        .subst($outdated,'foo2.myorg.com');
+    }
+}
+
+augment File {
+    #| Returns True if the file exists.
+    method ?exists { $(test '-e', self)  }
+    #| Alias for .exists
+    method ?e      { self.exists }
+    #| In Bool context, Files return [.exists](#exists)
+    method ?Bool { self.exists }
+    #| Returns True if the file is a directory]
+    method ?dir    { $(test '-d', self) }
+    #| Alias for .dir
+    method ?d      { self.dir }
+    #| Returns True if the file is file
+    method ?file   { $(test '-f', self)  }
+    #| Alias for .file
+    method ?f      { self.file }
+    #| Removes (unlinks) the file and returns True if it was successful.
+    #| If the file is a directory it will recursively it's children.
+    method ?remove { $(rm '-rf', self :!>X) }
+    #| Returns True if the file is empty
+    method ?empty  { ! $(test '-s', self) }
+    #| Returns True if the file is writable by the current user.
+    method ?writable { $(test '-w', self)  }
+    #| Alias for .writable
+    method ?w        { self.writable        }
+    #| Returns True if the file is executable
+    method ?executable { $(test '-x', self) }
+    #| Alias for .executable
+    method ?x          { self.executable     }
+    #| Returns True if the file is readable by the current user.
+    method ?readable   { $(test '-r', self) }
+    #| Alias for .readable
+    method ?r          { self.readable }
+    #| Returns the size of the file in bytes
+    method +size   { $(wc '-c', self | awk '{print $1}')  }
+    #| Alias for .size
+    method +s      { self.size }
+
+    #| Returns the line of text at an index. `.at-pos` is the
+    #| internal method called when using postcircumfix `[]`.
+    #|{
+        my File $file;
+        $file.write(~<foo bar baz>);
+        say $file[1] #-> bar
+    }
+    method ~at-pos(#|[The index of the line to return]Int $i) {
+        self.read[$i]
+    }
+    #| Calls chmod(1) with the file as the last argument.
+    #|{ .chmod(400) if File<foo.txt>.writeable }
+    method chmod(#|[The argument passed to chmod(1)]$mode) {
+        $(chmod $mode, self)
+    }
+    #| Returns the name of user who owns the file.
+    method ~owner  { $(ls '-ld',self | awk '{print $3}') }
+
+    #| Appends raw data to the file.
+    method append(#|[data to append] $data) { $data.$( :>> self ) }
+
+    #| Adds a line to a file. If the file doesn't end in a `\n`, a one
+    #| will be appended before the line being added.
+    method push(#|[line to add] $line) {
+        self.write(self.read.push($line));
+    }
+    #| Creates an empty file on the filesystem if one doesn't exist at
+    #| the file's path.
+    #|{ .create unless File<foo.txt> }
+    method create {
+        # Ohhh when I think about you I
+        $(touch self)
+    }
+    #| Copies the file to another path
+    method copy-to(#|[destination path] $dst,
+                   #|[preserve permissions] Bool :$p){
+        $(cp "-r{$p && 'p'}", self, $dst)
+    }
+    #| Sets the file's contents to `$data`. If the file doesn't exist
+    #| it will be created.
+    method write($data)  { $data.$( :> self  ) }
+
+    #| Returns true if the file contains the string
+    #|{ say "we're in trouble" unless File</etc/hosts>.contains("localhost") }
+    method ?contains(#|[String to be searched for] $needle,
+                     #|[Enable case insensitivity] Bool :$i) {
+        self.read.contains($needle,:$i);
+    }
+
+    #| Replaces the target strnig with the replacement string in the file.
+    #| **This modifies the file**.
+    #|{
+        given File.tmp {
+            .write("foood");
+            .subst("o","e");
+            .read.say; #-> feood
+            .subst("o","e",:g);
+            .read.say; #-> feeed
+        }
+    }
+    method subst(#|[The string to be replaced]$target,
+                 #|[The string to replace it with]$replacement,
+                 #|[Turn on global matching]Bool :$g){
+        self.write(self.read.subst($target,$replacement,:$g));
+    }
+
+    #| Reads the file into the file's content as a List of lines
+    #|{
+        my $content = File</etc/hosts>.read
+        say $content[2]; # print the 3rd line
+    }
+    method read(-->List) { $(cat self) }
+
+    #| Opens the file and returns a [FD] that can be written to.
+    #|{
+        my File $file = 'foo.txt';
+        my $fd = $file.open-w;
+        $fd.write("written to via file descriptor");
+        say $file.read; #-> written to via file descriptor!
+    }
+    method open-w(--> FD) is impure {
+        my $fd = FD.next-free;
+        $fd.open-file-w(self);
+        $fd;
+    }
+    #| Returns the file's path (relative or absolute) as a [Str].
+    #|{
+        my File $file = 'foo.text';
+        $file.subst('foo','bar'); # modifies the file
+        say $file;
+        say $file.path.subst('foo','bar');
+    }
+    method ~path { self }
+    #| Returns the name of the file.
+    #|{ say File</etc/hosts>.name #->hosts }
+    method ~name { $(basename self) }
+    #| Returns the parent directory of the file.
+    #|{ say File</etc/foo/foo.cfg>.name #->/etc/foo }
+    method ~parent(--> File){ $(dirname self) }
+    #|{ say File</etc/foo>.child('foo.cfg') #-> /etc/foo/foo.cfg }
+    method ~child($name --> File) { self.path ~ '/' ~ $name }
+
+    my File $tmplist = $(mktemp);
+    #| Creates a tempfile via mktemp(1) and adds it to a list of
+    #| files which will be removed at the END.
+    #|{
+      my $tmpfile = File.tmp; # Will be removed at the end
+    }
+    method tmp(--> File) {
+        my File $tmpfile = $(mktemp);
+        $(printf '%s\n', $tmpfile :>> $tmplist);
+        $tmpfile;
+        END { $(rm |$tmplist.read,$tmplist ) }
+    }
+}
