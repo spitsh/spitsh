@@ -1,7 +1,8 @@
 use Spit::Compile;
 use Test;
 use Spit::Exceptions;
-plan 7;
+use Terminal::ANSIColor;
+plan 9;
 
 my $name = 'syntax-tests';
 throws-like { compile( '"', :$name) },
@@ -35,3 +36,11 @@ throws-like { compile('say $*foo',:$name) },
 throws-like { compile('my $*foo; say $*foo', :$name) },
             SX::RequiredOption,"required option not set",
             message => "Option foo used but no value provided for it and it doesn't have default.";
+
+throws-like { compile('sub foo($a,$b) { }; foo("bar")',:$name)},
+              SX::BadCall,"too few arguments",
+              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("bar"⏏)');
+
+throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) }
+              SX::BadCall,"too many arguments",
+              gist => *.&colorstip.contains('sub foo($a,$b) { }; foo("foo","bar",⏏"baz")');

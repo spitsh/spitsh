@@ -785,11 +785,11 @@ method angle-quote ($/) {
     }
 }
 
-method quote:double-quote ($/) { make $<str>.ast; }
-method quote:single-quote ($/) { make $<str>.ast }
-method quote:sym<qq>      ($/) { make $<str>.ast }
-method quote:sym<q>       ($/) { make $<str>.ast }
-method balanced-quote ($/) { make $<str>.ast }
+method quote:double-quote ($/) { make $<str>.ast andthen .match = $/;  }
+method quote:single-quote ($/) { make $<str>.ast andthen .match = $/; }
+method quote:sym<qq>      ($/) { make $<str>.ast andthen .match = $/; }
+method quote:sym<q>       ($/) { make $<str>.ast andthen .match = $/; }
+method balanced-quote ($/)     { make $<str>.ast andthen .match = $/; }
 method quote:sym<eval> ($/) {
     my $src = $<balanced-quote>.ast;
     my %opts = $<args>.ast.<named> || Empty;

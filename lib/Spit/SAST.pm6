@@ -38,7 +38,7 @@ sub tFile is export { state $ = class-by-name('File')  }
 sub tEnumClass is export { state $ = class-by-name('EnumClass')  }
 
 role SAST is rw {
-    has Match:D $.match is required;
+    has Match:D $.match is required is rw;
     has %.ann; # a place to put stuff that doesn't fit anywhere
     has $.stage2-done is rw;
     has $.stage3-done is rw;
@@ -196,38 +196,7 @@ sub derive-type(Spit::Type $_) {
 }
 
 sub check-call(:%named-args,:@pos-args,:$signature,:$call-name,:$match) {
-    my (@pos-params,%named-params) := ($signature.pos,$signature.named);
-    my $slurpy = @pos-params ?? @pos-params[*-1].slurpy !! False;
-    if not $slurpy and @pos-args != @pos-params {
-        SX.new(
-            message => "wrong number of positional arguments to $call-name. Expected {@pos-params.elems}, got {@pos-args.elems}",
-            :$match
-        ).throw
-    }
 
-    my $pos-args := @pos-args.iterator;
-    for @pos-params.kv -> $i,$param {
-        if $param.slurpy {
-            my $elem-type = derive-type($param.type);
-            until (my $arg := $pos-args.pull-one) =:= IterationEnd {
-                $arg .= do-stage2($elem-type,:desc("argument slurped by {$param.gist} doesn't match its type"));
-            }
-        } else {
-            my $arg := $pos-args.pull-one;
-            $arg .= do-stage2($param.type,:desc("argument {$param.gist} to $call-name doesn't match its type"));
-        }
-    }
-
-    for %named-args.kv -> $name,$arg is rw {
-        if %named-params{$name} -> $param {
-            $arg .= do-stage2($param.type,:desc("named argument {$param.gist} to $call-name doesn't match its type"));
-        } else {
-            SX.new(
-                message => "unexpected named argument $name passed to $call-name",
-                match => $arg.match,
-            ).throw;
-        }
-    }
 }
 
 sub type-from-sigil(Str:D $sigil --> Spit::Type) {
@@ -671,6 +640,7 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
     method symbol-type { SUB }
 
     method gist { "sub {$!name}\(" ~ $!signature.gist ~ '){ ... }' }
+    method spit-gist { "sub {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
         $!signature.invocant-used = $!invocant-used;
@@ -704,7 +674,8 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
     has $.rw is rw;
     has SAST::ClassDeclaration $.invocant-type is rw;
 
-    method gist { "method {$.name}\(" ~ $.signature.gist ~ '){ ... }' }
+    method gist { "method {$.name}\({$.signature.gist})\{ ... \}" }
+    method spit-gist { "method {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
         $.return-type = $.invocant-type.class if $!rw;
@@ -750,13 +721,62 @@ class SAST::Call  is SAST::Children {
     has Str:D $.name is required;
 
     method stage2($ctx) is default {
-        check-call(
-            pos-args => @!pos,
-            named-args => %!named,
-            signature => self.gen-sig,
-            call-name => $.name,
-            :$.match
-        );
+        my $signature := self.gen-sig;
+        my (@pos-params,%named-params) := ($signature.pos,$signature.named);
+        my $slurpy = @pos-params ?? @pos-params[*-1].slurpy !! False;
+
+        my $pos-args := @!pos.iterator;
+        my $last-valid;
+        for @pos-params.kv -> $i,$param {
+            if $param.slurpy {
+                my $elem-type = derive-type($param.type);
+                until (my $arg := $pos-args.pull-one) =:= IterationEnd {
+                    $arg .= do-stage2(
+                        $elem-type,
+                        :desc("Argument slurped by {$param.spit-gist} " ~
+                              "in {$.declaration.spit-gist} doesn't match its type")
+                    );
+                }
+            } else {
+                if (my $arg := $pos-args.pull-one) !=:= IterationEnd {
+                    $arg .= do-stage2(
+                        $param.type,
+                        :desc("Argument {$i + 1} to {$.declaration.spit-gist} doesn't match its type")
+                    );
+                    $last-valid := $arg;
+                } else {
+                    SX::BadCall.new(
+                        :$.declaration,
+                        reason => "Not enough positional arguments. Expected {@pos-params.elems}, got {@!pos.elems}.",
+                        match => ($last-valid andthen .match or $.match),
+                        after => ?$last-valid,
+                    ).throw;
+                }
+            }
+        }
+
+        if (my $extra-arg := $pos-args.pull-one) !=:= IterationEnd {
+            SX::BadCall.new(
+                :$.declaration,
+                reason => "Too many positional arguments. Expected {@pos-params.elems}, got {@!pos.elems}.",
+                match => $extra-arg.match,
+            ).throw;
+        }
+
+        for %!named.kv -> $name,$arg is rw {
+            if %named-params{$name} -> $param {
+                $arg .= do-stage2(
+                    $param.type,
+                    :desc("Named argument {$param.spit-gist} to $!name doesn't match its type")
+                );
+            } else {
+                SX::BadCall.new(
+                    :$.declaration,
+                    reason => "Unexpected named argument '$name'.",
+                    match => $arg.match,
+                ).throw;
+            }
+        }
         self;
     }
 
@@ -832,6 +852,7 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
         }
     }
 
+    method spit-gist { ".$.name" ~ "\(...)" }
 }
 
 class SAST::SubCall is SAST::Call {
@@ -841,12 +862,13 @@ class SAST::SubCall is SAST::Call {
     }
 
     method children { |@.pos,|%.named.values }
+
+    method spit-gist { $.name ~ "(...)" }
 }
 
 
 class SAST::Invocant does SAST {
     has $.type is required;
-    #method stage2($) { self }
 }
 
 class SAST::Param does SAST does SAST::Declarable {
@@ -870,7 +892,7 @@ class SAST::Param does SAST does SAST::Declarable {
 
 class SAST::PosParam is SAST::Param {
     has $.slurpy;
-    has $.ord is rw;
+    has Int $.ord is rw;
 
     method spit-gist { ('*' if $!slurpy) ~ "$.sigil$.name" }
 }
@@ -902,7 +924,7 @@ class SAST::Signature is SAST::Children {
     }
 
     method spit-gist {
-        ~ @.children».spit-gist.join(', ');
+        ~ @.children.map({ "{.type.name} {.spit-gist}" }).join(", ");
     }
 
 }

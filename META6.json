@@ -24,7 +24,7 @@
         "Spit::Parser::P5Regex" : "lib/Spit/Parser/P5Regex.pm6",
         "Spit::Parser::Quote"   : "lib/Spit/Parser/Quote.pm6"
     },
-    "depends" : ["DispatchMap","JSON5::Tiny"],
+    "depends" : ["DispatchMap","JSON5::Tiny","Terminal::ANSIColor"],
     "resources" : [
         "src/Any.spt",
         "src/Bool.spt",

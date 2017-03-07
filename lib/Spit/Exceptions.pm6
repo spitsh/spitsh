@@ -158,10 +158,9 @@ class SX::UndeclaredSpecialOnOS is SX::UndeclaredSpecial {
 }
 
 class SX::BadCall is SX {
-    has $.call-name is required;
-    has Array:D $.params is required;
-    has $.args   is required;
-    method message { "call doesn't match parameters $!call-name\(" ~ $!params».gist.join(',') ~ ")" }
+    has $.declaration is required;
+    has $.reason is required;
+    method message { "Invalid call to {$.declaration.spit-gist}.\n$!reason" }
 }
 
 
