@@ -41,6 +41,6 @@ throws-like { compile('sub foo($a,$b) { }; foo("bar")',:$name)},
               SX::BadCall,"too few arguments",
               gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("bar"⏏)');
 
-throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) }
+throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) },
               SX::BadCall,"too many arguments",
-              gist => *.&colorstip.contains('sub foo($a,$b) { }; foo("foo","bar",⏏"baz")');
+              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("foo","bar",⏏"baz")');
