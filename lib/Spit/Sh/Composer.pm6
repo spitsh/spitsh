@@ -238,7 +238,6 @@ multi method walk(SAST::Elem:D $THIS is rw) {
 }
 
 multi method walk(SAST::Eval:D $THIS is rw) {
-    $ = ?(require Spit::Compile <&compile>);
     my %opts = $THIS.opts;
     %opts<os> //= SAST::Type.new(class-type => $.os,match => $THIS.match);
 
@@ -267,6 +266,8 @@ multi method walk(SAST::Eval:D $THIS is rw) {
             }
         }
     }
+
+    require Spit::Compile <&compile>;
     $THIS .= stage3-node(
         SAST::SVal,
         val => compile(
