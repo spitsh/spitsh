@@ -1,0 +1,13 @@
+language: perl6
+perl6:
+  - latest
+
+install:
+  - rakudobrew build zef
+  - zef --depsonly .
+
+script:
+  - zef install .
+  - prove -r -e 'spit --in-docker=alpine compile' spec/
+  - prove -r -e 'spit --in-docker=debian compile' spec/
+  - prove -r -e 'spit --in-docker=centos compile' spec/
