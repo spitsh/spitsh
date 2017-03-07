@@ -717,11 +717,6 @@ multi method arg(SAST::Type $_,:$flat) {
     }
 }
 
-# XXX: WHY IS THIS HERE?
-multi method arg(SAST:D $_ where { .type ~~ tInt()}) {
-    '"$(',|self.cap-stdout($_),')"'
-}
-
 multi method arg(SAST::Slip:D $_) {
     self.arg(.children[0],:flat)
 }
