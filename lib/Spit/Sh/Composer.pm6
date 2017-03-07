@@ -405,12 +405,16 @@ multi  method walk(SAST::Call:D $THIS is rw) {
     self.walk($THIS.declaration);
 
     if $THIS.declaration.chosen-block -> $block {
-        if $block ~~ SAST::Block {
+        if $block ~~ SAST::Block and not $block.ann<cant-inline> {
             # only inline routines with one child for now
             if $block.children == 1  && ($block.returns.?val || $block.last-stmt) <-> $last-stmt {
                 if self.inline-call($THIS,$last-stmt) -> $replacement {
                     $THIS = $replacement;
                     self.walk($THIS);
+                } else {
+                    # If we find we can't inline it leave a marker so others
+                    # don't bother trying.
+                    $block.ann<cant-inline> = True;
                 }
             }
         }
