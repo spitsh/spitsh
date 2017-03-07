@@ -9,7 +9,4 @@ env:
   - PATH="/home/travis/.rakudobrew/moar-nom/install/share/perl6/site/bin:$PATH"
 
 script:
-  - zef install .
-  - prove -r -e 'spit --in-docker=alpine compile' spec/
-  - prove -r -e 'spit --in-docker=debian compile' spec/
-  - prove -r -e 'spit --in-docker=centos compile' spec/
+  - zef install . && spit eval 'say "hello world"'
