@@ -4,7 +4,6 @@ perl6:
 
 install:
   - rakudobrew build zef
-  - zef --depsonly .
 
 script:
   - zef install .
