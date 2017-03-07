@@ -1,9 +1,9 @@
 {
     "name" : "Spit",
-    "perl" : "6.*",
+    "perl" : "6.c",
     "version" : "0.0.1",
     "description" : "The Spook in the Shell Script (Spit-sh) compiler",
-    "authors" : ["Lloyd Fournier"],
+    "authors" : ["Lloyd Fournier lloyd.fourn@gmail.com"],
     "provides" : {
         "Spit::Compile" : "lib/Spit/Compile.pm6",
         "Spit::Constants" : "lib/Spit/Constants.pm6",
@@ -43,5 +43,10 @@
         "src/os.spt",
         "core-lib/Test.spt"
     ],
-    "source-url" : "git://github.com/LLFourn/Spitsh-private.git"
+    "source-url" : "https://github.com/Spit-sh/spitsh.git",
+    "support": {
+        "source": "https://github.com/Spit-sh/spitsh.git",
+        "email" : "lloyd.fourn@gmail.com",
+        "bugtracker" : "https://github.com/Spit-sh/spitsh/issues"
+    }
 }
