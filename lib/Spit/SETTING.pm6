@@ -1,5 +1,5 @@
 use Spit::Compile;
-our $src = <base EnumClass os List FD core-subs Any File Str Int Bool Pkg Cmd Locale checks>
+constant $src = <base EnumClass os List FD core-subs Any File Str Int Bool Pkg Cmd Locale checks>
             .map({ %?RESOURCES{"src/$_.spt"}.slurp })
             .join("\n");
 
