@@ -11,4 +11,4 @@ env:
 script:
   - zef install . && spit eval 'say "hello world"'
   - spit --in-docker=alpine compile spec/base/sanity.t
-  - prove -r -e 'spit --in-docker=alpine compile' spec/
+  - prove -v -r -e 'spit --in-docker=alpine compile' spec/
