@@ -5,6 +5,9 @@ perl6:
 install:
   - rakudobrew build zef
 
+env:
+  - PATH="/home/travis/.rakudobrew/moar-nom/install/share/perl6/site/bin:$PATH"
+
 script:
   - zef install .
   - prove -r -e 'spit --in-docker=alpine compile' spec/
