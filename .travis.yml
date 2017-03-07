@@ -2,6 +2,9 @@ language: perl6
 perl6:
   - latest
 
+services:
+  - docker
+
 install:
   - rakudobrew build zef
 
