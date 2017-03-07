@@ -412,7 +412,6 @@ class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
             $.assign .= do-stage2($!type,:$.desc) if $.assign;
         } else {
             $!type = do if $.assign {
-                SX.new(node => self,message => "derp").throw if $.assign ~~ SAST::CompUnit;
                 $.assign .= do-stage2($sigil-type,:$.desc);
                 $.assign.type;
             } else {
