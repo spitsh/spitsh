@@ -51,7 +51,7 @@ method clone-node($node is rw) {
 proto method walk(SAST:D $sast is rw) {
     self.clone-node($sast);
     if not $sast ~~ SAST::ClassDeclaration and $sast ~~ SAST::Children {
-          self.walk($_)for $sast.children;
+        self.walk($_) for $sast.children;
     }
 
     if not $sast.stage3-done {
@@ -60,6 +60,8 @@ proto method walk(SAST:D $sast is rw) {
         $save.stage3-done = True;
     }
 }
+
+multi method walk(SAST:D $ is rw) {}
 
 multi method walk(SAST::CompUnit:D $THIS is rw) {
     self.add-scaffolding($_) for @!scaffolding;
@@ -502,8 +504,6 @@ multi method inline-call(SAST::Call:D $outer,SAST:D $inner where SAST::Call|SAST
 multi method inline-call(SAST::Call:D $outer,SAST::CompileTimeVal:D $_) { $_ }
 
 multi method inline-call(SAST::Call:D $outer,$) { Nil }
-
-multi method walk(SAST:D $ is rw) {}
 
 method add-scaffolding(SAST::Dependable:D $dep is rw)  {
     self.walk($dep);
