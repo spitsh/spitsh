@@ -690,7 +690,7 @@ multi method arg(SAST::Blessed:D $_) {
     }
 }
 
-multi method arg(SAST::Elem:D $_) { self.arg(.id) }
+multi method arg(SAST::Elem:D $_) { die 'SAST::Elem made it to compiler' }
 
 multi method arg(SAST::FileContent:D $_,:$flat) {
     self.quote: :$flat,
