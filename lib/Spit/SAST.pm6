@@ -57,7 +57,7 @@ role SAST is rw {
         $.stage2-done = Backtrace.new;
         $!ctx = ctx;
         my SAST:D $res = self.stage2(ctx,|args);
-        $res = coerce $res,ctx,$desc;
+        $res = coerce $res,ctx,:$desc;
         $res;
     }
 
@@ -143,7 +143,7 @@ class SAST::CmpRegex {...}
 class SAST::Cmd {...}
 
 # makes sure $node is ~~ $type.primative or coerces it to it OR throws a type exception
-sub coerce(SAST:D $node,Spit::Type $type,$desc = '') {
+sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
     my $target-prim = $type.primitive;
     X::AdHoc.new( payload => "{$node.^name} {try $node.gist} gave a literal Spit::Type type object").throw
         if $node.type === Spit::Type;
@@ -162,7 +162,7 @@ sub coerce(SAST:D $node,Spit::Type $type,$desc = '') {
                 $node,
             );
             $call.set-declaration($meth);
-            return $call.do-stage2($target-prim);
+            return $call.do-stage2($target-prim,:$desc);
         }
         else {
             # We need node to become a list. As long as the node matches the List's
@@ -174,7 +174,7 @@ sub coerce(SAST:D $node,Spit::Type $type,$desc = '') {
                     class-type => $list-type,
                     match => $node.match,
                     :stage2-done,
-                    coerce($node,$elem-type,'convert to list'),
+                    coerce($node,$elem-type,:desc<coercing to a list>),
                 );
             }
             # we lose
@@ -463,7 +463,7 @@ class SAST::Block is SAST::MutableChildren does SAST::Dependable {
         }
         if $returns {
             $returns = SAST::Return.new(val => $returns,match => $returns.match) if $ctx !=== tAny;
-            $returns .= do-stage2($ctx);
+            $returns .= do-stage2($ctx,:desc<return value of block>);
         }
         self;
     }
@@ -568,8 +568,8 @@ class SAST::Cmd is SAST::MutableChildren is rw {
         $_ .= do-stage2(tStr) for ($!cmd,$!in,|@.nodes,|%!set-env.values).grep(*.defined);
 
         for |@!write,|@!append <-> $in,$out {
-            $in .= do-stage2(tFD);
-            $out .= do-stage2(tStr);
+            $in  .= do-stage2(tFD, :desc<Output redirection source>);
+            $out .= do-stage2(tStr,:desc<Output redirection destination>);
         }
         self;
     }
@@ -1235,7 +1235,7 @@ class SAST::If is SAST::Children is rw {
     has $.when;
 
     method stage2($ctx) is default {
-        $!cond .= do-stage2($!when ?? tAny() !! tBool());
+        $!cond .= do-stage2(($!when ?? tAny() !! tBool()),:desc<If/unless condition>);
         if not $!when {
             generate-topic-var(
                var => $!topic-var,
@@ -1243,7 +1243,7 @@ class SAST::If is SAST::Children is rw {
                :$!cond
             )
         }
-        $_ .= do-stage2($ctx) for $!then,($!else // Empty);
+        $_ .= do-stage2($ctx,:desc<if/unless block return value>) for $!then,($!else // Empty);
         self;
     }
 
@@ -1258,9 +1258,9 @@ class SAST::While is SAST::Children {
     has SAST::VarDecl $.topic-var;
 
     method stage2($ctx) {
-        $!cond .= do-stage2(tBool);
+        $!cond .= do-stage2(tBool,:desc<while conditional>);
         generate-topic-var(var => $!topic-var,:$!cond,blocks => ($!block,));
-        $!block .= do-stage2($ctx);
+        $!block .= do-stage2($ctx,:desc<while block return value>);
         self;
     }
     method children { $!cond,$!block,($!topic-var // Empty) }
