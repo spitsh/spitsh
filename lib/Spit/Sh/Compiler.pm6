@@ -25,11 +25,11 @@ sub shell_quote(Str() $str is copy){
 
 my %native = (
     et => Map.new((
-        body => q|$1 "$2" && printf %s "$2"|,
+        body => Q<eval "$@" && eval "printf %s \"\$$#\"">,
         deps => (),
     )),
     ef => Map.new((
-        body => q<$1 "$2" || { printf %s "$2" && return 1; }>,
+        body => Q<eval "$@" || { eval "printf %s \"\$$#\"" && return 1; }>,
         deps => (),
     )),
     list  => Map.new((
@@ -845,10 +845,10 @@ method try-param-substitution(SAST::Junction:D $junct) {
 }
 
 multi method cap-stdout(SAST::CondReturn:D $_) {
-    if  .when === False and .val.uses-Str-Bool {
-        # Special case shell optimization!!! since the only false value for Str-like things is the empty
-        # string and here we only return the value when it is false (ie when is the empty string)
-        # we can just ignore its value.
+    if .when === True  and !.Bool-call {
+        self.junct-helper(.val,True);
+    } elsif .when === False and .val.uses-Str-Bool or !.Bool-call {
+        # Special case shell optimization!!!
         # $(test "$foo" || { echo "$foo" && false; }  && echo "$bar")
         # can be reduced-to: (test "$foo" || echo "$bar")
         self.cond(.val);

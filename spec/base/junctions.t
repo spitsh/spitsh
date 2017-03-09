@@ -1,6 +1,6 @@
 use Test;
 
-plan 126;
+plan 127;
 
 my $true = True;
 my $false = False;
@@ -27,6 +27,7 @@ my $false = False;
     ok ($true || $false), '<||> works';
 
     ok (!$true or $true), "<!> precedence is correct";
+    nok (!$true or $false),"!T | F";
     nok !($false or $true),'!(F | T)';
 
     ok ($true or $false and $true),'double junction ($T | $F & $T)';

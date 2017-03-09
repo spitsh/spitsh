@@ -366,7 +366,7 @@ multi method walk(SAST::CmpRegex:D $THIS is rw) {
 }
 
 multi method walk(SAST::CondReturn:D $THIS is rw) {
-    with $THIS.Bool-call.compile-time {
+    with ($THIS.Bool-call andthen .compile-time) {
         # We know the result of .Bool at compile time.
         # Test to see if the value should be inlined or if we should put a Bool in its place.
         if $_ === $THIS.when {

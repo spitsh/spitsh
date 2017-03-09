@@ -1005,15 +1005,17 @@ class SAST::CondReturn is SAST::Children  {
 
     method stage2($ctx) {
         $!val .= do-stage2($ctx);
-        $!Bool-call = SAST::MethodCall.new(
-            match => $!val.match,
-            name => 'Bool',
-            $!val.clone,
-        ).do-stage2(tBool);
+        if $!val.type !~~ tBool() {
+            $!Bool-call = SAST::MethodCall.new(
+                match => $!val.match,
+                name => 'Bool',
+                $!val.clone,
+            ).do-stage2(tBool);
+        }
         self;
     }
 
-    method children { $!val,$!Bool-call }
+    method children { $!val,($!Bool-call // Empty) }
     method type { $!val.type }
     method gist { $.node-name ~ "($!when)" ~ $.gist-children }
 }
