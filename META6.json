@@ -43,10 +43,10 @@
         "src/os.spt",
         "core-lib/Test.spt"
     ],
-    "source-url" : "https://github.com/Spit-sh/spitsh.git",
+    "source-url" : "https://github.com/spitsh/spitsh.git",
     "support": {
-        "source": "https://github.com/Spit-sh/spitsh.git",
+        "source": "https://github.com/spitsh/spitsh.git",
         "email" : "lloyd.fourn@gmail.com",
-        "bugtracker" : "https://github.com/Spit-sh/spitsh/issues"
+        "bugtracker" : "https://github.com/spitsh/spitsh/issues"
     }
 }
