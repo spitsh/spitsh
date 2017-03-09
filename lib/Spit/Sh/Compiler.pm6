@@ -246,6 +246,8 @@ multi method node(SAST::Var:D $var) {
         @var;
     } elsif $var ~~ SAST::VarDecl {
         $name,'=',($var.decl-type ~~ tInt() ?? '0' !! '""');
+    } else {
+        ': $',$name;
     }
 }
 
@@ -401,9 +403,8 @@ multi method node(SAST::Junction:D $_) {
 
 multi method node(SAST::Ternary:D $_,:$tight) {
     # shouldn't this also be checking for Boo
-    my $meth = .ctx ~~ tStr() ?? 'cap-stdout' !! 'node';
     ('{ ' if $tight),
-    |self.cond(.cond),' && ',|self."$meth"(.on-true,:tight),' || ',|self."$meth"(.on-false,:tight),
+    |self.cond(.cond),' && ',|self.compile-in-ctx(.on-true,:tight),' || ',|self.compile-in-ctx(.on-false,:tight),
     ('; }' if $tight);
 }
 
@@ -523,12 +524,16 @@ multi method node(SAST::Return:D $ret) {
     if $ret.impure {
         'R=',self.arg($ret.val);
     } else {
-        do given $ret.ctx {
-            when tBool() { |self.cond($ret.val)       }
-            when tStr()  { |self.cap-stdout($ret.val) }
-            when tAny()  { |self.node($ret.val) }
-            default { die "invalid return context: {.^name}" }
-        }
+        self.compile-in-ctx($ret.val,|%_);
+    }
+}
+
+method compile-in-ctx($node,*%_) {
+    given $node.ctx {
+        when tBool() { self.cond($node,|%_)       }
+        when tStr()  { self.cap-stdout($node,|%_) }
+        when tAny()  { self.node($node,|%_) }
+        default { die "invalid return context: {.^name}" }
     }
 }
 

@@ -1,6 +1,6 @@
 use Test;
 
-plan 125;
+plan 126;
 
 my $true = True;
 my $false = False;
@@ -138,4 +138,11 @@ my $false = False;
     # Need to put ~ in front because in Any context I'm not
     # sure what a junction should return yet
     is (~($true && B<foo> || C<foo>)).WHAT,'A','junction.WHAT returns common parent';
+}
+
+{
+    my $tmp;
+    ?($true || $tmp);
+    $true || $tmp;
+    pass "Any context ending in var doesn't cause syntax error";
 }
