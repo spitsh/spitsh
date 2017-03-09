@@ -25,11 +25,11 @@ sub shell_quote(Str() $str is copy){
 
 my %native = (
     et => Map.new((
-        body => Q<eval "$@" && eval "printf %s \"\$$#\"">,
+        body => Q<eval '$@' && eval "printf %s \"\$$#\"">,
         deps => (),
     )),
     ef => Map.new((
-        body => Q<eval "$@" || { eval "printf %s \"\$$#\"" && return 1; }>,
+        body => Q<eval '$@' || { eval "printf %s \"\$$#\"" && return 1; }>,
         deps => (),
     )),
     list  => Map.new((

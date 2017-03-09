@@ -1,6 +1,6 @@
 use Test;
 
-plan 127;
+plan 128;
 
 my $true = True;
 my $false = False;
@@ -128,6 +128,8 @@ my $false = False;
     is Foo<foo> && Foo<bar>,'bar','Foo<foo> && Foo<bar>';
     is Foo<bar> || Foo<baz>,'baz','Foo<bar> || Foo<baz>';
     is Foo<foo> || Foo<bar>,'foo','Foo<foo> || Foo<bar>';
+    my $es = "";
+    is Foo{"$es foo"} && Foo<baz>," foo",'Foo{weird stuff} && Foo<baz>';
 
     Foo<foo> && pass "Foo<foo> in Any context";
 }
