@@ -1,6 +1,6 @@
 use Test;
 
-plan 128;
+plan 134;
 
 my $true = True;
 my $false = False;
@@ -28,7 +28,9 @@ my $false = False;
 
     ok (!$true or $true), "<!> precedence is correct";
     nok (!$true or $false),"!T | F";
+    ok (!$false && $true),'!F && T';
     nok !($false or $true),'!(F | T)';
+    ok !($false or $false), '(F | F)';
 
     ok ($true or $false and $true),'double junction ($T | $F & $T)';
     nok !($true or $false and $true),'neg double junction !($T | $F & $T)';
@@ -148,4 +150,15 @@ my $false = False;
     ?($true || $tmp);
     $true || $tmp;
     pass "Any context ending in var doesn't cause syntax error";
+}
+
+{
+    class Bar {
+        method ?Bool { self.$(grep '-Eq',self) }
+    }
+
+    is Bar<f> || $true,'f',   '1. .Bool inlined to cmd canary';
+    is Bar<f> && $true,True,  '2. .Bool inlined to cmd canary';
+    is Bar<^f> || $true,True, '3. .Bool inlined to cmd canary';
+    is Bar<^f> && $true,'^f', '4. .Bool inlined to cmd canary';
 }

@@ -998,10 +998,13 @@ class SAST::Increment is SAST::MutableChildren {
 
 enum JunctionContext <NEVER-RETURN RETURN-WHEN-FALSE RETURN-WHEN-TRUE JUST-RETURN>;
 
+# Represents the LHS or RHS of junctions where its value
+# might need to returned as the value of the entire expression
+# $.when it's True of False.
 class SAST::CondReturn is SAST::Children  {
     has Bool:D $.when is required;
     has $.val is required;
-    has $.Bool-call;
+    has $.Bool-call is rw;
 
     method stage2($ctx) {
         $!val .= do-stage2($ctx);
@@ -1015,7 +1018,7 @@ class SAST::CondReturn is SAST::Children  {
         self;
     }
 
-    method children { $!val,($!Bool-call // Empty) }
+    method children { $!val,(self.stage3-done && $!Bool-call || Empty) }
     method type { $!val.type }
     method gist { $.node-name ~ "($!when)" ~ $.gist-children }
 }

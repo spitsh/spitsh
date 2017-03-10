@@ -48,10 +48,13 @@ method clone-node($node is rw) {
     $node.mutate-for-os($.os) if $node ~~ SAST::OSMutant;
 }
 
-proto method walk(SAST:D $sast is rw) {
+proto method walk(SAST:D $sast is rw,|) {
     self.clone-node($sast);
+
     if not $sast ~~ SAST::ClassDeclaration and $sast ~~ SAST::Children {
-        self.walk($_) for $sast.children;
+        for $sast.children {
+            self.walk($_)
+        }
     }
 
     if not $sast.stage3-done {
@@ -367,7 +370,31 @@ multi method walk(SAST::CmpRegex:D $THIS is rw) {
     }
 }
 
+# The things we can inline in CondReturns is limited. We can't have
+# any ol shell command expresssion. The ones we can inline depend
+# on whether their last value as it appears in the shell is the same
+# as their original. See 'ef' and 'et' for why.
+sub acceptable-in-cond-return($_,$original) {
+    when SAST::Cmd {
+        (not .write || .append || .in) and
+        (.nodes[*-1] andthen .cloned === $original);
+    }
+    when SAST::MethodCall {
+        (.pos[*-1] || .invocant) andthen .cloned === $original;
+    }
+    when SAST::Call {
+        .pos[*-1] andthen .cloned === $original;
+    }
+    default { False }
+}
+
+
 multi method walk(SAST::CondReturn:D $THIS is rw) {
+
+    with $THIS.Bool-call {
+        my $orig = .invocant;
+        self.walk($_, { acceptable-in-cond-return($_,$orig) } );
+    }
     with ($THIS.Bool-call andthen .compile-time) {
         # We know the result of .Bool at compile time.
         # Test to see if the value should be inlined or if we should put a Bool in its place.
@@ -402,7 +429,7 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
     }
 }
 
-multi  method walk(SAST::Call:D $THIS is rw) {
+multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
     return if $.no-inline;
     self.walk($THIS.declaration);
 
@@ -411,8 +438,10 @@ multi  method walk(SAST::Call:D $THIS is rw) {
             # only inline routines with one child for now
             if $block.children == 1  && ($block.returns.?val || $block.last-stmt) <-> $last-stmt {
                 if self.inline-call($THIS,$last-stmt) -> $replacement {
-                    $THIS = $replacement;
-                    self.walk($THIS);
+                    if $replacement ~~ $accept {
+                        $THIS = $replacement;
+                        self.walk($THIS);
+                    }
                 } else {
                     # If we find we can't inline it leave a marker so others
                     # don't bother trying.
