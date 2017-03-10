@@ -25,11 +25,11 @@ sub shell_quote(Str() $str is copy){
 
 my %native = (
     et => Map.new((
-        body => Q<eval '$@' && eval "printf %s \"\$$#\"">,
+        body => Q<"$@" && eval "printf %s \"\$$#\"">,
         deps => (),
     )),
     ef => Map.new((
-        body => Q<eval '$@' || { eval "printf %s \"\$$#\"" && return 1; }>,
+        body => Q<"$@" || { eval "printf %s \"\$$#\"" && return 1; }>,
         deps => (),
     )),
     list  => Map.new((
@@ -846,7 +846,7 @@ method try-param-substitution(SAST::Junction:D $junct) {
 
 multi method cap-stdout(SAST::CondReturn:D $_) {
     if .when === True  and !.Bool-call {
-        self.junct-helper(.val,True);
+        '{ ',self.cond(.val), ' && ',self.scaf('e'), ' 1;',' }';
     } elsif .when === False and .val.uses-Str-Bool or !.Bool-call {
         # Special case shell optimization!!!
         # $(test "$foo" || { echo "$foo" && false; }  && echo "$bar")
@@ -886,7 +886,7 @@ multi method int-expr(SAST::IVal:D $_) { .val.Str }
 
 method comment(Str:D $_) { '# ',$_ }
 
-method junct-helper($Bool-call,$when) {
+method junct-helper($Bool-call is copy,$when is copy) {
     my $name = $when ?? 'et' !! 'ef';
     self.scaf($name),' ',self.cond($Bool-call);
 }
