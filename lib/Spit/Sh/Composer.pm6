@@ -121,8 +121,12 @@ multi method walk(SAST::Cast:D $THIS is rw) {
 }
 
 multi method walk(SAST::Neg:D $THIS is rw) {
-    with $THIS[0].compile-time {
-        $THIS .= stage3-node(SAST::BVal,val => !$_);
+    if $THIS[0] ~~ SAST::Neg {
+        $THIS = $THIS[0][0];
+    } else {
+        with $THIS[0].compile-time {
+            $THIS .= stage3-node(SAST::BVal,val => !$_);
+        }
     }
 }
 
@@ -440,7 +444,6 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
                 if self.inline-call($THIS,$last-stmt) -> $replacement {
                     if $replacement ~~ $accept {
                         $THIS = $replacement;
-                        self.walk($THIS);
                     }
                 } else {
                     # If we find we can't inline it leave a marker so others
@@ -485,13 +488,16 @@ method inline-value($inner,$outer,$_ is raw) {
         }
     }
     # if arg inside inner is a blessed value, try inlining the value
-    when SAST::Blessed|SAST::FileContent {
+    when SAST::Blessed|SAST::FileContent|SAST::Neg {
         if self.inline-value($inner,$outer,.children[0]) -> $val {
             .children[0] = $val;
+            # because we're changing child of a rather than the node itself
+            # we'll need to re-walk to it has a chance to re-optimize itself.
+            .stage3-done = False;
+            self.walk($_);
             $_;
         }
     }
-
     when *.compile-time.defined {
         $*char-count += .compile-time.chars;
         $_;
@@ -501,6 +507,10 @@ method inline-value($inner,$outer,$_ is raw) {
     }
 }
 
+subset ChildSwapInline of SAST:D
+       where SAST::Call|SAST::Cmd|SAST::Increment|
+             SAST::WriteToFile|SAST::Neg;
+
 # CONSIDER:
 #   {
 #    sub foo($a) { say($a) }
@@ -508,8 +518,8 @@ method inline-value($inner,$outer,$_ is raw) {
 #   }
 # 'foo("baz")' is the $outer call, 'say($a)' is the $inner call.
 # We inline by switching the outer SAST::Call out for a modified clone of the inner SAST::Call.
-# We can do this with a bunch of other nodes as well.
-multi method inline-call(SAST::Call:D $outer,SAST:D $inner where SAST::Call|SAST::Cmd|SAST::Increment|SAST::WriteToFile) {
+# We can do this with a bun ch of other nodes as well.
+multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     # Can't inline is rw methods yet. Probs need to redesign it before we can.
     return if ($outer ~~ SAST::MethodCall) && $outer.declaration.rw;
 
