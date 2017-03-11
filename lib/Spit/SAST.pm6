@@ -112,7 +112,7 @@ role SAST is rw {
 
     # Convenience methods
     method stage2-node(\type,|args) {
-        type.new(:stage2-done,:$.match,|args);
+        type.new(:stage2-done,:$.ctx,:$.match,|args);
     }
 
     method stage3-node(\type,|args) {
@@ -120,8 +120,9 @@ role SAST is rw {
             :stage2-done,
             :stage3-done,
             :cloned,
-            |args,
+            :$.ctx,
             :$.match,
+            |args,
         )
     }
     method uses-Str-Bool {
