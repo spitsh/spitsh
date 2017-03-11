@@ -135,6 +135,15 @@ role SAST is rw {
             |args,
         );
     }
+
+    # used in stage3 to replace one node with another in the AST
+    method switch(SAST:D $self is rw: $b is copy) {
+        if $b.type !=== $self.type {
+            $b = $self.stage3-node(SAST::Blessed,class-type => $self.type,$b);
+        }
+        $b.extra-depends.append($self.extra-depends);
+        $self = $b;
+    }
 }
 role SAST::Assignable {
     has SAST $.assign is rw;

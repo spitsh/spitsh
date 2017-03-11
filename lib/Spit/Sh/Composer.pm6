@@ -26,14 +26,6 @@ method os {
     }
 }
 
-method switch($a is rw,$b is copy) {
-    if $b.type !=== $a.type {
-        $b = $a.stage3-node(SAST::Blessed,class-type => $a.type,$b);
-    }
-    $b.extra-depends.append($a.extra-depends);
-    $a = $b;
-}
-
 method clone-node($node is rw) {
     return if $node.cloned;
 
@@ -111,7 +103,7 @@ multi method walk(SAST::If:D $THIS is rw) {
 multi method walk(SAST::Ternary:D $THIS is rw) {
     given $THIS.cond.compile-time -> $ct {
         if $ct.defined {
-            self.switch: $THIS, ($ct ?? $THIS.on-true !! $THIS.on-false);
+            $THIS.switch: ($ct ?? $THIS.on-true !! $THIS.on-false);
         }
     }
 }
@@ -170,7 +162,7 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
         }
 
         if $decl.inline-value -> $inline {
-            self.switch: $THIS,$inline;
+            $THIS.switch: $inline;
         }
 
     } elsif $decl ~~ SAST::MaybeReplace and $decl.replace-with -> $val {
@@ -530,7 +522,7 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     for $replacement.children -> $try-switch is raw {
         if self.inline-value($replacement,$outer,$try-switch) -> $switch {
             return if $*char-count > $max;
-            self.switch: $try-switch,$switch;
+            $try-switch.switch: $switch;
         } else {
             # Nodes without children are probably ok just to leave where they are but
             # give up if we have a node with children
