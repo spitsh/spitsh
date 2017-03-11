@@ -82,7 +82,7 @@ plan 12;
 }
 
 {
-    given $(echo "foo") {
+    given ${echo "foo"} {
         when /food/ { flunk 'cmd as given arg' }
         when /fo/   { pass 'cmd as given arg'  }
     }

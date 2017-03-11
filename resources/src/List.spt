@@ -20,7 +20,7 @@ augment List {
         say @list[1]; #-> two
     }
     method at-pos(#|[the index to return the line at]Int $i --> Elem-Type) {
-        self.$(sed '-n', ($i+1) ~ 'p')
+        self.${sed '-n', ($i+1) ~ 'p'}
     }
     #| `set-pos` is the internal method called which you set a list
     #| element using the postcircumfix syntax `[..]`.
@@ -29,14 +29,14 @@ augment List {
         @a[1] = "deux";
     }
     method ~set-pos(Int $pos,Elem-Type $item) is rw {
-        self.$(
+        self.${
           awk '-v',"pos=$pos",'{ print } END { for (i = (NR-1); i <= pos; i++) print "\n" }'
         | awk '-v',"pos=$pos",'-v',"item=$item",'{ print((NR-1) == pos ? item : $0) }'
-        )
+        }
     }
     #| Returns the number notional elements in the list. This is equal
     #| to 0 if the list is the empty string otherwise the number of `\n` + 1.
-    method +elems { self ?? self.$(wc '-l') + 1 !! 0 }
+    method +elems { self ?? self.${wc '-l'} + 1 !! 0 }
     #| The list in Int context returns `.elems`
     #|{
         my @a = <one two three>;
@@ -52,7 +52,7 @@ augment List {
         }
     }
     method push(#|[The item to add to the list]Elem-Type $item) is rw {
-        self.$(awk '-v',"item=$item", '{ print } END { print item }')
+        self.${awk '-v',"item=$item", '{ print } END { print item }'}
     }
     #| Removes the first line from the list
     #|{
@@ -60,7 +60,7 @@ augment List {
         @a.shift;
         say @a;
     }
-    method shift is rw { self.$(sed '1d') }
+    method shift is rw { self.${sed '1d'} }
 
     #| Adds a line to the front of the list.
     #|{
@@ -68,19 +68,19 @@ augment List {
         @a.unshift("zero");
     }
     method unshift(#|[The item to add to the list]Elem-Type $item) is rw {
-        self.$(awk '-v', "item=$item",'BEGIN { print item } { print }')
+        self.${awk '-v', "item=$item",'BEGIN { print item } { print }'}
     }
     #| Removes a line from the end of the list
     #|{
         my @a = <one two three>;
         @a.pop;
     }
-    method pop is rw { self.$(sed '$d') }
+    method pop is rw { self.${sed '$d'} }
 
     #| Returns the result of removing the `\n` between each line and
     #| replacing it with a new separtor.
     method ~join(#|[The separator to join on]$sep) {
-        self.$(awk '-v', "s=$sep", q{{if(NR != 1) printf s; printf $0;}})
+        self.${awk '-v', "s=$sep", q({if(NR != 1) printf s; printf $0})}
     }
 }
 

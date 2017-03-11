@@ -245,5 +245,5 @@ if $true and $false {
 }
 
 {
-    is (if $true { "foo" } else { "bar" }).$(cat),'foo','piping result of if';
+    is (if $true { "foo" } else { "bar" }).${cat},'foo','piping result of if';
 }

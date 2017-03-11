@@ -392,10 +392,10 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     rule cmd {
-        '$('
+        '${'
         [<cmd-body> *% ['|'<!before "\>"> <.ws> ]]
         <cmd-out>*
-        [')' || <.expected("closing )")>]
+        ['}' || <.expected("closing }")>]
     }
 
     rule cmd-out {

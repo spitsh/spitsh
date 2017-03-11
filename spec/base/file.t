@@ -30,7 +30,7 @@ plan 27;
 
     $file.push("baz");
     is $file.read,"foobar\nbaz",'.push';
-    is $file.read.$(cat),"foobar\nbaz",'.read.$(cat)';
+    is $file.read.${cat},"foobar\nbaz",'.read.${cat}';
 
     is $file.size,10,'.size changes after appending';
 
