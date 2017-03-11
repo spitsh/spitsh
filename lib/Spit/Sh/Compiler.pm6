@@ -533,7 +533,9 @@ method compile-in-ctx($node,*%_) {
         when tBool() { self.cond($node,|%_)       }
         when tStr()  { self.cap-stdout($node,|%_) }
         when tAny()  { self.node($node,|%_) }
-        default { die "invalid return context: {.^name}" }
+        default {
+            SX::Bug.new(:$node,desc => "Node's type context {.gist} is invalid").throw
+        }
     }
 }
 
