@@ -37,6 +37,29 @@ sub tFD is export { state $ = class-by-name('FD') }
 sub tFile is export { state $ = class-by-name('File')  }
 sub tEnumClass is export { state $ = class-by-name('EnumClass')  }
 
+class SAST::IntExpr   {...}
+class SAST::Var       {...}
+class SAST::Block     {...}
+class SAST::Param     {...}
+class SAST::Nop       {...}
+class SAST::Return    {...}
+class SAST::Signature {...}
+class SAST::MethodCall {...}
+class SAST::IVal      {...}
+class SAST::BVal       {...}
+class SAST::SVal {...}
+
+class SAST::Blessed      {...}
+class SAST::List {...}
+class SAST::ClassDeclaration {...}
+class SAST::Concat {...}
+class SAST::PhaserBlock {...}
+class SAST::Invocant {...}
+class SAST::Type {...}
+class SAST::RoutineDeclare { ... }
+class SAST::CmpRegex {...}
+class SAST::Cmd {...}
+
 role SAST is rw {
     has Match:D $.match is required is rw;
     has %.ann; # a place to put stuff that doesn't fit anywhere
@@ -118,29 +141,6 @@ role SAST::Assignable {
 
     method assign-type { ... }
 }
-
-class SAST::IntExpr   {...}
-class SAST::Var       {...}
-class SAST::Block     {...}
-class SAST::Param     {...}
-class SAST::Nop       {...}
-class SAST::Return    {...}
-class SAST::Signature {...}
-class SAST::MethodCall {...}
-class SAST::IVal      {...}
-class SAST::BVal       {...}
-class SAST::SVal {...}
-
-class SAST::Blessed      {...}
-class SAST::List {...}
-class SAST::ClassDeclaration {...}
-class SAST::Concat {...}
-class SAST::PhaserBlock {...}
-class SAST::Invocant {...}
-class SAST::Type {...}
-class SAST::RoutineDeclare { ... }
-class SAST::CmpRegex {...}
-class SAST::Cmd {...}
 
 # makes sure $node is ~~ $type.primative or coerces it to it OR throws a type exception
 sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
