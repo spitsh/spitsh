@@ -12,7 +12,6 @@ constant @brackets := "<>[]()\{}\x[0028]\x[0029]\x[003C]\x[003E]\x[005B]\x[005D]
 constant @openers = eager @brackets.map: -> $o,$ { $o };
 
 grammar Spit::Grammar is Spit::Lang {
-{}
     token TOP {
         :my $*CURPAD;
         :my $*CU;
