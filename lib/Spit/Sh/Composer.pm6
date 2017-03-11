@@ -27,7 +27,7 @@ method os {
 }
 
 method clone-node($node is rw) {
-    return if $node.cloned;
+    return with $node.cloned;
 
     SX::CompStageNotCompleted.new(stage => 2,:$node).throw unless $node.stage2-done;
 

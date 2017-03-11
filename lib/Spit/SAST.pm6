@@ -119,7 +119,7 @@ role SAST is rw {
         type.new(
             :stage2-done,
             :stage3-done,
-            :cloned,
+            :!cloned,
             :$.ctx,
             :$.match,
             |args,
