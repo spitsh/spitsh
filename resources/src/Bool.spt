@@ -3,11 +3,11 @@
 #| successfully. In [Str](Str.md) context a Bool will be '1' if true
 #| and "" (they empty string) if false.
 #|{
-    if False.  {
-        say ("foo" eq "bar").WHAT; #-> Bool
-        say "foo" eq "bar"; #-> ""
-        say "foo" eq "foo"; #-> 1
-    }
+    say True.WHAT #-> Bool
+    say False.WHAT #-> Bool
+    say ("foo" eq "bar").WHAT; #-> Bool
+    say False; #-> ''
+    say True;  #-> '1'
 }
 augment Bool {
     #| In Int context, Bools become a 1 if True or a 0 if False.
