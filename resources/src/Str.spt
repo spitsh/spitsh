@@ -14,28 +14,28 @@ sub ?re-match($str,$r) { $str.${grep '-Eq',$r} }
 }
 augment Str {
     #| Prints the string to stdout
-    method say { say self }
+    method say { say $self }
     #| Prints the string to stderr
-    method note { note self }
+    method note { note $self }
     #| Returns an uppercase version of the string
-    method ~uc    { self.${tr '[:lower:]','[:upper:]'} }
+    method ~uc    { $self.${tr '[:lower:]','[:upper:]'} }
     #| Returns an lowercase version of the string
-    method ~lc    { self.${tr '[:upper:]','[:lower:]'} }
+    method ~lc    { $self.${tr '[:upper:]','[:lower:]'} }
     #| Returns the number of characters in the string. **note:** This
     #| will depend on the locale of the terminal the script is running in.
-    method +chars { self.${wc '-m'|tr '-d',' '} }
+    method +chars { $self.${wc '-m'|tr '-d',' '} }
     #| Returns the number of bytes in the string.
-    method +bytes { self.${wc '-c'|tr '-d',' '} }
+    method +bytes { $self.${wc '-c'|tr '-d',' '} }
 
     #| Splits the string on a separator. Returns the string with each
     #| instance of the `$sep` replaced with `\n` as a [List].
     method @split(#|[The separator to split on]$sep) {
-        self.${
+        $self.${
           awk '-v',"FS=$sep", '{l = split($0,a); for (i = 0; i < l;) print a[++i]}'
          }
     }
     #| Returns true if the string isn't empty
-    method ?Bool { ${test self} }
+    method ?Bool { ${test $self} }
 
     constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
     {
@@ -55,7 +55,7 @@ augment Str {
     method ~subst(#|[The string to be replaced]$target,
                   #|[The string to replace it with]$replacement,
                   #|[Turns on global matching]Bool :$g){
-        self.${awk '-v',"g=$g",$subst-awk, :T($target),:R($replacement)};
+        $self.${awk '-v',"g=$g",$subst-awk, :T($target),:R($replacement)};
     }
     #| Returns true if the string contains `$needle`.
     #|{
@@ -65,12 +65,10 @@ augment Str {
     }
     method ?contains(#|[The string being searched for]$needle,
                      #|[Turns on case insensitive matching]Bool :$i) {
-            self.${awk '-v', 'RS=^$','-v',"t=$needle",'-v',"i=$i",
+            $self.${awk '-v', 'RS=^$','-v',"t=$needle",'-v',"i=$i",
                   '{exit(!index(i ? tolower($0) :$0, i ? tolower(t) : t))}'}
     }
 
-    # 'self' here is a hack to get the stop the compiler labeling these
-    # as static methods
     #| Returns true if the string starts with the argument.
     #|{
         my @urls = <http://github.com ftp://ftp.FreeBSD.org>;
@@ -81,7 +79,7 @@ augment Str {
             default { "well I'm not sure.." }
         }
     }
-    method ?starts-with(#|[True if the string starts-with this]$starts-with) is native { self; }
+    method ?starts-with(#|[True if the string starts-with this]$starts-with) is native {  }
 
     #| Returns true if the string ends with the argument.
     #|{
@@ -93,7 +91,7 @@ augment Str {
             when .ends-with('.io')  { say 'a moon of Jupiter' }
         }
     }
-    method ?ends-with(#|[True if the string ends-with this]$ends-with) is native { self; }
+    method ?ends-with(#|[True if the string ends-with this]$ends-with) is native {  }
 
-    method ~gist { self }
+    method ~gist { $self }
 }

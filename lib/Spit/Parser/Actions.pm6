@@ -346,12 +346,20 @@ method new-routine($/) {
     make $r;
 }
 
-method make-routine ($/,$type) {
-    my \routine-type = do given $type {
-        when 'sub' { SAST::SubDeclare }
-        when 'method'  { SAST::MethodDeclare }
+method make-routine ($/,$type,:$static) {
+    my $name = $<name>.Str;
+    $*ROUTINE = do given $type {
+        when 'sub' { SAST::SubDeclare.new(:$name) }
+        when 'method'  {
+            my $r = SAST::MethodDeclare.new(:$name,:$static);
+            unless $static {
+                for <$ @> {
+                    $r.invocants.push: $*CURPAD.declare: SAST::Invocant.new(sigil => $_,class-type => $*CLASS.class);
+                }
+            }
+            $r;
+        }
     };
-    $*ROUTINE = routine-type.new(name => $<name>.Str);
 }
 
 method on-switch ($/) {
@@ -503,13 +511,6 @@ method var ($/)   {
         name => $<name>.Str,
         sigil => $<sigil>.Str,
     );
-}
-
-method term:sym<self> ($/) {
-    SX::NoSelf.new.throw unless $*CLASS;
-    my $self = SAST::Invocant.new(type => $*CLASS.class);
-    $*ROUTINE.invocant-used //= $self;
-    make $self;
 }
 
 method term:name ($/) {

@@ -46,41 +46,41 @@ augment FD {
 
     #|Gets the next free file descriptor.
     #|**note:** This only kinda works.
-    method next-free(-->FD) {
+    static method next-free(-->FD) {
         ++$fd-count;
     }
 
     #|Redirects output from the invocant file descriptor to the
     #|argument file descriptor.
     method open-w(#|[The file descriptor to redirect to] FD $dst) {
-        ${exec :(self)>$dst};
+        ${exec :($self)>$dst};
     }
 
     #|Redirects output from the invocant file descriptor to the file.
     method open-file-w(#|[The file to redirect to]File $file) {
-        ${exec :(self)>$file}
+        ${exec :($self)>$file}
     }
 
     #| Closes redirection for this file descriptor.
     method close-w() {
-        ${exec :(self)> FD{-1}};
+        ${exec :($self)> FD{-1}};
     }
     #| Returns if the file descriptor is writable.
     method ?writable {
-        quietly { ${true :>self} }
+        quietly { ${true :>$self} }
     }
     #| Writes to the file descriptor.
     method write(#|[The data to write to the file descriptor]$data) {
-        $data.${ :> self};
+        $data.${ :> $self};
     }
 
     # No tests yet
-    method ~read { self.${cat} }
+    method ~read { $self.${cat} }
 
     #| Returns whether this file descriptor is linked to a terminal.
     #|{
         say $*OUT.tty;  #probably true
         say FD<42>.tty; #probably false
     }
-    method ?tty { ${test '-t', self} }
+    method ?tty { ${test '-t', $self} }
 }

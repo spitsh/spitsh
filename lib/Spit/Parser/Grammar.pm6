@@ -219,15 +219,15 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     rule declaration:sym<method> {
-        <sym>
+        [$<static>='static']? <sym>
         :my $*ROUTINE;
-        <routine-declaration('method')>
+        {} <routine-declaration('method',static => $<static>:exists)>
     }
 
-    rule routine-declaration($type){
+    rule routine-declaration(|c){
         <.newpad>
         :my $*DECL;
-        <.new-routine($type)>
+        <.new-routine(|c)>
         <trait>*
         [ <on-switch> || <blockoid> || <.expected("on switch or block to define routine")>]
         <.finishpad>
@@ -235,9 +235,9 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token fatarrow {['-->'| '⟶']}
-    rule new-routine($type){
+    rule new-routine(|c){
         <return-type-sigil>?$<name>=<.identifier>
-        { $*DECL = $*ACTIONS.make-routine($/,$type) }
+        { $*DECL = $*ACTIONS.make-routine($/,|c) }
         <.attach-pre-doc>
         [
             '('

@@ -1,7 +1,7 @@
 use Test;
 plan 3;
 class Foo {
-    method concat-with($a) is rw { self ~ $a }
+    method concat-with($a) is rw { $self ~ $a }
     method static-concat($a) is rw { 'bar' ~ $a };
 }
 

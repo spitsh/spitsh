@@ -123,8 +123,10 @@ multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.name,:$fal
 }
 
 multi method gen-name(SAST::PosParam:D $_) {
-    return  ~(.ord + (.signature.invocant-used ?? 1 !! 0 ) + 1);
+    return  ~(.ord + (.signature.has-invocant ?? 1 !! 0 ) + 1);
 }
+
+multi method gen-name(SAST::Invocant:D $) { '1' }
 
 multi method gen-name(SAST::Var:D $_ where { $_ !~~ SAST::VarDecl }) {
     self.gen-name(.declaration);
@@ -657,7 +659,6 @@ multi method arg(SAST::Regex:D $_) {
     self.arg(.src);
 }
 
-multi method arg(SAST::Invocant:D $_,:$flat) { self.quote: '$1', :$flat }
 multi method arg(SAST::IntExpr:D $_) { '$((', |self.int-expr($_),'))' }
 multi method arg(SAST::Increment:D $_,:$sink) {
     do if .[0] ~~ SAST::Var {
@@ -864,7 +865,6 @@ multi method cap-stdout(SAST::Ternary:D $_,:$tight) {
 }
 
 multi method int-expr(SAST:D $_) { '$(',|self.cap-stdout($_),')' }
-multi method int-expr(SAST::Invocant:D $_) { '$1' }
 multi method int-expr(SAST::IntExpr:D $_,:$tight) {
     ('(' if $tight),|self.int-expr(.[0]),.sym,|self.int-expr(.[1],:tight),(')' if $tight);
 }

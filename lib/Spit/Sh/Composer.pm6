@@ -461,10 +461,6 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
 
 method inline-value($inner,$outer,$_ is raw) {
 
-        # if arg inside inner is invocant use the invocant of the original call
-    when SAST::Invocant {
-        $outer.invocant;
-    }
     # if arg inside inner is a param use the corresponding arg from the original call
     when SAST::Var {
         my $decl := .declaration;
@@ -473,6 +469,8 @@ method inline-value($inner,$outer,$_ is raw) {
             $outer.pos[$decl.ord];
         } elsif $decl ~~ SAST::NamedParam {
             $outer.named{$decl.name} || $outer.stage3-node(SAST::BVal,val => False);
+        } elsif $decl ~~ SAST::Invocant {
+            $outer.invocant;
         } else {
             #XXX: since we only inline blocks with 1 node in them this should be ok
             # not $inner.deep-first(* =:= $decl)

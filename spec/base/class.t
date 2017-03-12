@@ -4,26 +4,26 @@ plan 10;
 
 {
     class Foo {
-        method ~doit { "foo" }
+        static method ~doit { "foo" }
     }
 
     class Bar {
-        method ~doit { "bar" }
+        static method ~doit { "bar" }
     }
 
-    is Foo.doit,"foo","basic method call works";
-    is Bar.doit,"bar","basic method call works again";
+    is Foo.doit,"foo","basic static method call";
+    is Bar.doit,"bar","basic static method call again";
 }
 
 {
     class Parent {
-        method ~dont-override { ":D"}
-        method ~override      { "parent" }
+        static method ~dont-override { ":D"}
+        static method ~override      { "parent" }
     }
 
     class Child is Parent {
-        method ~override { "child" }
-        method ~child-only { "child-only" }
+        static method ~override { "child" }
+        static method ~child-only { "child-only" }
     }
 
     is Child.dont-override,':D','child inherited from parent';
@@ -42,8 +42,8 @@ plan 10;
 
 {
     class Foo {
-        method ~second($a) { self ~ $a ~ "baz"}
-        method ~first($a)  { self.second($a) }
+        method ~second($a) { $self ~ $a ~ "baz"}
+        method ~first($a)  { $self.second($a) }
     }
 
     is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";

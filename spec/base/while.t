@@ -19,9 +19,9 @@ plan 20;
 }
 
 class Foo is Int {
-    method ?Bool { self <= 8 }
-    method squared(--> Foo) { self * self }
-    method times2(--> Foo)  { self + self }
+    method ?Bool { $self <= 8 }
+    method squared(--> Foo) { $self * $self }
+    method times2(--> Foo)  { $self + $self }
 }
 
 {

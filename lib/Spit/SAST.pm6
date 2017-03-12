@@ -218,6 +218,12 @@ sub type-from-sigil(Str:D $sigil --> Spit::Type) {
     };
 }
 
+sub symbol-type-from-sigil(Str:D $_ --> SymbolType) {
+    when '$' { SCALAR }
+    when '@' { ARRAY  }
+    default { die "got boigus sigil '$_'" }
+}
+
 # XXX: why are there two? This can be done better.
 role SAST::Dependable {
     has $.referenced is rw;
@@ -256,7 +262,8 @@ class SAST::Children does SAST {
     method type { tAny }
 
     method all-deps {
-        (|@.children.map(*.all-deps).flat,|self.depends).grep({ $_ !~~ SAST::Param });
+        # XXX: THIS IS HORRIBLE AND HAS TO DIE ASAP. NEED TO USE LEXICAL ANALYSIS INSTEAD.
+        (|@.children.map(*.all-deps).flat,|self.depends).grep({ $_ !~~ SAST::Param|SAST::Invocant });
     }
 
     method descend($self is rw: &block) {
@@ -641,7 +648,6 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
     has Str $.name is required;
     has SAST::Signature $.signature is rw;
     has Spit::Type $.return-type is rw = tAny();
-    has $.invocant-used is rw;
     has @.os-candidates is rw;
     has $.is-native is rw;
     has $.chosen-block is rw;
@@ -653,7 +659,6 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
     method spit-gist { "sub {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
-        $!signature.invocant-used = $!invocant-used;
         $!signature.do-stage2(tAny);
         # make os-candidates into a list of writable pairs
         @!os-candidates .= flatmap: -> $os,$block { cont-pair $os,$block };
@@ -682,13 +687,17 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
 
 class SAST::MethodDeclare is SAST::RoutineDeclare {
     has $.rw is rw;
+    has $.static is rw;
     has SAST::ClassDeclaration $.invocant-type is rw;
+    has @.invocants;
 
     method gist { "method {$.name}\({$.signature.gist})\{ ... \}" }
     method spit-gist { "method {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
+        $.signature.has-invocant = True unless $!static;
         $.return-type = $.invocant-type.class if $!rw;
+        $_ .= do-stage2(tAny) for @!invocants;
         nextsame;
     }
 
@@ -705,9 +714,9 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         $!invocant-type.class.^dispatcher.get(self.name,$os);
     }
 
-    method static { !$.invocant-used }
-
     method declarator { 'method' }
+
+    method children { |callsame,|@!invocants }
 }
 
 
@@ -842,7 +851,7 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
 
     method stage2($ctx) {
         $.invocant .= do-stage2(tAny) unless $.invocant.stage2-done;
-        if self.declaration.invocant-used && $.invocant.WHAT === SAST::Type {
+        if not $.declaration.static and $.invocant.WHAT === SAST::Type and !$.invocant.ostensible-type.enum-type {
             SX.new(message => q|Instance method called on a type.|,:$.match).throw;
         }
         callsame;
@@ -876,9 +885,16 @@ class SAST::SubCall is SAST::Call {
     method spit-gist { $.name ~ "(...)" }
 }
 
-
-class SAST::Invocant does SAST {
-    has $.type is required;
+class SAST::Invocant does SAST does SAST::Declarable {
+    has $.sigil is required;
+    has $.class-type is required;
+    method name { 'self' }
+    method symbol-type { symbol-type-from-sigil($!sigil) }
+    method gist { $.node-name ~ "($.spit-gist)" }
+    method spit-gist { "{$!sigil}self" }
+    method type { $!class-type }
+    method dont-depend { True }
+    method stage2 ($) { self }
 }
 
 class SAST::Param does SAST does SAST::Declarable {
@@ -915,7 +931,8 @@ class SAST::NamedParam is SAST::Param {
 class SAST::Signature is SAST::Children {
     has SAST::PosParam @.pos;
     has SAST::NamedParam %.named;
-    has $.invocant-used is rw;
+    has $.has-invocant is rw;
+
     method stage2 ($) {
         for @!pos.kv -> $i,$p is rw {
             $p.ord = $i;

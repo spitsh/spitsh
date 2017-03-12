@@ -3,12 +3,12 @@ use Test;
 plan 10;
 
 class Foo[Type] {
-    method doit(--> Type) { 3 }
-    method echo(Type $a --> Type)  { $a }
+    static method doit(--> Type) { 3 }
+    static method echo(Type $a --> Type)  { $a }
 }
 
 augment Foo {
-    method aug-echo(Type $a --> Type) { $a }
+    static method aug-echo(Type $a --> Type) { $a }
 }
 
 ok Foo[Int].doit ~~ Int,"Foo[Int].method returns Int";
