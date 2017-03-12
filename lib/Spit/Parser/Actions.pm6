@@ -347,7 +347,6 @@ method new-routine($/) {
 }
 
 method make-routine ($/,$type) {
-    my (:@pos,:%named) := ($<paramlist> andthen .ast);
     my \routine-type = do given $type {
         when 'sub' { SAST::SubDeclare }
         when 'method'  { SAST::MethodDeclare }
