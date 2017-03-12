@@ -192,24 +192,26 @@ method compile(SAST::CompUnit:D $CU --> Str:D) {
     @compiled.join("");
 }
 
-multi method node(SAST::CompUnit:D $*CU) {
-     my Str:D @body = |self.node($*CU.block,|%_).grep(*.defined);
-    @body;
-}
-
 proto method node($node) {
+    #note "node: {$node.^name}";
     self.check-stage3($node);
     {*};
 }
 
 proto method arg($node) {
+    #note "arg: {$node.^name}";
     self.check-stage3($node);
     {*};
 }
 
 proto method cond($node) {
+    #note "cond: {$node.^name}";
     self.check-stage3($node);
     {*};
+}
+
+multi method node(SAST::CompUnit:D $*CU) {
+    |self.node($*CU.block,|%_).grep(*.defined);
 }
 
 method compile-nodes(@sast,:$one-line,:$indent) {
