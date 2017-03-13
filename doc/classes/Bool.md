@@ -1,11 +1,11 @@
 # Bool
  Bool refers to the Boolean type. They can be used as values but more often represent whether a shell command exited successfully. In [Str](Str.md) context a Bool will be '1' if true and "" (they empty string) if false.
 ```perl6
-if False.  {
-    say ("foo" eq "bar").WHAT; #-> Bool
-    say "foo" eq "bar"; #-> ""
-    say "foo" eq "foo"; #-> 1
-}
+say True.WHAT #-> Bool
+say False.WHAT #-> Bool
+say ("foo" eq "bar").WHAT; #-> Bool
+say False; #-> ''
+say True;  #-> '1'
 ```
 ## Int
 >method Int( ⟶ [Int](./Int.md))

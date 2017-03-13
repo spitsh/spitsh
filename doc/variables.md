@@ -23,16 +23,16 @@ say "It's some other kind of Ubuntu XD"
 # $IFS
  The internal field separator. For Spit it's always `\n`.
 # $?CAP
- File descriptor used to represent the STDOUT of a cmd inside the script rather than the script itself. '~' is a short alias for `$?CAP` in `$(..)` commands.
+ File descriptor used to represent the STDOUT of a cmd inside the script rather than the script itself. '~' is a short alias for `$?CAP` in `${..}` commands.
 ```perl6
 # captures both the STDOUT and STDERR of ls into $res
-my $res = $(ls '/etc','/I/dont/exist' ::>~);
+my $res = ${ls /etc '/I/dont/exist' *>~};
 say "ls returned $res";
 ```
 # $*NULL
- File descriptor redirected to '/dev/null' by default. 'X' is a short alias for `$*NULL` in `$(..)` commands.
+ File descriptor redirected to '/dev/null' by default. 'X' is a short alias for `$*NULL` in `${..}` commands.
 ```perl6
-if $(command '-v','perl',:>X) {
+if ${command -v perl >X} {
     say "perl exists";
 }
 ```
@@ -42,11 +42,11 @@ if $(command '-v','perl',:>X) {
  $*OUT.write("hello world") # same as print("hello world")
 ```
 # $*ERR
- File descriptor connected to the STDERR of the script.  '!' is a short alias for `$*ERR` in `$(..)` commands.
+ File descriptor connected to the STDERR of the script.  '!' is a short alias for `$*ERR` in `${..}` commands.
 ```perl6
 $*ERR.write("something to script's stderr");
-$(printf "allo earth" :> $*ERR);
-$(printf "allo earth" :>!); #shorthand
-$(ls '/I/dont/exist', :!> $*OUT); #redirect STDERR to script's STDOUT
-my $error = $(ls '/I/dont/exist', :!>~); # capture STDERR into return value of cmd
+${printf "allo earth" > $*ERR};
+${printf "allo earth" >!}; #shorthand
+${ls '/I/dont/exist' !> $*OUT}; #redirect STDERR to script's STDOUT
+my $error = ${ls '/I/dont/exist' !>~}; # capture STDERR into return value of cmd
 ```
