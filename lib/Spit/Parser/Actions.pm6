@@ -460,10 +460,9 @@ method list ($/) {
         SAST::List.new($expr,match => $<EXPR>);
     }
 }
-
-method termish($/) {
-    my $ret = $<term>.ast;
-    for |$<postfix>,|$<prefix> {
+sub reduce-term(Match:D $term,@prefixes,@postfixes) {
+    my $ret = $term.ast;
+    for |@postfixes,|@prefixes {
         my $ast = .ast;
         if $ast ~~ Callable {
             $ret = $ast.($ret);
@@ -472,7 +471,10 @@ method termish($/) {
             $ret = $ast;
         }
     }
-    make $ret;
+    $ret
+}
+method termish($/) {
+    make reduce-term($<term>,$<prefix>,$<postfix>);
 }
 
 method term:true  ($/) { make SAST::BVal.new(val => True) }
@@ -552,49 +554,6 @@ method term:cmd ($/) {
     make $<cmd>.ast;
 }
 
-method cmd ($/) {
-    my $status;
-    my $cmd;
-
-    if not $<cmd-body> {
-        $cmd = SAST::WriteToFile.new;
-    } else {
-        for $<cmd-body>.map(*.ast) -> $next {
-            $next.in = $cmd with $cmd;
-            $cmd = $next;
-        }
-    }
-
-    my &make-fd =  {
-        SAST::Blessed.new(class-name => 'FD',SAST::IVal.new(val => $_),match => $/);
-    }
-    for $<cmd-out> -> $out {
-        my @in-fd = (
-            ($out<all-in> andthen (make-fd(1),make-fd(2)))
-            or $out<fd-in> andthen .ast
-            or ($out<stderr-in> && make-fd(2))
-            or make-fd(1);
-        );
-
-        my $out-fd = $out<null-out>
-        ?? { $*SETTING.lookup(SCALAR,'*NULL').gen-reference(match => $out<null-out>) }
-        !! $out<cap-out>
-        ?? { $*SETTING.lookup(SCALAR,'?CAP').gen-reference(match => $out<cap-out>)      }
-        !! $out<stderr-out>
-        ?? { $*SETTING.lookup(SCALAR,'*ERR').gen-reference(match => $out<stderr-out>)   }
-        !! { $out<out-fd>.ast.deep-clone };
-
-        for @in-fd -> $in-fd {
-            if $out<write> {
-                $cmd.write.append($in-fd,$out-fd());
-            } else {
-                $cmd.append.append($in-fd,$out-fd());
-            }
-        }
-    }
-    make $cmd;
-}
-
 sub gen-method-call($/) {
     my (:@pos,:%named) := $<args>.ast;
     my $name = $<name>.Str;
@@ -635,13 +594,8 @@ method term:pair ($/) {
     make SAST::Pair.new(:$key,:$value);
 }
 
-method cmd-body ($/) {
-    my (:@pos,:%named) := $<args>.ast;
-    make SAST::Cmd.new(
-        cmd => ($<cmd>.values[0].ast || SAST::SVal.new(val => $<cmd><identifier>.Str)) ,
-        set-env => %named,
-        |@pos,
-    );
+method term:fatarrow ($/) {
+    make SAST::Pair.new( key => SAST::SVal.new(val => $<key>.Str), value => $<value>.ast);
 }
 
 method eq-infix:sym<&&> ($/)  { make SAST::Junction.new }
@@ -769,6 +723,86 @@ method os   ($/) { make $*CURPAD.lookup(CLASS,$/.Str,match => $/).class }
 
 method p5regex ($/) { make $<src>.ast }
 
+method cmd ($/) {
+    my $cmd;
+
+    for $<cmd-body>.map(*.ast) -> $next {
+        $next.in = $cmd with $cmd;
+        $cmd = $next;
+    }
+
+    make $cmd;
+}
+
+method cmd-body ($/) {
+    my (SAST:D @pos,SAST:D %set-env,SAST:D @write,SAST:D @append);
+    for $<cmd-arg> {
+        with $_<cmd-term> {
+            @pos.push: .ast;
+        }
+        orwith $_<bare> {
+            @pos.push: SAST::SVal.new(val => .Str);
+        }
+        orwith $_<EXPR> {
+            @pos.push: .ast
+        }
+        orwith $_<pair>.ast {
+            %set-env{.key.compile-time} = .value;
+        }
+        orwith $_<output-redir> {
+            my (@add-write,@add-append) := .ast;
+            @write.append(@add-write);
+            @append.append(@add-append);
+        }
+    }
+
+    my $cmd = @pos ?? SAST::Cmd.new(cmd => @pos.shift,|@pos,:%set-env) !! SAST::WriteToFile.new;
+    $cmd.write = @write;
+    $cmd.append = @append;
+    make $cmd;
+}
+
+method cmd-term ($/) {
+    make reduce-term($/[0].values[0],(),$/<postfix>);
+}
+
+
+method output-redir($/) {
+    my &make-fd =  { SAST::Blessed.new(class-name => 'FD',SAST::IVal.new(val => $_),match => $/) }
+    my $src = $<src>;
+    my @src-fd = (
+        ($src<all> andthen (make-fd(1),make-fd(2)))
+        or $src<fd> andthen .ast
+        or ($src<err> && make-fd(2))
+        or make-fd(1);
+    );
+
+    my $dst = $<dst>;
+    my $gen-dst = $dst<null>
+    ?? { $*SETTING.lookup(SCALAR,'*NULL').gen-reference(match => $dst<null>)  }
+    !! $dst<cap>
+    ?? { $*SETTING.lookup(SCALAR,'?CAP').gen-reference(match => $dst<cap>)    }
+    !! $dst<err>
+    ?? { $*SETTING.lookup(SCALAR,'*ERR').gen-reference(match => $dst<err>) }
+    !! { $dst<fd>.ast.deep-clone };
+
+    my (@write,@append);
+    for @src-fd -> $src-fd {
+        if $<write> {
+            @write.append: $src-fd,$gen-dst();
+        } else {
+            @append.append: $src-fd,$gen-dst();
+        }
+    }
+    make (@write,@append);
+}
+
+method quote:double-quote ($/) { make $<str>.ast andthen .match = $/;  }
+method quote:single-quote ($/) { make $<str>.ast andthen .match = $/; }
+method quote:sym<qq>      ($/) { make $<str>.ast andthen .match = $/; }
+method quote:sym<q>       ($/) { make $<str>.ast andthen .match = $/; }
+method balanced-quote ($/)     { make $<str>.ast andthen .match = $/; }
+
 method angle-quote ($/) {
     my $val = $<str>.Str;
     my SAST::CompileTimeVal @parts = $val.split(" ").map: {
@@ -784,12 +818,6 @@ method angle-quote ($/) {
         @parts[0];
     }
 }
-
-method quote:double-quote ($/) { make $<str>.ast andthen .match = $/;  }
-method quote:single-quote ($/) { make $<str>.ast andthen .match = $/; }
-method quote:sym<qq>      ($/) { make $<str>.ast andthen .match = $/; }
-method quote:sym<q>       ($/) { make $<str>.ast andthen .match = $/; }
-method balanced-quote ($/)     { make $<str>.ast andthen .match = $/; }
 method quote:sym<eval> ($/) {
     my $src = $<balanced-quote>.ast;
     my %opts = $<args>.ast.<named> || Empty;

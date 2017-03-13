@@ -10,38 +10,38 @@
 
 augment File {
     #| Returns True if the file exists.
-    method ?exists { ${test '-e', $self}  }
+    method ?exists { ${test -e $self}  }
     #| Alias for .exists
     method ?e      { $self.exists }
     #| In Bool context, Files return [.exists](#exists)
     method ?Bool { $self.exists }
     #| Returns True if the file is a directory]
-    method ?dir    { ${test '-d', $self} }
+    method ?dir    { ${test -d $self} }
     #| Alias for .dir
     method ?d      { $self.dir }
     #| Returns True if the file is file
-    method ?file   { ${test '-f', $self}  }
+    method ?file   { ${test -f $self}  }
     #| Alias for .file
     method ?f      { $self.file }
     #| Removes (unlinks) the file and returns True if it was successful.
     #| If the file is a directory it will recursively it's children.
-    method ?remove { ${rm '-rf', $self :!>X} }
+    method ?remove { ${rm -rf $self !>X} }
     #| Returns True if the file is empty
-    method ?empty  { ! ${test '-s', $self} }
+    method ?empty  { ! ${test -s $self} }
     #| Returns True if the file is writable by the current user.
-    method ?writable { ${test '-w', $self}  }
+    method ?writable { ${test -w $self}  }
     #| Alias for .writable
     method ?w        { $self.writable        }
     #| Returns True if the file is executable
-    method ?executable { ${test '-x', $self} }
+    method ?executable { ${test -x $self} }
     #| Alias for .executable
     method ?x          { $self.executable     }
     #| Returns True if the file is readable by the current user.
-    method ?readable   { ${test '-r', $self} }
+    method ?readable   { ${test -r $self} }
     #| Alias for .readable
     method ?r          { $self.readable }
     #| Returns the size of the file in bytes
-    method +size   { ${wc '-c', $self | awk '{print $1}'}  }
+    method +size   { ${wc -c $self | awk '{print $1}'}  }
     #| Alias for .size
     method +s      { $self.size }
 
@@ -58,13 +58,13 @@ augment File {
     #| Calls chmod(1) with the file as the last argument.
     #|{ .chmod(400) if File<foo.txt>.writeable }
     method chmod(#|[The argument passed to chmod(1)]$mode) {
-        ${chmod $mode, $self}
+        ${chmod $mode $self}
     }
     #| Returns the name of user who owns the file.
-    method ~owner  { ${ls '-ld',$self | awk '{print $3}'} }
+    method ~owner  { ${ls -ld $self | awk '{print $3}'} }
 
     #| Appends raw data to the file.
-    method append(#|[data to append] $data) { $data.${ :>> $self } }
+    method append(#|[data to append] $data) { $data.${ >> $self } }
 
     #| Adds a line to a file. If the file doesn't end in a `\n`, a one
     #| will be appended before the line being added.
@@ -81,11 +81,11 @@ augment File {
     #| Copies the file to another path
     method copy-to(#|[destination path] $dst,
                    #|[preserve permissions] Bool :$p){
-        ${cp "-r{$p && 'p'}", $self, $dst}
+        ${cp "-r{$p && 'p'}" $self $dst}
     }
     #| Sets the file's contents to `$data`. If the file doesn't exist
     #| it will be created.
-    method write($data)  { $data.${ :> $self  } }
+    method write($data)  { $data.${ > $self  } }
 
     #| Returns true if the file contains the string
     #|{ say "we're in trouble" unless File</etc/hosts>.contains("localhost") }
@@ -155,8 +155,8 @@ augment File {
     }
     static method tmp(--> File) {
         my File $tmpfile = ${mktemp};
-        ${printf '%s\n', $tmpfile :>> $tmplist};
+        ${printf '%s\n' $tmpfile >> $tmplist};
         $tmpfile;
-        END { ${rm |$tmplist.read,$tmplist } }
+        END { ${rm (|$tmplist.read) $tmplist } }
     }
 }

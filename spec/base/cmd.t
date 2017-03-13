@@ -12,22 +12,22 @@ my $var = "foo";
 is $var.${sed 's/foo/bar/'},"bar","pipe works with variable as input";
 
 # , is optional after the first arg
-is ${'printf' '%s','win'},'win','quoted cmd';
-is ${'printf', '%s','win'},'win','quoted cmd with ,';
-is ${"printf" '%s','win'},'win','double quoted cmd';
-is ${"printf", '%s','win'},'win','double quoted cmd with ,';
-is ${{ ${printf 'printf'} } '%s','win'},'win','cmd from block expr with ,';
-is ${{ ${printf 'printf'} },'%s','win'},'win','cmd from block expr';
+is ${'printf' '%s' 'win'},'win','quoted cmd';
+is ${'printf' '%s' 'win'},'win','quoted cmd with ,';
+is ${"printf" '%s' 'win'},'win','double quoted cmd';
+is ${"printf" '%s' 'win'},'win','double quoted cmd with ,';
+is ${ (${printf 'printf'}) '%s' 'win'},'win','cmd from block expr with ,';
+is ${ (${printf 'printf'}) '%s' 'win'},'win','cmd from block expr';
 
-is ${printf 'foo' :>X },'',':>X';
+is ${printf 'foo' >X },'','>X';
 
 {
     my $data = eval{ $*OUT.write("1"); $*ERR.write("2") };
 
-    is $data.${sh ::>X},'','::>X';
-    is $data.${sh ::>~},"12",'::>~';
-    is $data.${sh :!>~ :>X},'2',':>X :!>~';
-    is $data.${sh :!>$?CAP :>$*NULL},'2',':!>$?CAP :>$*NULL';
+    is $data.${sh *>X},'','*>X';
+    is $data.${sh *>~},"12",'*>~';
+    is $data.${sh !>~ >X},'2','>X !>~';
+    is $data.${sh !>$?CAP >$*NULL},'2','!>$?CAP >$*NULL';
 
 }
 

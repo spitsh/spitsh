@@ -12,35 +12,35 @@ class Pkg {
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
     method ?install on {
-        RHEL { ${yum 'install','-y',$self ::>X} }
+        RHEL { ${yum install -y $self *>X} }
         Debian {
-            unless ${apt-get 'install','-y','-q',$self ::>X} or $updated {
+            unless ${apt-get install -y -q $self *>X} or $updated {
                 # for now see if we can install and if not try an update and try again.
                 # TODO: figure out a better way?
                 $self.update-pkgs;
-                ${apt-get 'install','-y','-q',$self ::>X};
+                ${apt-get install -y -q $self *>X};
             }
         }
     }
 
     #| Returns True if a version of the package is installed.
     method ?installed on {
-        Debian { ${dpkg '-s',$self ::>X} }
-        RHEL   { ${yum 'list','installed',$self ::>X} }
+        Debian { ${dpkg -s $self *>X} }
+        RHEL   { ${yum list installed $self *>X} }
     }
 
     #| Tells the system specific package manager to update its list of pacakges.
     method update-pkgs on {
         Debian {
-            ${apt-get 'update' ::>X};
+            ${apt-get update *>X};
             $updated = True;
         }
-        RHEL { ${yum 'check-update'} }
+        RHEL { ${yum check-update} }
     }
     #| Gets the version of the currently installed package
     method ~version on {
-        Debian { ${dpkg '-s',$self              |sed '-n', 's/^Version: //p' } }
-        RHEL   { ${yum 'info','installed',$self |sed '-n', 's/Version *: //p'} }
+        Debian { ${dpkg -s $self |sed -n 's/^Version: //p' } }
+        RHEL   { ${yum info installed $self |sed -n 's/Version *: //p'} }
     }
 
     #| In Bool context Pkgs return `.installed`

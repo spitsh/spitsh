@@ -73,12 +73,10 @@ grammar Spit::Grammar is Spit::Lang {
         ]?
     }
 
-    token apostrophe {
-        <[ ' \- ]>
-    }
+    token hyphen { '-' }
 
     token identifier {
-        <.ident> [ <.apostrophe> <.ident> ]*
+        <.ident> [ <.hyphen> <.ident> ]*
     }
 
     proto token pragma {*}
@@ -234,7 +232,7 @@ grammar Spit::Grammar is Spit::Lang {
         <.ENDSTMT>
     }
 
-    token fatarrow {['-->'| '⟶']}
+    token longarrow {['-->'| '⟶']}
     rule new-routine(|c){
         <return-type-sigil>?$<name>=<.identifier>
         { $*DECL = $*ACTIONS.make-routine($/,|c) }
@@ -242,7 +240,7 @@ grammar Spit::Grammar is Spit::Lang {
         [
             '('
             [
-                ||<paramlist> [<.fatarrow> [$<return-type>=<type> || <.panic("invalid return type")> ] ]?
+                ||<paramlist> [<.longarrow> [$<return-type>=<type> || <.panic("invalid return type")> ] ]?
                 || <.expected("valid parameters")>
             ]
             ')'
@@ -378,35 +376,24 @@ grammar Spit::Grammar is Spit::Lang {
         { $/.make($*ACTIONS.var-create($/,$decl-type) ) }
     }
 
-    rule term:pair {
-        ':'[
-            |$<key>=<identifier>['(' $<value>=<.EXPR> ')'|$<value>=<angle-quote>]?
-            |<var>
-        ]
-        | $<key>=<identifier>\h*'=>' $<value>=<.EXPR('i<=')>
+    token term:pair {
+        ':'
+          [
+              |$<key>=<.identifier>['(' $<value>=<.EXPR> ')'|$<value>=<.angle-quote>]?
+              |<var>
+          ]
+    }
+
+    token term:fatarrow {
+        $<key>=<.identifier>
+        \h*'=>'<.ws>
+        $<value>=<.EXPR('i<=')>
     }
 
     rule term:parens {
         '(' <statement> [')' | <.expected("closing )")>]
     }
 
-    rule cmd {
-        '${'
-        [<cmd-body> *% ['|'<!before "\>"> <.ws> ]]
-        <cmd-out>*
-        ['}' || <.expected("closing }")>]
-    }
-
-    rule cmd-out {
-        ':'
-        [ $<all-in>=':'| $<stderr-in>='!' | '(' $<fd-in>=<.EXPR> ')' ]?
-        [ $<append>='>>' || $<write>='>' ][
-              |$<null-out>='X'
-              |$<cap-out>='~'
-              |$<stderr-out>='!'
-              | {} '' $<out-fd>=<.EXPR>
-            ]
-    }
     rule term:cmd { <cmd> }
 
     # .call for @something
@@ -416,21 +403,11 @@ grammar Spit::Grammar is Spit::Lang {
     }
     # -->Pkg.install unless Cmd<curl>
     rule term:topic-cast {
-        <.fatarrow> [ <type> || <.expected('A type to cast $_ to')> ]
+        <.longarrow> [ <type> || <.expected('A type to cast $_ to')> ]
     }
 
     token term:regex {
         <p5regex>
-    }
-
-    rule cmd-body {
-        $<cmd>=(
-            |<identifier>
-            |<var> ','?
-            |<?before '"'|"'"> <quote> ','?
-            |<block> ','?
-        )
-        <args>?
     }
 
     proto token eq-infix {*}
@@ -445,7 +422,7 @@ grammar Spit::Grammar is Spit::Lang {
     proto token infix {*};
 
     token infix:eq-infix { $<sym>=<eq-infix> <!before '='> }
-    token infix:sym<=> { <eq-infix>?<sym> }
+    token infix:sym<=> { <eq-infix>?<sym> <!before \>> }
     token infix:sym<,>   { <sym> }
     token infix:sym<~~> { <sym> }
 
@@ -476,7 +453,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token postfix:sym<++>  { <sym> }
     token postfix:sym<-->  { <sym> <!before \>> }
-    token postfix:sym<⟶> { <.fatarrow> [<type> || <.expected("A type to cast to.")>] }
+    token postfix:sym<⟶> { <.longarrow> [<type> || <.expected("A type to cast to.")>] }
     token postfix:sym<[ ]> {  <index-accessor> }
 
     token index-accessor { '['<EXPR>']' }
@@ -519,6 +496,45 @@ grammar Spit::Grammar is Spit::Lang {
         '/'$<src>=<.LANG('Quote-rx',:closer</>)> '/'
     }
 
+    rule cmd {
+        '${'
+        [ <.ws> <cmd-body> <.ws> ] +% '|'
+        ['}' || <.expected("} to finish shell command")>]
+    }
+
+    token cmd-body {
+        [<!before <.ws><[|}]>> <cmd-arg> ]+ %
+        [\s<.ws> || (',' <.panic("comma in command arguments. Use whitespace to separate arguemnts")>) ]
+    }
+
+    token cmd-arg {
+        | <cmd-term>
+        | <output-redir>
+        | $<pair>=<::("term:pair")>
+        | $<bare>=[\w+|<.hyphen>]+
+        | {} <.panic('command argument. Try putting "(...)" around expressions')>
+    }
+
+    token cmd-term {
+        (<var> |'(' <EXPR> ')' <![<>]> |<quote>) <postfix>*
+    }
+
+    token output-redir {
+        $<src>=(
+            |$<all>='*'
+            |'(' $<fd>=<.EXPR> ')'
+            |$<err>='!'
+        )?
+        [$<append>='>>' | $<write>='>']
+        $<dst>=(
+            | $<null>='X'
+            | $<cap>='~'
+            | $<err>='!'
+            | {} <.ws> [$<fd>=<.cmd-term> ||
+                        <.panic('ouput redirection destination. Try putting "(...)" around expressions')>]
+        )
+    }
+
     proto token quote {*}
 
 
@@ -552,7 +568,7 @@ grammar Spit::Grammar is Spit::Lang {
         :my @tweaks;
         [
             |<opener>
-            |<!{$bracket-only}> $<open-and-close>=[<!before <.apostrophe>|<.identifier>> .]
+            |<!{$bracket-only}> $<open-and-close>=[<!before <.hyphen>|<.identifier>> .]
         ]
         {
             @tweaks = .Slip with $tweaks;
@@ -570,12 +586,12 @@ grammar Spit::Grammar is Spit::Lang {
         $<str>=<.LANG($lang,:$opener,:$closer,:tweaks(|@tweaks,'balanced'))> [$closer || <.expected("closing $closer")>]
     }
 
-    token quote:sym<eval> {
-        <sym>['(' <args> ')']?<balanced-quote('Quote-q')>
+    token angle-quote {
+        ['<'\s*] ~ [\s*'>'] $<str>=<-[>]>*
     }
 
-    token angle-quote {
-         ['<'\s*] ~ [\s*'>'] $<str>=<-[>]>*
+    token quote:sym<eval> {
+        <sym>['(' <args> ')']?<balanced-quote('Quote-q')>
     }
 
     token ws {
@@ -583,7 +599,6 @@ grammar Spit::Grammar is Spit::Lang {
             | \s+
             | '#'[<doc-comment>|| \N* ]
         ]*
-
     }
 
     token doc-comment {

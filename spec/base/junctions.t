@@ -154,7 +154,7 @@ my $false = False;
 
 {
     class Bar {
-        method ?Bool { $self.${grep '-Eq',$self} }
+        method ?Bool { $self.${grep -Eq $self} }
     }
 
     is Bar<f> || $true,'f',   '1. .Bool inlined to cmd canary';

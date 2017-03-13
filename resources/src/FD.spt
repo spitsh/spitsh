@@ -9,10 +9,10 @@ constant $*OUT = {
 #| short alias for `$*ERR` in `${..}` commands.
 #|{
     $*ERR.write("something to script's stderr");
-    ${printf "allo earth" :> $*ERR};
-    ${printf "allo earth" :>!}; #shorthand
-    ${ls '/I/dont/exist', :!> $*OUT}; #redirect STDERR to script's STDOUT
-    my $error = ${ls '/I/dont/exist', :!>~}; # capture STDERR into return value of cmd
+    ${printf "allo earth" > $*ERR};
+    ${printf "allo earth" >!}; #shorthand
+    ${ls '/I/dont/exist' !> $*OUT}; #redirect STDERR to script's STDOUT
+    my $error = ${ls '/I/dont/exist' !>~}; # capture STDERR into return value of cmd
 }
 constant FD $*ERR = 2;
 #|File descriptor used to represent the STDOUT of a cmd inside the
@@ -20,7 +20,7 @@ constant FD $*ERR = 2;
 #|`$?CAP` in `${..}` commands.
 #|{
     # captures both the STDOUT and STDERR of ls into $res
-    my $res = ${ls '/etc','/I/dont/exist' ::>~};
+    my $res = ${ls /etc '/I/dont/exist' *>~};
     say "ls returned $res";
 }
 constant FD $?CAP = 1;
@@ -28,7 +28,7 @@ constant FD $?CAP = 1;
 #|File descriptor redirected to '/dev/null' by default. 'X' is a short
 #|alias for `$*NULL` in `${..}` commands.
 #|{
-    if ${command '-v','perl',:>X} {
+    if ${command -v perl >X} {
         say "perl exists";
     }
 }
@@ -53,25 +53,25 @@ augment FD {
     #|Redirects output from the invocant file descriptor to the
     #|argument file descriptor.
     method open-w(#|[The file descriptor to redirect to] FD $dst) {
-        ${exec :($self)>$dst};
+        ${exec ($self)> $dst};
     }
 
     #|Redirects output from the invocant file descriptor to the file.
     method open-file-w(#|[The file to redirect to]File $file) {
-        ${exec :($self)>$file}
+        ${exec ($self)> $file}
     }
 
     #| Closes redirection for this file descriptor.
     method close-w() {
-        ${exec :($self)> FD{-1}};
+        ${exec ($self)> (FD{-1}) };
     }
     #| Returns if the file descriptor is writable.
     method ?writable {
-        quietly { ${true :>$self} }
+        quietly { ${true >$self} }
     }
     #| Writes to the file descriptor.
     method write(#|[The data to write to the file descriptor]$data) {
-        $data.${ :> $self};
+        $data.${ > $self};
     }
 
     # No tests yet
@@ -82,5 +82,5 @@ augment FD {
         say $*OUT.tty;  #probably true
         say FD<42>.tty; #probably false
     }
-    method ?tty { ${test '-t', $self} }
+    method ?tty { ${test -t $self} }
 }
