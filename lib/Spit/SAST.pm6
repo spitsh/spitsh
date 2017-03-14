@@ -205,10 +205,6 @@ sub derive-type(Spit::Type $_) {
     default { $_ }
 }
 
-sub check-call(:%named-args,:@pos-args,:$signature,:$call-name,:$match) {
-
-}
-
 sub type-from-sigil(Str:D $sigil --> Spit::Type) {
     do given $sigil {
         when '$' { tStr() }
