@@ -872,7 +872,7 @@ multi method int-expr(SAST::IntExpr:D $_,:$tight) {
 }
 multi method int-expr(SAST::Var:D $_) {
     my $name = self.gen-name(.declaration);
-    if $name.Int -> $param {
+    if $name.Int {
         '$',$name;
     } else {
         $name;
