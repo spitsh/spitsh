@@ -37,11 +37,11 @@ my %native = (
         deps => ('IFS'),
     )),
     starts-with => Map.new((
-        body => q|case "$1" in "$2"*) true;; *) false;; esac|,
+        body => Q<case "$1" in "$2"*) true;; *) false;; esac>,
         deps => ()
     )),
     ends-with => Map.new((
-        body => q|case "$1" in *"$2") true;; *) false;; esac|,
+        body => Q<case "$1" in *"$2") true;; *) false;; esac>,
         deps => ()
     )),
 );
