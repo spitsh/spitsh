@@ -1,6 +1,6 @@
 use Test;
 
-plan 18;
+plan 26;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -28,11 +28,25 @@ is ${printf 'foo' >X },'','>X';
     is $data.${sh *>~},"12",'*>~';
     is $data.${sh !>~ >X},'2','>X !>~';
     is $data.${sh !>$?CAP >$*NULL},'2','!>$?CAP >$*NULL';
-
 }
 
 
 {
     my $cmd = Cmd<nOrtExist> || Cmd<AlsOnotzist> || Cmd<printf>;
     is $cmd,'printf','Cmd or junction returns the one that exists';
+}
+
+my $a = <one two three>;
+{
+    is ${printf '%s-%s-%s' $a }, "$a--", '$a in cmd doesn\'t flatten';
+    is ${printf '%s-%s-%s' @$a}, 'one-two-three', '@$a in cmd flattens';
+    is ${printf '%s-%s-%s' $@$a }, "$a--", '$@$a in cmd doesn\'t flatten';
+    is ${printf '%s-%s-%s' @$@$a}, 'one-two-three', '@$@$a in cmd flattens';
+}
+
+{
+    is ${printf '%s-%s-%s' (<one two three>)  }, 'one-two-three', '<...> list falttens in cmd';
+    is ${printf '%s-%s-%s' $(<one two three>) }, "$a--", '$() itemizes in cmd';
+    is ${printf '%s-%s-%s' @($a) },              'one-two-three', '@($) flattens in cmd';
+    is ${printf '%s-%s-%s' @$(<one two three>)}, 'one-two-three', '@$() flattens in cmd';
 }

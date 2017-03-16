@@ -547,7 +547,11 @@ method term:sast ($/) {
 }
 
 method term:parens ($/) {
-    make $<statement>.ast
+    with $<itemizer> {
+        make SAST::Itemize.new(sigil => .Str, $<statement>.ast);
+    } else {
+        make $<statement>.ast
+    }
 }
 
 method term:cmd ($/) {
@@ -686,8 +690,14 @@ method prefix:sym<-> ($/) { make SAST::Negative.new() }
 method prefix:sym<?> ($/) { make SAST::Coerce.new(to => tBool())}
 method prefix:sym<!> ($/) { make SAST::Neg.new() }
 method prefix:sym<++> ($/) { make SAST::Increment.new(:pre) }
-method prefix:sym<|>  ($/) { make SAST::Slip.new }
 method prefix:sym<^>  ($/) { make SAST::Range.new(SAST::IVal.new(val => 0),:exclude-end) }
+method prefix:i-sigil ($/) {
+    make do given $<sigil>.Str {
+        when '$'|'@' { SAST::Itemize.new(sigil => $_) }
+        default { die "invalid itemizing sigil: $_" }
+    }
+}
+method prefix:sym<@>  ($/) { make SAST::Itemize(sigil => $<sym>.Str) }
 
 method pblock($/) {
     if $<lambda> {
@@ -743,7 +753,7 @@ method cmd-body ($/) {
         orwith $_<bare> {
             @pos.push: SAST::SVal.new(val => .Str);
         }
-        orwith $_<EXPR> {
+        orwith $_<parens> {
             @pos.push: .ast
         }
         orwith $_<pair>.ast {
@@ -763,7 +773,7 @@ method cmd-body ($/) {
 }
 
 method cmd-term ($/) {
-    make reduce-term($/[0].values[0],(),$/<postfix>);
+    make reduce-term($/[0].values[0],$<i-sigil>,$<postfix>);
 }
 
 

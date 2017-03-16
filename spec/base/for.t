@@ -1,6 +1,6 @@
 use Test;
 
-plan 18;
+plan 21;
 {
     my @a = <one two three>;
 
@@ -56,6 +56,16 @@ for 4,5 {
 
     for <IDONT_E_XITSttt ME_@niEErthr> -> Cmd $cmd {
         nok $cmd,'-> Cmd $cmd';
+    }
+}
+
+{
+    my $a = <one two three>;
+    for $a {
+        is $_,$a,'for $a iterates once';
+    }
+    for $a,$a {
+        is $_,$a,'for $a,$a iterates twice with the same value';
     }
 }
 

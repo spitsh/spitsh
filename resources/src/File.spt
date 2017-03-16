@@ -157,6 +157,6 @@ augment File {
         my File $tmpfile = ${mktemp};
         ${printf '%s\n' $tmpfile >> $tmplist};
         $tmpfile;
-        END { ${rm (|$tmplist.read) $tmplist } }
+        END { ${rm @($tmplist.read) $tmplist } }
     }
 }

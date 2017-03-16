@@ -390,8 +390,8 @@ grammar Spit::Grammar is Spit::Lang {
         $<value>=<.EXPR('i<=')>
     }
 
-    rule term:parens {
-        '(' <statement> [')' | <.expected("closing )")>]
+    token term:parens {
+       '(' <.ws> <statement> <.ws> [')' | <.expected("closing )")>]
     }
 
     rule term:cmd { <cmd> }
@@ -467,6 +467,7 @@ grammar Spit::Grammar is Spit::Lang {
     token prefix:sym<!>  { <sym> }
     token prefix:sym<|>  { <sym> }
     token prefix:sym<^>  { <sym> }
+    token prefix:i-sigil { <sigil> <?before <.sigil>|'('> }
 
     proto token sigil {*}
     token sigil:sym<$> { <sym> }
@@ -516,7 +517,9 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token cmd-term {
-        (<var> |'(' <EXPR> ')' <![<>]> |<quote>) <postfix>*
+        $<i-sigil>=<::('prefix:i-sigil')>*
+        (<var> | $<parens>=<::("term:parens")> <![<>]> |<quote>)
+        <postfix>*
     }
 
     token output-redir {

@@ -2,26 +2,7 @@ use Spit::SAST;
 use Spit::Metamodel;
 need Spit::Constants;
 need Spit::Exceptions;
-
-sub shell_quote(Str() $str is copy){
-    if $str !~~
-    /^[
-        |\w
-        |<[-!%+,./:[\]=@]>
-    ]+$/ {
-        return '\\' ~ $str if $str.chars == 1 and not $str ~~ "\n";
-        # lol wut
-        if $str ~~ /<["$]>/ or $str ~~ /'\\'$/ {
-            $str .= subst("'","'\\''",:g);
-            $str = "'$str'";
-        } else {
-            $str = '"' ~ $str ~ '"';
-        }
-        $str .= subst(/^"''"/,'');
-        $str .= subst(/"''"$/,'');
-    }
-    return $str;
-}
+need Spit::Sh::ShellElement;
 
 my %native = (
     et => Map.new((
@@ -46,6 +27,11 @@ my %native = (
     )),
 );
 
+sub nnq { NoNeedQuote.new: bits => @_ }
+sub dq  { DoubleQuote.new: bits => @_ }
+sub escape { Escaped.new: bits => @_  }
+sub cs { DoubleQuote.new: bits => ('$(',|@_,')')}
+sub var { DoubleQuote::Var.new: name => $^a }
 
 sub lookup-method($class,$name) {
     $*SETTING.lookup(CLASS,$class).class.^find-spit-method($name);
@@ -102,16 +88,11 @@ method require-native($name) {
      %item<body>;
 }
 
-method quote(*@strings,:$flat) {
-    self.scaf('IFS') if $flat;
-    ('"' unless $flat),|@strings,('"' unless $flat);
-}
-
 method check-stage3($node) {
     SX::CompStageNotCompleted.new(stage => 3,:$node).throw  unless $node.stage3-done;
 }
 
-multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.name,:$fallback) returns Str:D {
+multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.name,:$fallback)  {
     self.check-stage3($decl);
 
     do with $decl.ann<shell_name> {
@@ -157,16 +138,16 @@ method scaf($name) {
 }
 
 method comp-depend($_){
-    my Str:D @comp = self.compile-nodes([$_],:indent).grep(*.defined);
+    my ShellElement:D @comp = self.compile-nodes([$_],:indent).grep(*.defined);
     |do if @comp {
         Pair.new(key => $_,value => @comp)
     }
 }
 
-method compile(SAST::CompUnit:D $CU --> Str:D) {
+method compile(SAST::CompUnit:D $CU --> ShellElement:D) {
     my $*pad = '';
     my $*depends = $CU.depends-on;
-    my Str:D @compiled;
+    my ShellElement:D @compiled;
 
     my @MAIN = self.node($CU,:indent);
 
@@ -215,14 +196,14 @@ multi method node(SAST::CompUnit:D $*CU) {
 }
 
 method compile-nodes(@sast,:$one-line,:$indent) {
-    my Str:D @chunk;
+    my ShellElement:D @chunk;
     my $*indent = CALLERS::<$*indent> || 0;
     $*indent++ if $indent;
     my $*pad = '  ' x $*indent;
     my $sep = $one-line ?? '; ' !! "\n$*pad";
     my $i = 0;
     for @sast -> $node {
-        my Str:D @node = self.node( $node ).grep(*.defined);
+        my ShellElement:D @node = self.node( $node ).grep(*.defined);
         if @node {
             #if indenting, pad first statement
             @chunk.append: $i++ == 0 ??
@@ -249,7 +230,7 @@ multi method node(SAST::Var:D $var) {
         }
         @var;
     } elsif $var ~~ SAST::VarDecl {
-        $name,'=',($var.decl-type ~~ tInt() ?? '0' !! '""');
+        $name,'=',($var.decl-type ~~ tInt() ?? '0' !! "''");
     } else {
         ': $',$name;
     }
@@ -295,15 +276,15 @@ method try-case($if is copy) {
             @res.append: "\n$*pad  *) ", |self.node($if,:inline,:one-line),';;';
             $if = Nil;
         } elsif (
-            $if.cond ~~ SAST::Cmp && $if.cond.sym eq 'eq'
-                && ($topic = $if.cond[0]; $pattern := |self.arg($if.cond[1]))
+            (my \cond = $if.cond) ~~ SAST::Cmp && cond.sym eq 'eq'
+                && ($topic = cond[0]; $pattern := |self.arg(cond[1]))
             or
-            $if.cond ~~ SAST::CmpRegex && (my $case := $if.cond.re.patterns<case>)
-                && ($topic = $if.cond.thing; $pattern := $case.val)
+            cond ~~ SAST::CmpRegex && (my $case := cond.re.patterns<case>)
+                && ($topic = cond.thing; $pattern := $case.val)
             )
             or
-            $if.cond ~~ SAST::EnumCmp && ($if.cond.enum ~~ SAST::Type)
-                && ($topic = $if.cond.check; $pattern := |self.arg($if.cond.enum,:flat))
+            cond ~~ SAST::EnumCmp && (cond.enum ~~ SAST::Type) # ie we know at compile time
+                && ($topic = cond.check; $pattern := cond.enum.class-type.^types-in-enum».name.join('|'))
           {
               $common-topic //= $topic;
               if (given $common-topic {
@@ -392,9 +373,7 @@ multi method node(SAST::Given:D $_) {
 
 multi method node(SAST::For:D $_) {
     self.scaf('IFS');
-    my @list = .list.children;
-    my $flat = @list == 1 && @list[0].type ~~ tList();
-    'for ', self.gen-name(.iter-var), ' in', |.list.children.flatmap({ ' ',self.arg($_,:$flat) })
+    'for ', self.gen-name(.iter-var), ' in', |.list.children.flatmap({ ' ',self.arg($_) })
     ,"; do\n",
     |self.node(.block,:indent),
     "\n{$*pad}done"
@@ -458,9 +437,9 @@ multi method node(SAST::RoutineDeclare:D $_) {
 method call($name,@named-param-pairs,@pos) {
     |@named-param-pairs.\ # Errr rakudo, why do I need \ here?
        grep({.value.compile-time !=== False }).\
-       map({ self.gen-name(.key),"=",|self.arg(.value),' '} ).flat,
+       map({ self.gen-name(.key),"=",|self.arg(.value).itemize(True),' '} ).flat,
     $name,
-    |@pos.map({ ' ',|self.arg($_) }).flat;
+    |@pos.map({ ' ',|self.arg($_).itemize(True) }).flat;
 }
 
 multi method node(SAST::SubCall:D $_)  {
@@ -472,7 +451,7 @@ multi method node(SAST::MethodCall:D $_) {
                 .param-arg-pairs,
                 (( .declaration.static ?? Empty !! .invocant),|.pos);
     if .declaration.rw and .invocant.assignable {
-        |self.gen-name(.invocant),'=',|self.quote('$(',$call,')');
+        |self.gen-name(.invocant),'=$(',$call,')';
     } else {
         $call;
     }
@@ -495,8 +474,8 @@ method compile-cmd(@cmd-body,@write,@append,:$stdin) {
         @redir.push: list ('&' if $stdin.type ~~ tFD()),self.arg($stdin);
     }
     if $eval {
-        'eval ',|shell_quote((|@cmd-body," ").join),
-        |@redir.map(-> $in ,$sym,$out { |$in,|shell_quote($sym ~ $out.flat.join) }).flat;
+        'eval ',escape(|@cmd-body," "),
+        |@redir.map(-> $in ,$sym,$out { |$in,escape($sym, $out.flat)}).flat;
     } else {
         |@cmd-body,|(@redir.map(-> $a,$b,$c {' ',|$a,|$b,|$c}).flat if @redir) ;
     }
@@ -593,9 +572,9 @@ multi method cond(SAST::Cmp:D $cmp) {
 
 multi method cond(SAST::EnumCmp:D $cmp) {
     my $check := do if $cmp.check ~~ SAST::Type {
-        shell_quote($cmp.check.class-type.^name);
+        escape $cmp.check.class-type.^name;
     }  else {
-        |self.arg($cmp.check);
+        self.arg($cmp.check);
     }
     self.scaf('has-member'),' ',|self.arg($cmp.enum),' ',|$check;
 }
@@ -629,41 +608,35 @@ multi method cond(SAST::BVal:D $_) {
     .val ?? 'true' !! 'false';
 }
 
-multi method arg(SAST::SVal:D $_) { .val.&shell_quote }
+multi method arg(SAST::SVal:D $_) { escape .val }
 multi method arg(SAST::IVal:D $_) { .val.Str }
 multi method arg(SAST::BVal:D $_) { .val ?? '1' !! '""' }
 
 multi method arg(SAST::Eval:D $_) { self.arg(.compiled) }
-multi method arg(SAST::Var:D $var,:$flat) {
+multi method arg(SAST::Var:D $var) {
     my $name = self.gen-name($var);
     my $assign = $var.assign;
-    my @var = do with $assign {
+    (with $assign {
         if $assign ~~ SAST::Junction:D and $assign.dis {
-            self.compile-assign($var,$assign);
+            dq self.compile-assign($var,$assign);
         } elsif $var ~~ SAST::VarDecl {
             $*LATE-INIT{$name} = True if $*LATE-INIT.defined;
-            '${',$name,':=',|self.arg($assign),'}';
+            dq '${',$name,':=',|self.arg($assign),'}';
         } else {
             SX::NYI.new(feature => 'Non declaration assignment as an argument',node => $var).throw
         }
     } else {
-        '$',$name;
-    }
-
-    if $var.type ~~ tInt() {
-        |@var;
-    } else {
-        self.quote: |@var,:$flat;
-    }
+        var $name
+     }).itemize($var.itemize);
 }
 
 multi method arg(SAST::Regex:D $_) {
     self.arg(.src);
 }
 
-multi method arg(SAST::IntExpr:D $_) { '$((', |self.int-expr($_),'))' }
+multi method arg(SAST::IntExpr:D $_) { nnq '$((', |self.int-expr($_),'))' }
 multi method arg(SAST::Increment:D $_,:$sink) {
-    do if .[0] ~~ SAST::Var {
+    nnq do if .[0] ~~ SAST::Var {
         my $decl = .[0].declaration;
         my @inc = self.gen-name($decl),(.decrement ?? '-' !! '+'),'=1';
         if .pre or $sink {
@@ -675,18 +648,18 @@ multi method arg(SAST::Increment:D $_,:$sink) {
         die "tried to increment something that isn't a variable";
     }
 }
-multi method arg(SAST::Range:D $_,:$flat) {
-    self.quote: '$(seq ',
-    |(.exclude-start
-     ?? ('$((',|self.int-expr($_[0]),'+1))')
-     !! |self.arg($_[0])
-    )
-    ,' ',
-    |(.exclude-end
-      ?? ('$((',|self.int-expr($_[1]),'-1))')
-      !! |self.arg($_[1])
-    ),
-    ')',:$flat;
+multi method arg(SAST::Range:D $_) {
+    cs('seq ',
+       |(.exclude-start
+         ?? ('$((',|self.int-expr($_[0]),'+1))')
+         !! |self.arg($_[0])
+        )
+       ,' ',
+       |(.exclude-end
+         ?? ('$((',|self.int-expr($_[1]),'-1))')
+         !! |self.arg($_[1])
+        );
+      ).itemize(.itemize);
 }
 
 multi method arg(SAST::Blessed:D $_) {
@@ -697,38 +670,29 @@ multi method arg(SAST::Blessed:D $_) {
 
 multi method arg(SAST::Elem:D $_) { die 'SAST::Elem made it to compiler' }
 
-multi method arg(SAST::FileContent:D $_,:$flat) {
-    self.quote: :$flat,
-    '$(cat ',('<&' if .file.type ~~ tFD),|self.arg(.file),')' #'>'
+multi method arg(SAST::FileContent:D $_) {
+    dq '$(cat ',('<&' if .file.type ~~ tFD),|self.arg(.file),')' #'>'
 }
 
 multi method arg(SAST::Concat:D $_) {
     return '""' unless .children;
-    my @compiled = .children.flatmap({ self.arg($_) });
-    my @strs;
+    my @compiled = .children.flatmap({ self.arg($_).itemize(True) });
+    my $str = dq();
 
-    for @compiled -> $this {
-        if @strs[*-1] -> $last is rw {
-            if $last.ends-with('"') && $this.starts-with('"') {
-                $last ~~ s/'"'$/{$this.substr(1)}/;
-                next;
-            }
-        }
-        @strs.push($this);
+    my $last-var;
+    for @compiled {
+        $str.bits.append(.in-DQ);
     }
-    @strs;
+
+    $str;
 }
 
-multi method arg(SAST::Type $_,:$flat) {
+multi method arg(SAST::Type $_) {
     if .class-type.enum-type {
-        |self.quote: (.class-type.^types-in-enum».name).join('|'),:$flat;
+        dq (.class-type.^types-in-enum».name).join('|')
     } else {
-        |self.quote: .gist,:$flat;
+        dq .gist
     }
-}
-
-multi method arg(SAST::Slip:D $_) {
-    self.arg(.children[0],:flat)
 }
 
 multi method arg(SAST::Negative:D $_) {
@@ -739,12 +703,12 @@ multi method arg(SAST::Block:D $_) {
     if .one-stmt -> $return {
         self.arg($return.val);
     } else {
-        self.quote: '$(',self.node($_,:one-line),')';
+        cs self.node($_,:one-line);
     }
 }
 
 multi method arg(SAST::Given:D $_) {
-    self.quote: '$(',self.node($_),')';
+    cs self.node($_)
 }
 
 multi method arg(SAST::Call:D $_) is default {
@@ -752,8 +716,8 @@ multi method arg(SAST::Call:D $_) is default {
     nextsame;
 }
 
-multi method arg(SAST:D $_,:$flat) {
-    self.quote: '$(',|self.cap-stdout($_),')',:$flat;
+multi method arg(SAST:D $_) {
+    cs(self.cap-stdout($_)).itemize(.itemize)
 }
 multi method arg(SAST::Junction:D $_) {
     with self.try-param-substitution($_) {
@@ -761,6 +725,10 @@ multi method arg(SAST::Junction:D $_) {
     } else {
         nextsame;
     }
+}
+
+multi method arg(SAST::Itemize:D $_) {
+    self.arg($_[0]).itemize(.itemize);
 }
 
 multi method cap-stdout(ShellStatus $_) {
@@ -773,7 +741,7 @@ multi method cap-stdout(SAST::If:D $_) {
 }
 
 multi method cap-stdout(SAST:D $_) {
-    self.scaf('e'),' ',|self.arg($_);
+    self.scaf('e'),' ',|self.arg($_).itemize(True);
 }
 
 multi method cap-stdout(SAST::Call:D $_) is default {
@@ -841,7 +809,7 @@ method try-param-substitution(SAST::Junction:D $junct) {
     my \LHS = $junct[0];
     my \RHS = $junct[1];
     if LHS ~~ SAST::CondReturn and LHS.val ~~ SAST::Var and LHS.val.uses-Str-Bool {
-        self.quote: '${',
+        dq '${',
         self.gen-name(LHS.val),
         (LHS.when ?? ':-' !! ':+'),
         |self.arg(RHS),
