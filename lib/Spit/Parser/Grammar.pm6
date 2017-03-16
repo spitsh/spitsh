@@ -460,6 +460,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     proto token prefix {*}
     token prefix:sym<++> { <sym> }
+    token prefix:sym<--> { <sym> }
     token prefix:sym<~>  { <sym> }
     token prefix:sym<+>  { <sym> }
     token prefix:sym<->  { <sym> }

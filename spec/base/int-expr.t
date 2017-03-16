@@ -1,6 +1,6 @@
 use Test;
 
-plan 24;
+plan 30;
 
 {
    my Int $a;
@@ -53,6 +53,20 @@ plan 24;
     is $d,4,'+=';
     $d -= 3;
     is $d,1,'-=';
+}
+
+{
+    my Int $i = 0;
+    is ++$i,1,"pre-increment";
+    is --$i,0,"pre-decrement";
+}
+
+{
+    my $i = 0;
+    is $i++,0,"post-increment doesn't immediately incrememnt";
+    is $i,1,"post-inrement increments";
+    is $i--,1,"post-decrement doesn't immediately decrement";
+    is $i,0,"post-decrement decrements";
 }
 
 {

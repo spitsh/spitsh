@@ -690,6 +690,7 @@ method prefix:sym<-> ($/) { make SAST::Negative.new() }
 method prefix:sym<?> ($/) { make SAST::Coerce.new(to => tBool())}
 method prefix:sym<!> ($/) { make SAST::Neg.new() }
 method prefix:sym<++> ($/) { make SAST::Increment.new(:pre) }
+method prefix:sym<--> ($/) { make SAST::Increment.new(:pre,:decrement) }
 method prefix:sym<^>  ($/) { make SAST::Range.new(SAST::IVal.new(val => 0),:exclude-end) }
 method prefix:i-sigil ($/) {
     make do given $<sigil>.Str {
