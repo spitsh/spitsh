@@ -11,6 +11,8 @@ constant @brackets := "<>[]()\{}\x[0028]\x[0029]\x[003C]\x[003E]\x[005B]\x[005D]
 
 constant @openers = eager @brackets.map: -> $o,$ { $o };
 
+constant $lt-comma = 'i<';
+
 grammar Spit::Grammar is Spit::Lang {
     token TOP {
         :my $*CURPAD;
@@ -309,14 +311,16 @@ grammar Spit::Grammar is Spit::Lang {
         ||
         <?before
             $<check>=<.infix>
-            <?{ not $<check> or $<check>.&derive-precedence($term.ast)[0] gt $preclim }>
+            {}
+            <?{ not $<check> or $<check>.&derive-precedence($term)[0] ge $preclim }>
         >
     }
     # preclim is a word stolen from rakudo. It means precedence limit :^).
     rule EXPR($preclim?) {
         <termish>
         [
-            <.check-prec($preclim,$<termish>[*-1])>
+            {}
+            <.check-prec($preclim,$<termish>[*-1].ast)>
             <infix>
             [ <termish>  || {}<.expected("term after infix {$<infix>[*-1]<sym>.Str}")>  ]
         ]*
@@ -387,7 +391,7 @@ grammar Spit::Grammar is Spit::Lang {
     token term:fatarrow {
         $<key>=<.identifier>
         \h*'=>'<.ws>
-        $<value>=<.EXPR('i<=')>
+        $<value>=<.EXPR($lt-comma)>
     }
 
     token term:parens {
@@ -438,7 +442,7 @@ grammar Spit::Grammar is Spit::Lang {
     token infix:sym<..>  { [$<exclude-start>='^']? <sym> [$<exclude-end>='^']? }
 
     rule  infix:sym<?? !!> {
-        $<sym>='??' <EXPR('i=')> ['!!' || <.expected('!! to finish ternary')> ]
+        $<sym>='??' <EXPR($lt-comma)> ['!!' || <.expected('!! to finish ternary')> ]
     }
 
     proto token postfix {*}
