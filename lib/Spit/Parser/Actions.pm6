@@ -453,12 +453,11 @@ method EXPR($/) {
 }
 
 method list ($/) {
-    my $expr = $<EXPR>.ast;
-    make do if $expr ~~ SAST::List {
-        $expr;
-    } else {
-        SAST::List.new($expr,match => $<EXPR>);
+    my $list = SAST::List.new;
+    for $<EXPR> {
+        $list.push(.ast);
     }
+    make $list;
 }
 sub reduce-term(Match:D $term,@prefixes,@postfixes) {
     my $ret = $term.ast;

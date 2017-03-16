@@ -1,6 +1,6 @@
 use Test;
 
-plan 26;
+plan 30;
 
 {
     sub foo() {
@@ -8,6 +8,7 @@ plan 26;
     }
     foo();
     foo;
+    foo   ;
 }
 
 {
@@ -15,6 +16,14 @@ plan 26;
         is $a,"foo",'$a has correct value';
     }
     foo("foo");
+}
+
+{
+    sub ~echo($a) { $a }
+    my @a = <one two three>;
+    is echo(<one two three>), @a, "<one two three> is a single arg";
+    is echo(@a), @a, '@a is a single arg';
+    is echo(("one", "two","three")), @a, '(one two three) is a single arg';
 }
 
 {

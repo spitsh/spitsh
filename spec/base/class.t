@@ -12,7 +12,7 @@ plan 10;
     }
 
     is Foo.doit,"foo","basic static method call";
-    is Bar.doit,"bar","basic static method call again";
+    is Bar.doit(),"bar","basic static method call again";
 }
 
 {

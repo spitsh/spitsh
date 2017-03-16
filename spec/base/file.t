@@ -63,7 +63,7 @@ plan 27;
         .subst('o','e',:g);
         is .read,"feeed",".subst(:g), replaces all ocurrences";
 
-        .write($(<foo bar baz>)); # temp $() before I fix call args
+        .write(<foo bar baz>);
         .subst("oo\nba","ood\n\nca");
         is .read,"food\n\ncar\nbaz",'.subst with \\n';
     }
@@ -77,7 +77,7 @@ plan 27;
 
 {
     given File.tmp {
-        .write($(<foo bar baz>));
+        .write(<foo bar baz>);
         is .read[1],'bar','.read[1]';
     }
 }

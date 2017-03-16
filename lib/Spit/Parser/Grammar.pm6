@@ -326,7 +326,7 @@ grammar Spit::Grammar is Spit::Lang {
         ]*
     }
 
-    rule list { <EXPR> }
+    rule list { <EXPR($lt-comma)>* % ',' }
     rule args { <list> }
 
     token termish {
@@ -366,7 +366,7 @@ grammar Spit::Grammar is Spit::Lang {
             )?
             ||
             $<call-args>=(
-                | '('<.ws><args>?<.ws>')'
+                | '('<.ws><args><.ws>')'
                 | \s+ <args>
             )?
         ]
