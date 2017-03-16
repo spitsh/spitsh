@@ -462,7 +462,7 @@ method list ($/) {
 }
 sub reduce-term(Match:D $term,@prefixes,@postfixes) {
     my $ret = $term.ast;
-    for |@postfixes,|@prefixes {
+    for |@postfixes,|@prefixes.reverse {
         my $ast = .ast;
         if $ast ~~ Callable {
             $ret = $ast.($ret);
