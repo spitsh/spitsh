@@ -1018,6 +1018,8 @@ class SAST::Increment is SAST::MutableChildren {
     }
 
     method type { tInt }
+
+    method gist { $.node-name ~ "({$!decrement ?? '-' !! '+' }=$!amount)" ~ $.gist-children }
 }
 
 enum JunctionContext <NEVER-RETURN RETURN-WHEN-FALSE RETURN-WHEN-TRUE JUST-RETURN>;
