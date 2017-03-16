@@ -1,6 +1,6 @@
 use Test;
 
-plan 21;
+plan 23;
 {
     my @a = <one two three>;
 
@@ -69,5 +69,20 @@ for 4,5 {
     }
 }
 
+{
+    my $j = 0;
+    for <one two three>,<four five six>,<seven eight nine> {
+        $j++;
+    }
+    is $j, 9, 'for <...>,<...> iterates over all elements';
+}
+
+{
+    my $k = 0;
+    for $(<one two three>),<four five six>,<seven eight nine> {
+        $k++;
+    }
+    is $k, 7, '$(...) in for'
+}
 
 pass "statement-mod for $_" for ^3;
