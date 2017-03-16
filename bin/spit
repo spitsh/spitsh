@@ -5,7 +5,7 @@ need Spit::Repo;
 
 sub USAGE {
     print q:to/END/;
-    Spook in the Shell Script compiler v0.0.7;
+    Spook in the Shell Script compiler v0.0.8;
     Usage: spit [OPTIONS] COMMAND [arg...]
 
     Options:
