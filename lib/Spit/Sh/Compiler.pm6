@@ -362,7 +362,7 @@ multi method node(SAST::While:D $_) {
     .until ?? 'until' !! 'while',' ',
     |(|self.node(.topic-var),'; ' if .topic-var andthen .depended),
     |self.cond(.cond),"; do \n",
-    |self.node(.block,:indent),
+    |self.node(.block,:indent,:no-empty),
     "\n{$*pad}done";
 }
 
@@ -375,7 +375,7 @@ multi method node(SAST::For:D $_) {
     self.scaf('IFS');
     'for ', self.gen-name(.iter-var), ' in', |.list.children.flatmap({ ' ',self.arg($_) })
     ,"; do\n",
-    |self.node(.block,:indent),
+    |self.node(.block,:indent,:no-empty),
     "\n{$*pad}done"
 }
 

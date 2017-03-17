@@ -1,6 +1,15 @@
 use Test;
 
-plan 20;
+plan 21;
+
+{
+    my $i = 0;
+    while ++$i < 3 {
+
+    }
+    pass "empty while loop";
+}
+
 {
     my $i = 0;
 

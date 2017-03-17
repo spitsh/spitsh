@@ -1,6 +1,14 @@
 use Test;
 
-plan 23;
+plan 24;
+
+for <one two three> {
+
+}
+
+pass "empty for loop";
+
+
 {
     my @a = <one two three>;
 
