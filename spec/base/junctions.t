@@ -1,6 +1,6 @@
 use Test;
 
-plan 134;
+plan 136;
 
 my $true = True;
 my $false = False;
@@ -41,15 +41,22 @@ my $false = False;
 }
 
 {
-    my $a;
-    $a ||= "foo";
-    $a ||= "bar";
-    is $a,'foo','||=';
-    $a &&= "bar";
-    is $a,'bar','&&=';
-    $a = False;
-    $a &&= 'bar';
-    nok $a,'$x &&= "string", still false when $a is false';
+    my $x;
+    $x ||= "foo";
+    $x ||= "bar";
+    is $x,'foo','||=';
+    $x &&= "bar";
+    is $x,'bar','&&=';
+    $x = False;
+    $x &&= 'bar';
+    nok $x,'$x &&= "string", still false when $x is false';
+
+    my $y;
+    $y ||= 'foo}';
+    is $y,'foo}', '||= with } in value';
+    $y = False;
+    $y ||= 'foo{';
+    is $y, 'foo{', '||= with { in value';
 }
 
 {
