@@ -69,13 +69,18 @@ multi method walk(SAST::ClassDeclaration:D $THIS is rw) {
     $THIS .= stage3-node(SAST::Nop);
 }
 
-multi method walk(SAST::Block:D $THIS is rw) {
-    if $THIS.children == 0 || $THIS.children.all ~~ SAST::Nop {
-        $THIS .= stage3-node(SAST::Nop);
-    } elsif $THIS.children === 1 {
 
+multi method reduce-block(SAST::Block:D $block) {
+    if $block.children == 0 || $block.children.all ~~ SAST::Nop {
+        $block.stage3-node(SAST::Nop);
+    } elsif $block.one-stmt -> $one-stmt {
+        $one-stmt;
+    } else {
+        $block;
     }
 }
+
+multi method reduce-block(SAST:D $non-block) { $non-block }
 
 multi method walk(SAST::While:D $THIS is rw) {
     with $THIS.cond.compile-time -> $cond {
@@ -86,17 +91,20 @@ multi method walk(SAST::While:D $THIS is rw) {
     }
 }
 
-multi method walk(SAST::If:D $THIS is rw) {
+multi method walk(SAST::If:D $THIS is rw,:$sub-if) {
     with $THIS.cond.compile-time -> $cond {
         if ?$cond {
-            $THIS .= then;
+            $THIS = $sub-if ?? $THIS.then !! self.reduce-block($THIS.then);
         } else {
-            if $THIS.else -> $else {
+            if $THIS.else <-> $else {
                 $THIS = $else;
+                self.walk($THIS);
             } else {
                 $THIS .= stage3-node(SAST::Nop);
             }
         }
+    } else {
+        $THIS.else andthen self.walk($_,:sub-if);
     }
 }
 
@@ -432,7 +440,7 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
     if $THIS.declaration.chosen-block -> $block {
         if $block ~~ SAST::Block and not $block.ann<cant-inline> {
             # only inline routines with one child for now
-            if $block.children == 1  && ($block.returns.?val || $block.last-stmt) <-> $last-stmt {
+            if $block.one-stmt <-> $last-stmt {
                 if self.inline-call($THIS,$last-stmt) -> $replacement {
                     if $replacement ~~ $accept {
                         $THIS = $replacement;

@@ -195,7 +195,7 @@ multi method node(SAST::CompUnit:D $*CU) {
     |self.node($*CU.block,|%_).grep(*.defined);
 }
 
-method compile-nodes(@sast,:$one-line,:$indent) {
+method compile-nodes(@sast,:$one-line,:$indent,:$no-empty) {
     my ShellElement:D @chunk;
     my $*indent = CALLERS::<$*indent> || 0;
     $*indent++ if $indent;
@@ -212,9 +212,9 @@ method compile-nodes(@sast,:$one-line,:$indent) {
             @chunk.append: @node;
         }
     }
-    # unless @chunk {
-    #     @chunk.append: $*pad,': nop';
-    # }
+    if $no-empty and not @chunk {
+        @chunk.push("$*pad:");
+    }
     return @chunk;
 }
 
@@ -272,8 +272,8 @@ method try-case($if is copy) {
     my $i = 0;
     while $if and $can {
         my ($topic,$pattern);
-        if $if ~~ SAST::Block {
-            @res.append: "\n$*pad  *) ", |self.node($if,:inline,:one-line),';;';
+        if $if !~~ SAST::If {
+            @res.append: "\n$*pad  *) ", |self.node($if,:one-line),';;';
             $if = Nil;
         } elsif (
             (my \cond = $if.cond) ~~ SAST::Cmp && cond.sym eq 'eq'
@@ -346,8 +346,8 @@ multi method node(SAST::If:D $_,:$else) {
     |self.node(.then,:indent,:no-empty),
     |(with .else {
          when SAST::Nop   { Empty }
-         when SAST::Block { "\n{$*pad}else\n",|self.node($_,:indent) }
-         default { "\n{$*pad}",|self.node($_,:else) }
+         when SAST::If    { "\n{$*pad}",|self.node($_,:else) }
+         when SAST::Block { "\n{$*pad}else\n",|self.node($_,:indent,:no-empty) }
      } elsif .type ~~ tBool() {
           # if false; then false; fi; actually exits 0 (?!)
           # So we have to make sure it exits 1 if the cond is false
@@ -391,9 +391,9 @@ multi method node(SAST::Ternary:D $_,:$tight) {
     ('; }' if $tight);
 }
 
-multi method node(SAST::Block:D $block,:$indent is copy,:$curlies,:$one-line) {
+multi method node(SAST::Block:D $block,:$indent is copy,:$curlies,:$one-line,:$no-empty) {
     $indent ||= True if $curlies;
-    my @compiled = self.compile-nodes($block.children,:$indent,:$one-line);
+    my @compiled = self.compile-nodes($block.children,:$indent,:$one-line,:$no-empty);
     if $curlies {
         self.maybe-oneline-block(@compiled);
     } else {
@@ -526,13 +526,7 @@ multi method node(SAST:D $_) {
     ': ',|self.arg($_);
 }
 
-multi method node(SAST::Nop:D $_,:$indent,:$no-empty) {
-    if $no-empty {
-        $*pad,'  :nop';
-    } else {
-        Empty
-    }
-}
+multi method node(SAST::Nop:D $_) { Empty }
 
 multi method node(SAST::Quietly:D $_) {
     |self.node(.block,:curlies),' 2>',('&' if .null.type ~~ tFD()),self.arg(.null);
@@ -701,7 +695,7 @@ multi method arg(SAST::Negative:D $_) {
 
 multi method arg(SAST::Block:D $_) {
     if .one-stmt -> $return {
-        self.arg($return.val);
+        self.arg($return);
     } else {
         cs self.node($_,:one-line);
     }

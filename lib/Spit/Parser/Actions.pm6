@@ -248,7 +248,7 @@ method declaration:sym<class> ($/){
 
 method declare-class-params ($/) {
     for $*CLASS.class.^placeholder-params -> $type {
-        $*CURPAD.declare: SAST::ClassDeclaration.new(class => $type,block => SAST::Nop.new);
+        $*CURPAD.declare: SAST::ClassDeclaration.new(class => $type);
     }
 }
 
