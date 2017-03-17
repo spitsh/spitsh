@@ -21,8 +21,8 @@ role DynamicShellElement does ShellElement {
     method Str { self.in-ctx.join }
     method in-ctx { $!itemized ?? self.as-item !! self.as-flat }
     method itemize($!itemized) { self }
-    method contains(|c) { ?@.bits».contains(|c).any }
-    method match(|c) { ?@.bits».match(|c).any }
+    method contains(|c) { self.Str.contains(|c) }
+    method match(|c)    { self.Str.match(|c)    }
 }
 
 # A literal string - it should be escaped for whatever quotes it appears in
@@ -45,8 +45,8 @@ class Escaped does DynamicShellElement {
         return "''" if not @!bits or @!bits.all eq '';
         if @!bits.first({.contains("'")}) {
             '"',self.in-DQ,'"';
-        } elsif @!bits.first({.contains(@metachars.any) || ?/\s/}) {
-            "'",@!bits.join,"'"
+        } elsif @!bits.first(*.contains(@metachars.any)|/\s/) {
+            "'",|@!bits,"'"
         } else {
             self.backslashes;
         }
@@ -66,7 +66,7 @@ class DoubleQuote does DynamicShellElement {
 # a vanilla variable.
 class DoubleQuote::Var does DynamicShellElement {
     has $.name;
-    method in-DQ { '${',$!name,'}' }
+    method in-DQ(:$next) { ($next andthen .match(/^\w/)) ?? ('${',$!name,'}') !! ('$',$!name) }
     method as-item { '"$',$!name,'"' }
     method as-flat { '$',$!name }
     method contains(|) { False }

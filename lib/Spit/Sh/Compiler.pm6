@@ -680,8 +680,8 @@ multi method arg(SAST::Concat:D $_) {
     my $str = dq();
 
     my $last-var;
-    for @compiled {
-        $str.bits.append(.in-DQ);
+    for @compiled.kv -> $i,$_ {
+        $str.bits.append(.in-DQ(next => @compiled[$i+1]));
     }
 
     $str;
