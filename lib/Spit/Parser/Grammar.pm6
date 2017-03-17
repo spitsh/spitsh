@@ -259,16 +259,9 @@ grammar Spit::Grammar is Spit::Lang {
         '}'
     }
 
-    rule declaration:sym<constant> {
-        <sym> <var-and-type('constant')>
-        :my $*DECL;
-        { $*DECL = $<var-and-type>.ast }
-        <.attach-pre-doc>
-        <trait>* ['=' <EXPR>]?
-    }
-
-    rule declaration:sym<my> {
-        <sym> [ <var-and-type> || <.invalid('variable declaration')> ]
+    rule declaration:var {
+        $<sym>=['constant'|'my']
+        {} <var-and-type($<sym>.Str)>
         :my $*DECL;
         { $*DECL = $<var-and-type>.ast }
         <.attach-pre-doc>

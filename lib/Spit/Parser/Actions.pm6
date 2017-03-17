@@ -368,13 +368,7 @@ method on-switch ($/) {
     make @tmp;
 }
 
-method declaration:sym<constant> ($/) {
-    my $constant = $<var-and-type>.ast;
-    $constant.assign = $<EXPR>.ast;
-    make $*CURPAD.declare: $constant;
-}
-
-method declaration:sym<my> ($/) {
+method declaration:var ($/) {
     my $var = $<var-and-type>.ast;
     $var.assign = $<EXPR>.ast;
     make $*CURPAD.declare: $var;
@@ -384,8 +378,6 @@ method return-type-sigil:sym<~>($/) { make tStr() }
 method return-type-sigil:sym<+>($/) { make tInt() }
 method return-type-sigil:sym<?>($/) { make tBool() }
 method return-type-sigil:sym<@>($/) { make tList() }
-
-
 
 method paramlist ($/) {
     my @params = $<params>.map(*<param>.ast);
