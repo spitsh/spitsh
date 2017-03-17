@@ -1188,7 +1188,7 @@ class SAST::List is SAST::MutableChildren {
     }
 
     method compile-time {
-        list @.children.map: {
+        list do for @.children {
             return Nil unless .compile-time.defined;
             $_;
         }
