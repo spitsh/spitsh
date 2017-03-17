@@ -1,3 +1,11 @@
+## 0.0.9
+
+- `when` now works even where $_ hasn't been declared
+- A lot better inlining of if statements.
+- You can now assign to control statements without putting them in ()
+- Made variables in "" a bit smarter. It only uses ${curlies} when it needs to now.
+
+
 ## 0.0.8
 
 - Great itemization refactor

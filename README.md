@@ -36,7 +36,7 @@ You can compile this for CentOS with:
 ``` shell
 spit --os=centos eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"'
 ```
-Which ouputs the following (imperfect) shell at the time of writing:
+Which ouputs the following shell at the time of writing:
 
 ``` shell
 BEGIN(){
@@ -45,16 +45,16 @@ BEGIN(){
   install(){ yum install -y "$1" >&4 2>&4; }
   exists(){ command -v "$1" >&4; }
   exec 3>&1
-  say(){ printf "%s\n" "$1" >&3; }
+  say(){ printf '%s\n' "$1" >&3; }
   die(){ say "$1" && exit 1; }
-  ok(){ test "$1" && say \✔" - $2" || die \✘" - $2"; }
+  ok(){ test "$1" && say "✔ - $2" || die "✘ - $2"; }
   e(){ printf %s "$1"; }
 }
 MAIN(){
   if ! installed nc; then
     install nc
   fi
-  ok "$(exists nc && e 1)" "nc command exists now"
+  ok "$(exists nc && e 1)" 'nc command exists now'
 }
 BEGIN && MAIN
 ```
@@ -69,11 +69,10 @@ spit --in-docker=centos eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command ex
 Unfortunately on Debian the package is named 'netcat'. Let's deal with that:
 
 ``` perl
-constant Pkg $nc = (given $*os {
+constant Pkg $nc = given $*os {
     when Debian { 'netcat' }
-    when RHEL { 'nc' }
-    default { 'nc' }
-});
+    default     { 'nc' }
+};
 
 .install unless $nc;
 ok Cmd<nc>,"nc command exists now";
