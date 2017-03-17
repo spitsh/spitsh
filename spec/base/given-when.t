@@ -1,6 +1,6 @@
 use Test;
 
-plan 13;
+plan 14;
 
 {
     my $a = "foo";
@@ -20,6 +20,14 @@ plan 13;
         default { flunk 'numeric cmp given' }
     }
 }
+
+{
+    my $y = 3;
+    when $y > 3  { flunk 'when without $_' }
+    when $y < 3  { flunk 'when without $_' }
+    when $y == 3 { pass  'when without $_' }
+}
+
 {
     my $b = "NOPE";
     given $b {

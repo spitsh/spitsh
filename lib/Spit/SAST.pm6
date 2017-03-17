@@ -59,6 +59,7 @@ class SAST::Type {...}
 class SAST::RoutineDeclare { ... }
 class SAST::CmpRegex {...}
 class SAST::Cmd {...}
+class SAST::Accepts {...}
 
 role SAST is rw {
     has Match:D $.match is required is rw;
@@ -1270,15 +1271,27 @@ class SAST::If is SAST::Children is rw {
     has $.when;
 
     method stage2($ctx) is default {
-        $!cond .= do-stage2(($!when ?? tAny() !! tBool()),:desc<If/unless condition>);
-        if not $!when {
+        my $desc;
+        if $!when {
+            $!cond .= do-stage2(tStr,:desc<when condition>);
+            if $!cond.type !~~ tBool() {
+                $!cond = self.stage2-node(
+                    SAST::Accepts,
+                    SAST::Var.new(sigil => '$',name => '_', match => $!cond.match).do-stage2(tAny),
+                    $!cond,
+                )
+            }
+            $desc = 'when block return value';
+        } else {
+            $!cond .= do-stage2(tBool,:desc<If/unless condition>);
             generate-topic-var(
                var => $!topic-var,
                blocks => ($!then, ($!else if $!else ~~ SAST::Block:D)),
                :$!cond
-            )
+            );
+            $desc = 'if/unless block return value';
         }
-        $_ .= do-stage2($ctx,:desc<if/unless block return value>) for $!then,($!else // Empty);
+        $_ .= do-stage2($ctx,:$desc) for $!then,($!else // Empty);
         self;
     }
 
@@ -1373,7 +1386,7 @@ class SAST::Type does SAST {
     method ostensible-type { self.class-type }
 
     method stage2($ctx) {
-        if self.class-type ~~ $ctx and $ctx.enum-type  {
+        if self.class-type.enum-type  {
             self;
         } elsif $ctx ~~ tStr() {
             SAST::SVal.new(val => self.class-type.^name,:$.match).do-stage2($ctx);

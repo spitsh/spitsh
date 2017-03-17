@@ -202,14 +202,7 @@ method statement-control:sym<when> ($/) {
     my ($if,$last,$this);
     for $/[0] {
         $this = SAST::If.new(
-            cond => ($_<EXPR>
-                     ?? SAST::Accepts.new(
-                            SAST::Var.new(sigil => '$',name => '_', match => $_<EXPR>),
-                            $_<EXPR>.ast,
-                            match => $_<EXPR>
-                        )
-                     !! SAST::BVal.new(val => True,match => $_<block>)
-                    ),
+            cond => ($_<EXPR> andthen .ast or SAST::BVal.new(val => True,match => $_<block>)),
             then => $_<block>.ast,
             :when,
         );

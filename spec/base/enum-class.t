@@ -1,6 +1,6 @@
 use Test;
 
-plan 17;
+plan 19;
 
 enum-class Biological-Class { }
 
@@ -54,3 +54,10 @@ ok Kangaroo ~~ Biological-Class,'Kangaroo ~~ Biological-Class';
         default { flunk 'given/when with enum-class' }
     }
 }
+
+sub test-enum(Biological-Class $a, Biological-Class $b) {
+    ok $a ~~ $b, "in sub call: {$a.name} ~~ {$b.name}";
+}
+
+test-enum Kangaroo, Mamalia;
+test-enum Mamalia, Biological-Class;
