@@ -1,6 +1,7 @@
 use Test;
 
-plan 12;
+plan 13;
+
 {
     my $a = "foo";
     given $a {
@@ -41,6 +42,14 @@ plan 12;
         when 'bar' { }
         default { is $_,"NOPE",'default with string comparison'}
     }
+}
+
+{
+    my $x = given "foo" {
+        when "bar" { "lose"}
+        when "foo" { "win" }
+    };
+    is $x, "win", "= assignment to given";
 }
 
 {

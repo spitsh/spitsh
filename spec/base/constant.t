@@ -1,5 +1,5 @@
 use Test;
-plan 4;
+plan 5;
 
 {
     constant $x = "foo";
@@ -20,4 +20,13 @@ plan 4;
 {
     constant $x = ${printf '%s' 'foo'},"bar";
     is $x,<foo bar>,'assignment to list with runtime value';
+}
+
+{
+    constant $x = if ${true} {
+        "foo"
+    } else {
+        "bar";
+    };
+    is $x,"foo",'assignment to bare if';
 }

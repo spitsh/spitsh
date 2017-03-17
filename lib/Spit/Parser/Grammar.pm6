@@ -265,7 +265,7 @@ grammar Spit::Grammar is Spit::Lang {
         :my $*DECL;
         { $*DECL = $<var-and-type>.ast }
         <.attach-pre-doc>
-        <trait>* ['=' <EXPR>]?
+        <trait>* ['=' <statement>]?
     }
 
     proto token return-type-sigil {*};

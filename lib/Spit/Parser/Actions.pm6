@@ -370,7 +370,7 @@ method on-switch ($/) {
 
 method declaration:var ($/) {
     my $var = $<var-and-type>.ast;
-    $var.assign = $<EXPR>.ast;
+    $var.assign = $<statement>.ast;
     make $*CURPAD.declare: $var;
 }
 
