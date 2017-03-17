@@ -701,11 +701,7 @@ method pblock($/) {
 
 method blockoid($/) {
     my $pad = $*CURPAD;
-    with $<when-chain> {
-        $pad.append(.ast);
-    } else {
-        $pad.append($<statementlist>.ast);
-    }
+    $pad.append($<statementlist>.ast);
     make $pad;
 }
 
