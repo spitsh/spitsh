@@ -259,7 +259,7 @@ multi method compile-assign($var,SAST::Junction:D $j) {
 
 multi method compile-assign($var,SAST::Call:D $call) {
     if $call.declaration.impure {
-        |self.node($call),'; ',self.gen-name($var),'="$R"';
+        |self.node($call),'; ',self.gen-name($var),'=$R';
     } else {
         nextsame;
     }
