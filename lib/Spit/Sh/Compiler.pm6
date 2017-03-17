@@ -689,9 +689,9 @@ multi method arg(SAST::Concat:D $_) {
 
 multi method arg(SAST::Type $_) {
     if .class-type.enum-type {
-        dq (.class-type.^types-in-enum».name).join('|')
+        escape .class-type.^types-in-enum».name.join('|')
     } else {
-        dq .gist
+        escape .gist
     }
 }
 
