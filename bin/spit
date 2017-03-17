@@ -40,7 +40,7 @@ sub USAGE {
 
 proto MAIN(
     Str $cmd,*@,
-    :$in-docker,
+    :$in-docker is copy,
     Bool :$*debug,
     Str  :$*target = 'compile',
     Bool :$no-inline,
@@ -53,9 +53,21 @@ proto MAIN(
 ) {
     note "run starting { now - (BEGIN now)}" if $*debug;
 
-    my $mangle-os = ($os || ($in-docker &&  $in-docker.split(':')[0]) andthen "\$:OS<$_>");
+    my $mangle-os = do if $os {
+        $os;
+    } elsif $in-docker {
+        if $in-docker ~~ Bool {
+            $in-docker = 'debian' if $in-docker;
+        } else {
+            $in-docker;
+        }
+    };
 
-    my %*opts = parse-opts $opts,mangle => %(|(os => $mangle-os if $mangle-os));
+    my %*opts = do if $mangle-os {
+        parse-opts $opts,mangle => %(|(os => "\$: OS<$mangle-os>"));
+    } else {
+        parse-opts $opts;
+    };
 
     my ($docker,$promise) =  ($in-docker andthen .&start-docker);
 
@@ -92,7 +104,6 @@ multi MAIN("compile",Str $file,*%_) {
 }
 
 sub start-docker($image is copy) {
-    $image = 'alpine' if $image === True;
     my @args = 'docker','run','-i','--rm',$image,'sh';
     note "starting docker with {@args[1..*].gist}" if $*debug;
     my $docker = Proc::Async.new(|@args,:w);
