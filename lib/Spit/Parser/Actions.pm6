@@ -545,8 +545,11 @@ method term:cmd ($/) {
 sub gen-method-call($/) {
     my (:@pos,:%named) := $<args>.ast;
     my $name = $<name>.Str;
-    return SAST::WHAT.new if $name eq 'WHAT';
-    return SAST::WHY.new if $name eq 'WHY';
+    given $name {
+        when 'WHAT' { return SAST::WHAT.new }
+        when 'WHY'  { return SAST::WHY.new }
+        when 'PRIMITIVE' { return SAST::PRIMITIVE.new }
+    }
 
     SAST::MethodCall.new(
         :$name,

@@ -1465,6 +1465,15 @@ class SAST::Accepts is SAST::MutableChildren {
     }
 }
 
+class SAST::PRIMITIVE is SAST::MutableChildren {
+    method type { tStr }
+    method stage2($ctx) {
+        self[0] .= do-stage2(tAny);
+        my $type = self[0].ostensible-type;
+        SAST::SVal.new(val => $type.primitive.name,:$.match).do-stage2(tStr);
+    }
+}
+
 class SAST::WHAT is SAST::MutableChildren {
     method type { tStr() }
     method stage2($) {
