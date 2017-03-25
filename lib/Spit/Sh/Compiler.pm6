@@ -182,13 +182,19 @@ proto method node($node) {
 proto method arg($node) {
     #note "arg: {$node.^name}";
     self.check-stage3($node);
-    {*};
+    {*}.itemize(True)
 }
 
 proto method cond($node) {
     #note "cond: {$node.^name}";
     self.check-stage3($node);
     {*};
+}
+
+method space-then-arg(SAST:D $_) {
+    if $_ !~~ SAST::Empty or .itemize {
+        ' ', self.arg($_).itemize(.itemize)
+    }
 }
 
 multi method node(SAST::CompUnit:D $*CU) {
@@ -373,7 +379,7 @@ multi method node(SAST::Given:D $_) {
 
 multi method node(SAST::For:D $_) {
     self.scaf('IFS');
-    'for ', self.gen-name(.iter-var), ' in', |.list.children.flatmap({ ' ',self.arg($_) })
+    'for ', self.gen-name(.iter-var), ' in', |.list.children.map({ self.space-then-arg($_) }).flat
     ,"; do\n",
     |self.node(.block,:indent,:no-empty),
     "\n{$*pad}done"
@@ -437,9 +443,9 @@ multi method node(SAST::RoutineDeclare:D $_) {
 method call($name,@named-param-pairs,@pos) {
     |@named-param-pairs.\ # Errr rakudo, why do I need \ here?
        grep({.value.compile-time !=== False }).\
-       map({ self.gen-name(.key),"=",|self.arg(.value).itemize(True),' '} ).flat,
+       map({ self.gen-name(.key),"=",|self.arg(.value),' '} ).flat,
     $name,
-    |@pos.map({ ' ',|self.arg($_).itemize(True) }).flat;
+    |@pos.map({ ' ',|self.arg($_) }).flat;
 }
 
 multi method node(SAST::SubCall:D $_)  {
@@ -490,9 +496,10 @@ multi method node(SAST::Cmd:D $cmd,:$silence) {
         $pipe-in = $cmd.in;
     }
 
-    my @cmd-body = |(self.arg($cmd.cmd),|$cmd.nodes.map({(' ',self.arg($_)) })).flat;
+    my @cmd-body  = |(self.arg($cmd.cmd).itemize($cmd.itemize),
+                    |$cmd.nodes.map({ self.space-then-arg($_) })).flat;
     my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,:$stdin);
-    my $pipe := |(|self.cap-stdout($_),'|' with $pipe-in);
+    my $pipe     := |(|self.cap-stdout($_),'|' with $pipe-in);
     |$pipe,
     ("\n{$*pad}" if $pipe and $pipe.chars + $full-cmd.chars > $.chars-per-line-cap),
     |$cmd.set-env.map({"{.key.subst('-','_',:g)}=",|self.arg(.value)," "}).flat,
@@ -611,7 +618,7 @@ multi method arg(SAST::Eval:D $_) { self.arg(.compiled) }
 multi method arg(SAST::Var:D $var) {
     my $name = self.gen-name($var);
     my $assign = $var.assign;
-    (with $assign {
+    with $assign {
         if $assign ~~ SAST::Junction:D and $assign.dis {
             dq self.compile-assign($var,$assign);
         } elsif $var ~~ SAST::VarDecl {
@@ -622,11 +629,11 @@ multi method arg(SAST::Var:D $var) {
         }
     } else {
         var $name
-     }).itemize($var.itemize);
+    }
 }
 
 multi method arg(SAST::Regex:D $_) {
-    self.arg(.src);
+    self.arg(.src)
 }
 
 multi method arg(SAST::IntExpr:D $_) { nnq '$((', |self.int-expr($_),'))' }
@@ -644,22 +651,21 @@ multi method arg(SAST::Increment:D $_,:$sink) {
     }
 }
 multi method arg(SAST::Range:D $_) {
-    cs('seq ',
-       |(.exclude-start
-         ?? ('$((',|self.int-expr($_[0]),'+1))')
-         !! |self.arg($_[0])
-        )
-       ,' ',
-       |(.exclude-end
-         ?? ('$((',|self.int-expr($_[1]),'-1))')
-         !! |self.arg($_[1])
-        );
-      ).itemize(.itemize);
+    cs 'seq ',
+    |(.exclude-start
+      ?? ('$((',|self.int-expr($_[0]),'+1))')
+      !! |self.arg($_[0])
+     )
+    ,' ',
+    |(.exclude-end
+      ?? ('$((',|self.int-expr($_[1]),'-1))')
+      !! |self.arg($_[1])
+     )
 }
 
 multi method arg(SAST::Blessed:D $_) {
     with $_[0] {
-        self.arg($_);
+        self.arg($_)
     }
 }
 
@@ -671,7 +677,7 @@ multi method arg(SAST::FileContent:D $_) {
 
 multi method arg(SAST::Concat:D $_) {
     return '""' unless .children;
-    my @compiled = .children.flatmap({ self.arg($_).itemize(True) });
+    my @compiled = .children.flatmap({ self.arg($_) });
     my $str = dq();
 
     my $last-var;
@@ -712,7 +718,7 @@ multi method arg(SAST::Call:D $_) is default {
 }
 
 multi method arg(SAST:D $_) {
-    cs(self.cap-stdout($_)).itemize(.itemize)
+    cs(self.cap-stdout($_))
 }
 multi method arg(SAST::Junction:D $_) {
     with self.try-param-substitution($_) {
@@ -723,7 +729,11 @@ multi method arg(SAST::Junction:D $_) {
 }
 
 multi method arg(SAST::Itemize:D $_) {
-    self.arg($_[0]).itemize(.itemize);
+    self.arg($_[0])
+}
+
+multi method cap-stdout(SAST::Itemize:D $_) {
+    self.cap-stdout($_[0])
 }
 
 multi method cap-stdout(ShellStatus $_) {
@@ -736,7 +746,7 @@ multi method cap-stdout(SAST::If:D $_) {
 }
 
 multi method cap-stdout(SAST:D $_) {
-    self.scaf('e'),' ',|self.arg($_).itemize(True);
+    self.scaf('e'),' ',|self.arg($_)
 }
 
 multi method cap-stdout(SAST::Call:D $_) is default {
