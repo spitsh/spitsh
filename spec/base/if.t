@@ -1,5 +1,5 @@
 use Test;
-plan 40;
+plan 44;
 
 if True {
    pass "basic if works";
@@ -207,6 +207,18 @@ if $true and $false {
 
     is $_,"true",'$_ is set in statement mod' if Cmd<true>;
     is .WHAT,'Cmd','$_ type is right in statement mod' if Cmd<true>;
+
+    is ${printf "%s-%s" ("one" if $true) ("two" if $false) ("three" if $true) },
+       "one-three", '${printf (X if true)} flattens out in cmd';
+
+    is ${printf "%s-%s-%s" ("one" if $true) $("two" if $false) ("three" if $true) },
+       "one--three", '$(X if false) itemizes';
+
+    is ${printf "%s-%s" ("one" if True) ("two" if False) ("three" if True) },
+       "one-three", '${printf (X if true)} flattens out in cmd (compile time)';
+
+    is ${printf "%s-%s-%s" ("one" if True) $("two" if False) ("three" if True) },
+       "one--three", '$(X if false) itemizes (compile time)';
 }
 
 {

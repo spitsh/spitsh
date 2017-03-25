@@ -1301,6 +1301,8 @@ class SAST::If is SAST::Children is rw {
         ($!else // Empty if $.stage3-done)
     }
     method type { derive-common-parent($!then.type, ($!else.type if $!else)) }
+
+    method itemize { False }
 }
 
 class SAST::While is SAST::Children {
