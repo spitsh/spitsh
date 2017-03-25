@@ -262,7 +262,7 @@ method new-class ($/) {
 method class-params ($/) {
     make $<type-name>.map({
         $*CURPAD.lookup(CLASS,.Str,match => $_);
-    }).List;
+    }).list;
 }
 
 method declaration:sym<augment> ($/) {
