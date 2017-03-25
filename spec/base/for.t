@@ -1,6 +1,6 @@
 use Test;
 
-plan 24;
+plan 27;
 
 for <one two three> {
 
@@ -91,6 +91,26 @@ for 4,5 {
         $k++;
     }
     is $k, 7, '$(...) in for'
+}
+
+{
+    my $l = 0;
+
+    for ("one","two" if ${true}), "three" {
+        $l++;
+    }
+
+    is $l, 3, "if statements in loop list don't itemize";
+
+    for ("one","two" if False) {
+        $l++
+    }
+    is $l, 3, "a compile-time empty loop list doesn't iterate";
+
+    for ("one","two" if ${false}) {
+        $l++
+    }
+    is $l, 3, "a run-time empty loop doesn't iterate";
 }
 
 pass "statement-mod for $_" for ^3;
