@@ -14,6 +14,7 @@ role Spit::Type {
     method Bool { self === Spit::Type ?? False !! True }
     method name { self.^name }
     method primitive { self.^primitive }
+    method is-primitive { self === self.primitive }
     method parameterized { so self ~~ Spit::Parameterized && self.params }
     method enum-type {  so self.HOW ~~ Spit::Metamodel::EnumClass }
 }
@@ -24,6 +25,7 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
     has $!num-params = 0;
     has @!placeholder-params;
     has $!declaration;
+    has %!param-type-cache;
 
     method new_type(|) {
         my \type = callsame;
@@ -53,10 +55,29 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
 
     method parameterize(Mu \type, *@params) {
         if @params {
-            my $what := type.^mixin(Spit::Parameterized[|@params]);
-            $what.^set_name("{type.^name}[{@params.map(*.name).join(", ")}]");
-            $what.^compose; # dunno why but I have to do this
-            $what;
+                                              # .&WHAT is just here to decont
+            my $cached := %!param-type-cache{\(|@params.map(*.&WHAT)).WHICH} and return $cached;
+            my $name := "{type.^name}[{@params.map(*.name).join(", ")}]";
+            my $what;
+            my $role := Spit::Parameterized[|@params];
+
+            my @permutations = [X] @params.map: *.^parents(:local).grep(Spit::Type);
+
+            if @permutations {
+                $what := Spit::Metamodel::Type.new_type(:$name);
+                $what.^add_role($role);
+                for @permutations -> \parent-params is raw {
+                    $what.^add_parent(type.^parameterize(|parent-params));
+                }
+                $what.^set-primitive($what) if @params.grep(*.is-primitive);
+                $what.^compose;
+            } else {
+                $what := type.^mixin($role);
+                $what.^set_name($name);
+                $what.^set-primitive: $what;
+                $what.^compose;
+            }
+            $cached = $what;
         } else {
             type;
         }

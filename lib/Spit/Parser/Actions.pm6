@@ -306,8 +306,7 @@ method trait:sym<is> ($/){
     } elsif $<impure> {
         $*ROUTINE.impure = True;
     } else {
-        my $parent := $*CURPAD.lookup(CLASS,$<type-name>.Str,match => $<type-name>).class;
-        $*CLASS.class.^add_parent($parent);
+        $*CLASS.class.^add_parent($<type>.ast);
     }
 }
 

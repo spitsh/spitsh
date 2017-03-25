@@ -207,7 +207,7 @@ grammar Spit::Grammar is Spit::Lang {
             |$<export>='export'
             |$<rw>='rw'
             |$<impure>='impure'
-            |<type-name>
+            |<type>
         ]
     }
 
