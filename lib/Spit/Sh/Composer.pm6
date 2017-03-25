@@ -66,13 +66,13 @@ multi method walk(SAST::CompUnit:D $THIS is rw) {
 }
 
 multi method walk(SAST::ClassDeclaration:D $THIS is rw) {
-    $THIS .= stage3-node(SAST::Nop);
+    $THIS .= stage3-node(SAST::Empty);
 }
 
 
 multi method reduce-block(SAST::Block:D $block) {
-    if $block.children == 0 || $block.children.all ~~ SAST::Nop {
-        $block.stage3-node(SAST::Nop);
+    if $block.children == 0 || $block.children.all ~~ SAST::Empty {
+        $block.stage3-node(SAST::Empty);
     } elsif $block.one-stmt -> $one-stmt {
         $one-stmt;
     } else {
@@ -85,7 +85,7 @@ multi method reduce-block(SAST:D $non-block) { $non-block }
 multi method walk(SAST::While:D $THIS is rw) {
     with $THIS.cond.compile-time -> $cond {
         if not $cond {
-            $THIS .= stage3-node(SAST::Nop);
+            $THIS .= stage3-node(SAST::Empty);
             return;
         }
     }
@@ -100,7 +100,7 @@ multi method walk(SAST::If:D $THIS is rw,:$sub-if) {
                 $THIS = $else;
                 self.walk($THIS);
             } else {
-                $THIS .= stage3-node(SAST::Nop);
+                $THIS .= stage3-node(SAST::Empty);
             }
         }
     } else {
@@ -573,7 +573,7 @@ multi method include(SAST:D $sast) {
 multi method include(SAST::PhaserBlock:D $phaser-block is rw) {
     self.include($phaser-block.block);
     $*CU.phasers[$phaser-block.stage].push($phaser-block.block);
-    $phaser-block .= stage3-node(SAST::Nop,:included);
+    $phaser-block .= stage3-node(SAST::Empty,:included);
 }
 
 # If we include a Doom we're doomed.

@@ -345,7 +345,7 @@ multi method node(SAST::If:D $_,:$else) {
     |self.cond(.cond),"; then\n",
     |self.node(.then,:indent,:no-empty),
     |(with .else {
-         when SAST::Nop   { Empty }
+         when SAST::Empty   { Empty }
          when SAST::If    { "\n{$*pad}",|self.node($_,:else) }
          when SAST::Block { "\n{$*pad}else\n",|self.node($_,:indent,:no-empty) }
      } elsif .type ~~ tBool() {
@@ -526,7 +526,8 @@ multi method node(SAST:D $_) {
     ': ',|self.arg($_);
 }
 
-multi method node(SAST::Nop:D $_) { Empty }
+multi method node(SAST::Empty:D $_) { Empty }
+multi method  arg(SAST::Empty:D $_) { dq '' }
 
 multi method node(SAST::Quietly:D $_) {
     |self.node(.block,:curlies),' 2>',('&' if .null.type ~~ tFD()),self.arg(.null);

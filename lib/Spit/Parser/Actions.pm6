@@ -111,7 +111,7 @@ method pragma:sym<use>($/) {
         }
 
     }
-    make SAST::Nop.new;
+    make SAST::Empty.new;
 }
 
 method statement-prefix:sym<END> ($/) {

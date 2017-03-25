@@ -41,7 +41,7 @@ class SAST::IntExpr   {...}
 class SAST::Var       {...}
 class SAST::Block     {...}
 class SAST::Param     {...}
-class SAST::Nop       {...}
+class SAST::Empty       {...}
 class SAST::Return    {...}
 class SAST::Signature {...}
 class SAST::MethodCall {...}
@@ -1364,7 +1364,7 @@ class SAST::For is SAST::Children {
     method type { $!block.type }
 }
 
-class SAST::Nop does SAST {
+class SAST::Empty does SAST {
     method type { tAny }
     method stage2 ($) { self }
 }
