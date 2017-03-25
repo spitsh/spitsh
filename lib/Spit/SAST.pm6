@@ -1367,6 +1367,7 @@ class SAST::For is SAST::Children {
 class SAST::Empty does SAST {
     method type { tAny }
     method stage2 ($) { self }
+    method itemize { False }
 }
 
 class SAST::Type does SAST {
