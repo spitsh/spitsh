@@ -276,7 +276,7 @@ multi method walk(SAST::Eval:D $THIS is rw) {
         }
     }
 
-    require Spit::Compile <&compile>;
+    $ = (require Spit::Compile <&compile>);
     $THIS .= stage3-node(
         SAST::SVal,
         val => compile(
