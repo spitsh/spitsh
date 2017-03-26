@@ -145,18 +145,6 @@ class SX::UndeclaredSpecial is SX {
     }
 }
 
-class SX::UndeclaredSpecialOnOS is SX::UndeclaredSpecial {
-    has $.os is required;
-    has @.candidates;
-
-    method message {
-        "unable to find a definition for special {$.class.^name}<*$.name> on {$!os.gist}\n" ~
-        "It has definitions on the following operating systems:\n" ~
-        "   " ~ @!candidates.map(*.gist).join("   \n");
-
-    }
-}
-
 class SX::BadCall is SX {
     has $.declaration is required;
     has $.reason is required;
