@@ -1,58 +1,133 @@
-use nqp;
-use NQPHLL:from<NQP>;
 use Spit::Constants;
-constant $error-lines = 4;
+use Terminal::ANSIColor;
+
+sub line-start($match) {
+    $match.orig.substr(0,$match.from).lines.elems;
+}
+
+sub gen-ctx(+@marks,
+            :$orig is copy,
+            Int :$middle-line is copy,
+            :$lines = 6,
+            :$before is copy = '',
+            :$after = '',
+            :$yada,
+           ) {
+
+    $orig //= @marks[0]<match>.orig;
+
+    $middle-line //= do if @marks == 1 {
+        @marks[0]<match>.&line-start;
+    } else {
+        ((@marks[0]<match>.&line-start +
+         @marks[1]<match>.&line-start)/2).Int
+    }
+
+    my $offset = 0;
+
+    for @marks -> (:$before,:$after,:$match) {
+
+        if $before {
+            my $substr := $orig.substr-rw($match.from + $offset, $match.to + $offset);
+            $substr = $before ~ $substr;
+            $offset += $before.chars;
+        }
+
+        if $after {
+            my $substr := $orig.substr-rw(0,$match.to + $offset);
+            $substr ~~ s|\s*$|$after$/|;
+            $offset += $after.chars;
+        }
+    }
+
+    my $start-line = $middle-line - ($lines/2).Int;
+
+    if $start-line < 0 {
+        $start-line = 0;
+    } else {
+        $before ~= "$yada\n" if $yada;
+    }
+
+    my @lines;
+
+    for $orig.lines[$start-line..*] {
+        if @lines or not /^\s*$/ {
+            @lines.push($_);
+        }
+
+        last if @lines >= $lines;
+    }
+
+    @lines[0] = $before ~ @lines[0];
+    @lines[*-1] ~= $after;
+    return @lines.join("\n");
+}
+
+my constant \GRAY = color("238");
+my constant \YELLOW = color("yellow");
+
 class SX is Exception is rw {
 
-    has $.pre is required;
-    has $.post is required;
-    has $.marked;
     has $.line is required;
-    has $.message;
+    has $.match is required;
     has $.cu-name is required;
 
     multi method new(:$node!,|a) {
         callwith(match => $node.match,:$node,|a);
     }
 
-    multi method new(:$match!,:$after,|a) {
-        my $orig := $match.orig;
-        my $pre = $orig.substr(0,$match.from);
-        my $post = $orig.substr($match.to);
-        if $pre.lines > $error-lines {
-            my @pre = $pre.lines[(* - $error-lines)..*];
-            @pre.shift while @pre[0] ~~ /^\s*$/;
-            $pre = "......\n" ~ @pre.join("\n") ~ ("\n" if $pre.ends-with("\n"));
+    multi method new(:$match is copy,|c) is default {
+        if not $match {
+            my $tmp = OUTER::CALLER::LEXICAL::<$/>;
+            $match = $tmp // Nil;
         }
-        if $post.lines > $error-lines {
-            my @post = $post.lines[0..($error-lines -1)];
-            @post.pop while @post[*-1] ~~ /^\s*$/;
-            $post = @post.join("\n") ~ "\n......";
-        }
-        my $marked = do if $after {
-            $pre ~= $match.Str;
-            if $pre ~~ s/(\s+)$// {
-                $post = $/[0].Str ~ $post;
-            }
-            '⏏'
-        } else {
-            '⏏' ~ $match.Str;
-        }
-        my $line = HLL::Compiler.lineof($orig,$match.from);
-        self.bless(:$pre,:$post,:$marked,:$line,cu-name => $*CU-name,|a);
-    }
-
-    multi method new(|a) {
-        my $match = CALLER::LEXICAL::<$/>;
-        self.new(:$match,|a);
+        my $line = $match.&line-start;
+        self.bless(:$line,cu-name => $*CU-name,:$match,|c);
     }
 
     method gist {
-        my ($red,$clear,$green,$yellow,$eject) = Rakudo::Internals.error-rcgye;
-        "ERROR while compiling $!cu-name: " ~
-        "$.message\n$!cu-name:$!line\n$green$.pre$yellow$.marked$red$.post$clear" ;
+        my $snippet := gen-ctx :before(GRAY), :after(RESET),
+        ${ :before(RESET() ~ $.mark-before), :after($.mark-after ~ RESET() ~ GRAY), :$.match };
+        self.ERROR ~ " $.message\n$!cu-name:$!line\n$snippet";
     }
 
+    method mark-before { color("on_red") }
+    method mark-after  { '' }
+
+    method ERROR { colored("ERROR","red") ~ " while compiling $!cu-name:"}
+}
+
+class SX::Unbalanced is SX {
+    has Match:D $.opener is required;
+    has $.closer is required;
+    has $.desc;
+
+    method gist {
+        my $o-line = $.opener.&line-start;
+        if $.line - $o-line < 8 {
+            my $snippet := gen-ctx :lines(8), :before(GRAY), :after(RESET),
+            ${ :before(YELLOW ~ BOLD()),
+               :after(BOLD_OFF() ~ RESET), match => $!opener },
+            ${ :after(colored(colored(" $!closer↩","green"),"bold") ~  GRAY), :$.match};
+            self.ERROR ~ " $.message." ~
+            "\n$.cu-name:$o-line\n$snippet";
+        } else {
+            my $o-snippet = gen-ctx :lines(4), :before(GRAY), :after(RESET),
+            ${ :before(YELLOW ~ BOLD()),
+               :after(BOLD_OFF() ~ RESET), match => $!opener };
+            my $c-snippet = gen-ctx :after(RESET), :lines(4),
+               :yada(GRAY ~  "====line:$.line===" ~ RESET),
+            ${ :after(colored(colored(" $!closer↩","green"),"bold") ~ GRAY), :$.match };
+
+            self.ERROR ~ " $.message\n" ~
+            "$.cu-name:$o-line\n$o-snippet\n" ~
+            "$c-snippet";
+        }
+    }
+
+    method message {
+        "Couldn't find closing ‘$.closer’{ $!desc andthen " to finish $_" }"
+    }
 }
 
 class SX::TypeCheck is SX {
@@ -76,6 +151,8 @@ class SX::Expected is SX {
     has Str:D $.expected is required;
 
     method message { "Expected $!expected." }
+    method mark-before { '' }
+    method mark-after { colored('➧','red') }
 }
 
 class SX::MethodNotFound is SX {
@@ -105,8 +182,7 @@ class SX::Redeclaration is SX {
     has Match:D $.orig-match is required;
 
     method message {
-        my $line = HLL::Compiler.lineof($!orig-match.orig,$!orig-match.from);
-        "$!type $!name already declared on line $line.";
+        "$!type $!name already declared on line {$!orig-match.&line-start}.";
     }
 }
 
@@ -136,6 +212,8 @@ class SX::Undeclared is SX {
         }
         "$desc '$name' hasn't been declared.";
     }
+
+    method mark-before { colored('➧','red') }
 }
 
 class SX::UndeclaredSpecial is SX {
