@@ -158,7 +158,9 @@ grammar Spit::Grammar is Spit::Lang {
         <type-name>
         <class-params>?
     }
-    rule class-params { '[' <type-name> *% [<.ws>','] ']' }
+    rule class-params {
+        $<params>=<.r-wrap: '[', rule { <type-name>* % ','},']', :desc<class parameter list> >
+    }
     token declare-class-params { <?> }
     rule declaration:sym<class> {
         :my $*CLASS;
@@ -239,23 +241,20 @@ grammar Spit::Grammar is Spit::Lang {
         { $*DECL = $*ACTIONS.make-routine($/,|c) }
         <.attach-pre-doc>
         [
-            '('
-            [
-                ||<paramlist> [<.longarrow> [$<return-type>=<type> || <.panic("invalid return type")> ] ]?
-                || <.expected("valid parameters")>
-            ]
-            ')'
+            $<param-def>=<.r-wrap:'(',rule {
+                <paramlist> [<.longarrow> [$<return-type>=<.type> || <.invalid("return type")> ] ]?
+            },')'>
         ]?
     }
 
     rule on-switch {
-        'on' '{'
-        (
-            <!before '}'>
-            [<os> || <.expected('OS name')> ]
-            [<block> || <.expected("A block for { $<os>.Str }")>]
-        )*
-        '}'
+        'on' $<candidates>=<.wrap: '{', rule {
+            (
+                <!before '}'>
+                [<os> || <.expected('OS name')> ]
+                [<block> || <.expected("A block for { $<os>.Str }")>]
+            )*
+        },'}'>
     }
 
     rule declaration:var {
@@ -354,11 +353,11 @@ grammar Spit::Grammar is Spit::Lang {
             <class-params>?
             $<object>=(
                 |<angle-quote>
-                |'{' <EXPR> ['}' || <.expected(q<closing '}' in object definition>)>]
+                | $<EXPR>=<.r-wrap('{',/<R=.EXPR>/,'}',:desc<object definition>)>
             )?
             ||
             $<call-args>=(
-                | '('<.ws><args><.ws>')'
+                | $<args>=<.r-wrap('(',/<R=.args>/,')',:desc("call to {$<name>.Str}'s arguments"))>
                 | \s+ <args>
             )?
         ]
@@ -375,7 +374,10 @@ grammar Spit::Grammar is Spit::Lang {
     token term:pair {
         ':'
           [
-              |$<key>=<.identifier>['(' $<value>=<.EXPR> ')'|$<value>=<.angle-quote>]?
+              |$<key>=<.identifier> [
+                  | $<value>=<.wrap: '(', /<R=.EXPR>/, ')',:desc<pair value>>
+                  | $<value>=<.angle-quote>
+              ]?
               |<var>
           ]
     }
@@ -387,7 +389,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token term:parens {
-       '(' <.ws> <statement> <.ws> [')' | <.expected("closing )")>]
+        $<statement>=<.wrap: '(',rule { '' <R=.statement> },')',:desc<parenthesized expression>>
     }
 
     rule term:cmd { <cmd> }
@@ -395,7 +397,7 @@ grammar Spit::Grammar is Spit::Lang {
     # .call for @something
     rule term:topic-call {
         '.'$<name>=<.identifier>
-        ['(' ~ ')' <args>]?
+        [$<args>=<.wrap: '(', /<R=.args>/,')',:desc<call arguments>>]?
     }
     # -->Pkg.install unless Cmd<curl>
     rule term:topic-cast {
@@ -441,7 +443,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token postfix:method-call {
         '.'$<name>=<.identifier>
-        ['(' ~ ')' <args>]?
+        [ $<args>=<.r-wrap: '(',/<R=.args>/,')', :desc<method call arguments>> ]?
     }
     token postfix:cmd-call {
         '.'<cmd>
@@ -452,7 +454,7 @@ grammar Spit::Grammar is Spit::Lang {
     token postfix:sym<⟶> { <.longarrow> [<type> || <.expected("A type to cast to.")>] }
     token postfix:sym<[ ]> {  <index-accessor> }
 
-    token index-accessor { '['<EXPR>']' }
+    token index-accessor { $<EXPR>=<.wrap: '[',/<R=.EXPR>/,']',:desc<positional accessor>> }
 
     proto token prefix {*}
     token prefix:sym<++> { <sym> }
@@ -473,9 +475,7 @@ grammar Spit::Grammar is Spit::Lang {
     # requires a <.newpad> before invocation
     # and a <.finishpad> after
     token blockoid {
-        '{'
-        <statementlist>
-        ['}' || <.expected('closing }')>]
+        $<statementlist>=<.wrap('{',/<R=.statementlist>/,'}',:desc("block"))>
     }
 
     token block {
@@ -491,7 +491,7 @@ grammar Spit::Grammar is Spit::Lang {
     token type-name { <.identifier> }
 
     token p5regex {
-        '/'$<src>=<.LANG('Quote-rx',:closer</>)> '/'
+        $<src>=<.wrap: '/', /<R=.LANG('Quote-rx',:closer</>)>/, '/' , :desc<regex>>
     }
 
     rule cmd {
@@ -522,7 +522,7 @@ grammar Spit::Grammar is Spit::Lang {
     token output-redir {
         $<src>=(
             |$<all>='*'
-            |'(' $<fd>=<.EXPR> ')'
+            |$<fd>=<.wrap: '(',/<R=.EXPR>/,')', :desc<source file descriptor>>
             |$<err>='!'
         )?
         [$<append>='>>' | $<write>='>']
@@ -539,15 +539,11 @@ grammar Spit::Grammar is Spit::Lang {
 
 
     token quote:double-quote {
-        '"'
-        $<str>=<.LANG('Quote-qq',:opener('"'),:closer('"'),:tweaks<curlies>)>
-        ['"' || <.expected(q|closing '"'|)> ]
+        $<str>=<.wrap('"',/<R=.LANG('Quote-qq',:opener('"'),:closer('"'),:tweaks<curlies>)>/,'"',:desc<double-quoted string>)>
     }
 
     token quote:single-quote {
-        "'"
-        $<str>=<.LANG('Quote-q',:opener("'"),:closer("'"))>
-        ["'" || <.expected(q|closing "'"|)>]
+        $<str>=<.wrap("'",/<R=.LANG('Quote-q',:opener("'"),:closer("'"))>/,"'",:desc<quoted string>)>
     }
 
     token quote:sym<qq> {
@@ -583,7 +579,8 @@ grammar Spit::Grammar is Spit::Lang {
             }
         }
 
-        $<str>=<.LANG($lang,:$opener,:$closer,:tweaks(|@tweaks,'balanced'))> [$closer || <.expected("closing $closer")>]
+        $<str>=<.LANG($lang,:$opener,:$closer,:tweaks(|@tweaks,'balanced'))>
+        <closer: $<opener> // $<open-and-close>, $closer, :desc($lang.lc)>
     }
 
     token angle-quote {
@@ -591,7 +588,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token quote:sym<eval> {
-        <sym>['(' <args> ')']?<balanced-quote('Quote-q')>
+        <sym>[$<args>=<.r-wrap:'(', /<R=.args>/,')',:desc<eval arguemnts>>]?<balanced-quote('Quote-q')>
     }
 
     token ws {
@@ -628,6 +625,19 @@ grammar Spit::Grammar is Spit::Lang {
 
     token attach-pre-doc {
         <?> { if @*PRE-DOC { $*DECL.docs.append(@*PRE-DOC); @*PRE-DOC = (); } }
+    }
+
+    token wrap($o,$thing,$c,:$desc) {
+        $<o>=$o [ $<thing>=$thing || <.invalid($desc)> ]
+        {} <closer($<o>,$c,:$desc)>
+    }
+
+    rule r-wrap($o,$thing,$c,:$desc) {
+        $<o>=$o [ $<thing>=$thing || <.invalid($desc)> ]
+        {} <closer($<o>,$c,:$desc)>
+    }
+    token closer($opener,$closer,:$desc) {
+        [$closer || { SX::Unbalanced.new(:$closer,:$opener,:$desc).throw } ]
     }
 
 }

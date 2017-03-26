@@ -247,7 +247,7 @@ method declare-class-params ($/) {
 
 method new-class ($/) {
     my $class = declare-new-type($/,$<type-name>.Str,Spit::Metamodel::Type);
-    with $<class-params> {
+    with $<class-params><params><thing> {
         for $_<type-name>.map(*.Str).kv -> $i,$name {
             my $placeholder-type := Spit::Metamodel::Placeholder.new_type(:$name);
             set-primitive($placeholder-type);
@@ -260,9 +260,9 @@ method new-class ($/) {
 }
 
 method class-params ($/) {
-    make $<type-name>.map({
+    make cache  $<params><thing><type-name>.map: {
         $*CURPAD.lookup(CLASS,.Str,match => $_);
-    }).list;
+    };
 }
 
 method declaration:sym<augment> ($/) {
@@ -331,10 +331,10 @@ method routine-declaration ($/) {
 }
 
 method new-routine($/) {
-    my (:@pos,:%named) := $<paramlist>.ast;
+    my (:@pos,:%named) := $<param-def>.ast<paramlist>.ast;
     my $r = $*ROUTINE;
     $r.signature = SAST::Signature.new(:@pos,:%named);
-    $r.return-type = .ast with $<return-type> || $<return-type-sigil>;
+    $r.return-type = .ast with $<param-def>.ast<return-type> || $<return-type-sigil>;
     make $r;
 }
 
@@ -356,7 +356,7 @@ method make-routine ($/,$type,:$static) {
 
 method on-switch ($/) {
     # XXX: BUG in rakudo. Value from seq disappears so assign to array first.
-    my @tmp = $/[0].flatmap({ $_<os>.ast, $_<block>.ast });
+    my @tmp = $/<candidates>.ast[0].map({  $_<os>.ast, $_<block>.ast }).flat;
     make @tmp;
 }
 
@@ -816,3 +816,13 @@ method quote:sym<eval> ($/) {
     my %opts = $<args>.ast.<named> || Empty;
     make SAST::Eval.new(:%opts,:$src,outer => $*CURPAD);
 }
+
+method wrap ($/) {
+    with $<thing><R> {
+        make .ast;
+    } else {
+        make $<thing>;
+    }
+}
+
+method r-wrap ($/) { self.wrap($/)}
