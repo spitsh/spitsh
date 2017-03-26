@@ -1,6 +1,6 @@
 use Test;
 
-plan 12;
+plan 13;
 
 {
     class Foo {
@@ -37,6 +37,7 @@ plan 12;
     class Foo { }
     is Foo<bar>,'bar','Foo<bar>';
     is Foo{'bar'},'bar','Foo{ }';
+    is Foo{ 'bar' },'bar','Foo{ "bar" }';
     ok Foo<bar>.chars == 3,'classes inherit from Str';
 }
 
