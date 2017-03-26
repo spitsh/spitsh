@@ -181,10 +181,9 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
             if $type ~~ tList() and $node.type !~~ tList() {
                 my $elem-type := derive-type($type);
                 my $list-type = $type === tList() ?? tList($elem-type) !! $type;
-                SAST::Blessed.new(
+                $node.stage2-node(
+                    SAST::Blessed,
                     class-type => $list-type,
-                    match => $node.match,
-                    :stage2-done,
                     coerce($node,$elem-type,:desc<coercing to a list>),
                 );
             }

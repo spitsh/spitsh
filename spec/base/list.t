@@ -1,6 +1,6 @@
 use Test;
 
-plan 38;
+plan 39;
 
 {
     my @a;
@@ -114,4 +114,9 @@ plan 38;
 {
     my @h = <foo bar baz>;
     is @h.join(', '),'foo, bar, baz','.join(", ")';
+}
+
+{
+    my @a = if ${true} { "foo" };
+    is @a,"foo",'@a = assign to if returning itemized value';
 }

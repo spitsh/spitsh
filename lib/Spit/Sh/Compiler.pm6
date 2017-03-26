@@ -704,7 +704,7 @@ method compile-in-ctx($node,*%_) {
         when tStr()  { self.cap-stdout($node,|%_) }
         when tAny()  { self.node($node,|%_) }
         default {
-            SX::Bug.new(:$node,desc => "Node's type context {.gist} is invalid").throw
+            SX::Bug.new(:$node,desc => "{$node.^name}'s type context {.gist} is invalid").throw
         }
     }
 }
