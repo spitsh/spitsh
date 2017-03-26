@@ -1,3 +1,13 @@
+## 0.0.10
+
+- Added experimental .PRIMITIVE which returns the primitive type of the node
+- Parameterized class comparisons `List[File] ~~ List[Str]` now give
+  correct answer (True)
+- if statements are now non-itemizing when used as a
+  value. i.e. `${echo ("foo" if False)}` passes 0 arguments to echo
+- Hugely improved error messages esp for "missing '}'" type syntax
+  errors. They are still a WIP though.
+
 ## 0.0.9
 
 - `when` now works even where $_ hasn't been declared
