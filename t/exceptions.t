@@ -6,12 +6,12 @@ plan 9;
 
 my $name = 'syntax-tests';
 throws-like { compile( '"', :$name) },
-            SX::Expected,'stray "',
-            message => q|Expected closing '"'.|;
+            SX::Unbalanced,'stray "',
+            message => q|Couldn't find closing ‘"’ to finish double-quoted string|;
 
 throws-like { compile( '"foo', :$name ) },
-            SX::Expected, 'unfinished "',
-            message => q|Expected closing '"'.|;
+            SX::Unbalanced, 'unfinished "',
+            message => q|Couldn't find closing ‘"’ to finish double-quoted string|;
 
 throws-like { compile('foo',:$name) },
             SX::Undeclared,'undeclared sub',
@@ -39,8 +39,8 @@ throws-like { compile('my $*foo; say $*foo', :$name) },
 
 throws-like { compile('sub foo($a,$b) { }; foo("bar")',:$name)},
               SX::BadCall,"too few arguments",
-              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("bar"⏏)');
+              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("bar")');
 
 throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) },
               SX::BadCall,"too many arguments",
-              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("foo","bar",⏏"baz")');
+              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("foo","bar","baz")');
