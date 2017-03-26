@@ -64,7 +64,7 @@ grammar Spit::Grammar is Spit::Lang {
                 | {} <EXPR-and-mod>
             )
             | <?[;]>
-            | {} <.expected: "statement">
+            | {} <.invalid: "statement">
         ]
     }
 
@@ -291,7 +291,7 @@ grammar Spit::Grammar is Spit::Lang {
             <type>? $<slurpy>='*'?<var>
             {
                 if $<slurpy>.Str and $<var><sigil>.Str ne '@' {
-                    self.panic("slurpy params can only be used with '@' sigil")
+                    self.invalid("slurpy parameter")
                 }
             }
             ]
@@ -503,7 +503,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token cmd-body {
         [<!before <.ws><[|}]>> <cmd-arg> ]+ %
-        [\s<.ws> || (',' <.panic("comma in command arguments. Use whitespace to separate arguemnts")>) ]
+        [\s<.ws> || (',' <.invalid("comma in command arguments. Use whitespace to separate arguemnts")>) ]
     }
 
     token cmd-arg {
@@ -511,7 +511,7 @@ grammar Spit::Grammar is Spit::Lang {
         | <output-redir>
         | $<pair>=<::("term:pair")>
         | $<bare>=[\w+|<.hyphen>]+
-        | {} <.panic('command argument. Try putting "(...)" around expressions')>
+        | {} <.invalid('command argument. Try putting "(...)" around expressions')>
     }
 
     token cmd-term {
@@ -532,7 +532,7 @@ grammar Spit::Grammar is Spit::Lang {
             | $<cap>='~'
             | $<err>='!'
             | {} <.ws> [$<fd>=<.cmd-term> ||
-                        <.panic('ouput redirection destination. Try putting "(...)" around expressions')>]
+                        <.invalid('ouput redirection destination. Try putting "(...)" around expressions')>]
         )
     }
 

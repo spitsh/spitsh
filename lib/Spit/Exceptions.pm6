@@ -65,9 +65,11 @@ class SX::TypeCheck is SX {
     }
 }
 
-class SX::Syntax is SX {
-    has $.problem;
-    method message { "Invalid $!problem." }
+class SX::Invalid is SX {
+    has $.invalid;
+    method mark-before { '' }
+    method mark-after { colored('➧','red') }
+    method message { "Invalid $!invalid." }
 }
 
 class SX::Expected is SX {

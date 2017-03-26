@@ -26,8 +26,7 @@ grammar Spit::Lang {
         $lang_cursor."$regex"(|%args);
     }
 
-    method panic(Str:D $problem){ SX::Syntax.new(match => self.MATCH,:$problem).throw }
-    method invalid(Str:D $problem){ SX::Syntax.new(match => self.MATCH,:$problem,:after).throw }
-    method expected(Str:D $expected) { SX::Expected.new(:after,:marker-before-ws,match => self.MATCH,:$expected).throw }
+    method invalid(Str() $invalid){ SX::Invalid.new(match => self.MATCH,:$invalid).throw }
+    method expected(Str:D $expected) { SX::Expected.new(:after,match => self.MATCH,:$expected).throw }
 
 }
