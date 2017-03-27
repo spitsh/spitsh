@@ -3,7 +3,7 @@ use Test;
 plan 27;
 
 {
-    my $file = File.tmp;
+    my File $file .= tmp;
     ok $file.exists,'.tmp';
     ok $file,'File.Bool = File.exists';
     $file.remove;
@@ -15,7 +15,7 @@ plan 27;
 }
 
 {
-    my $file = File.tmp;
+    my File $file .= tmp;
     ok $file.writable,'.writable';
     ok $file.w, '.w';
 
@@ -38,7 +38,7 @@ plan 27;
 }
 
 {
-    my $file = File.tmp;
+    my File $file .= tmp;
     my @a;
     for <foo bar baz> {
         @a.push($_);
