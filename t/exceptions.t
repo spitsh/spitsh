@@ -11,7 +11,7 @@ throws-like { compile( '"', :$name) },
 
 throws-like { compile( '"foo', :$name ) },
             SX::Unbalanced, 'unfinished "',
-            message => q|Couldn't find closing ‘"’ to finish double-quoted string|;
+            message => q<Couldn't find closing ‘"’ to finish double-quoted string>;
 
 throws-like { compile('foo',:$name) },
             SX::Undeclared,'undeclared sub',
