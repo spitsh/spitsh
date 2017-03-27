@@ -3,9 +3,14 @@ use Spit::Compile;
 use Spit::OptsParser;
 need Spit::Repo;
 
+sub get-ver {
+    try $*REPO.resolve(CompUnit::DependencySpecification.new(:short-name<Spit::Compile>)).distribution.meta<ver>
+}
+
 sub USAGE {
-    print q:to/END/;
-    Spook in the Shell Script compiler v0.0.11;
+    print
+    "Spook in the Shell Script compiler v{get-ver() || 'DEV'}\n" ~
+    q:to/END/;
     Usage: spit [OPTIONS] COMMAND [arg...]
 
     Options:
