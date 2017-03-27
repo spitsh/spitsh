@@ -504,12 +504,24 @@ method term:name ($/) {
     make do if $<is-type> {
         my @params = $<class-params>.ast || Empty;
         do with $<object> {
-            my $definite = .values[0].ast;
-            SAST::Blessed.new(
-                class-name => $name,
-                :@params,
-                $definite,
-            )
+            if $_<angle-quote> andthen (my $list = .ast) ~~ SAST::List {
+                for $list.children {
+                    $_ = SAST::Blessed.new(
+                        class-name => $name,
+                        :@params,
+                        $_,
+                        match => .match,
+                    );
+                }
+                $list;
+            } else {
+                my $definite = $list || $_<EXPR>.ast;
+                SAST::Blessed.new(
+                    class-name => $name,
+                    :@params,
+                    $definite,
+                )
+            }
         } else {
             SAST::Type.new(
                 class-name => $name,

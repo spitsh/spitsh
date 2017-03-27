@@ -1,6 +1,6 @@
 use Test;
 
-plan 39;
+plan 41;
 
 {
     my @a;
@@ -119,4 +119,10 @@ plan 39;
 {
     my @a = if ${true} { "foo" };
     is @a,"foo",'@a = assign to if returning itemized value';
+}
+
+{
+    is Cmd<one two three>.WHAT, 'List[Cmd]', 'Cmd<one two three>.WHAT is List[Cmd]';
+    my @h = Cmd<one two three>;
+    is @h.WHAT, 'List[Cmd]', 'thing assigning to List[Cmd] gets its type';
 }
