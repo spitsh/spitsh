@@ -1,6 +1,6 @@
 use Test;
 
-plan 35;
+plan 36;
 
 for <one two three> {
 
@@ -137,6 +137,11 @@ for 4,5 {
 
     is ( @(for <foo bar> { .chars,.chars }) ).WHAT, 'List[Int]',
        "block that returns List[Int] doesn't make expr return List[List[Int]]";
+}
+
+{
+    is (for <one two three> { .uc }).${ sed 's/E/z/g' }, <ONz TWO THRzz>,
+       "piping into command";
 }
 
 
