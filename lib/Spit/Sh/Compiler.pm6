@@ -446,6 +446,10 @@ multi method node(SAST::For:D $_) {
     |self.node(.block,:indent,:no-empty),
     "\n{$*pad}done"
 }
+
+multi method arg(SAST::For:D $_) {
+    cs self.node($_)
+}
 #!Junction
 multi method node(SAST::Junction:D $_) {
     |self.cond($_[0]), (.dis ?? ' || ' !! ' && '),|self.node($_[1])
