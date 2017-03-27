@@ -1,3 +1,11 @@
+## 0.0.11
+
+- for and while loops can be used as values like
+  ```perl6
+  my @a = for <one two three> { .uc }
+  say @a eq <ONE TWO THREE> #-> True
+  ```
+
 ## 0.0.10
 
 - Added experimental .PRIMITIVE which returns the primitive type of the node
