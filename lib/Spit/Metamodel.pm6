@@ -49,8 +49,8 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
         $!dispatcher.get($name,$os);
     }
 
-    method spit-methods(Mu $t) {
-        $!dispatcher.namespaces.map({$!dispatcher.ns-meta($_) || Empty}).list;
+    method spit-methods(Mu $) {
+        $!dispatcher.namespaces.map({$!dispatcher.ns-meta($_)}).list;
     }
 
     method parameterize(Mu \type, *@params) {
