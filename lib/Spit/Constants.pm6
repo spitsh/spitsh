@@ -11,6 +11,7 @@ constant %precedence is export = %(
     |(<and or> X=> $('d=',LEFT)),
     '=' => $(&eq-prec,LEFT),
     ',' => $('g=',LEFT),
+    '.=' => $('i=',LEFT),
     '=>' => $('i=',LEFT),
     '??' => $('j=',RIGHT),
     '~~' => $('m=',LEFT),

@@ -619,7 +619,32 @@ method infix:sym<=> ($/) {
         $var;
     }
 }
-
+method infix:sym<.=> ($/) {
+    make -> $var,$_ {
+        unless $var ~~ SAST::Assignable && $var.assign-type {
+            SX::Assignment-Readonly.new.throw
+        }
+        when SAST::Call {
+            $var.assign = .make-new(
+                SAST::MethodCall,
+                :name(.name),
+                :named(.named),
+                :pos(.pos),
+                $var.gen-reference(match => $var.match),
+            );
+            $var;
+        }
+        when SAST::Cmd {
+            proceed if .in;
+            .in = $var.gen-reference(match => $var.match);
+            $var.assign = $_;
+            $var;
+        }
+        default {
+            SX::Invalid.new(invalid => 'RHS for ‘.=’').throw;
+        }
+    }
+}
 method infix:sym<,>  ($/) {
     make -> $lhs,$rhs {
         if $lhs ~~ SAST::List && $rhs !~~ SAST::List {

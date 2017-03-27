@@ -44,10 +44,14 @@ grammar Spit::Grammar is Spit::Lang {
 
     token eat-terminator {
         || <?{$*ENDSTMT ?? ($*ENDSTMT = False; True) !! False}>
-        || <.ws> $
-        || <.ws> ';'
-        || <.ws> <?before '}'>
+        || <.terminator>
         || <.expected("terminator")>
+    }
+
+    token terminator {
+        | <.ws> $
+        | <.ws> ';'
+        | <.ws> <?before '}'>
     }
 
     token ENDSTMT { [<.ws> <?after \v\h*> { $*ENDSTMT = True }]? }
@@ -262,8 +266,10 @@ grammar Spit::Grammar is Spit::Lang {
         {} <var-and-type($<sym>.Str)>
         :my $*DECL;
         { $*DECL = $<var-and-type>.ast }
-        <.attach-pre-doc>
-        <trait>* ['=' <statement>]?
+        <trait>* [
+            || '=' <.attach-pre-doc> <statement>
+            || <?terminator> <.attach-pre-doc>
+        ]
     }
 
     proto token return-type-sigil {*};
@@ -298,8 +304,6 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     rule check-prec($preclim,$term) {
-        <!{ $preclim }>
-        ||
         <?before
             $<check>=<.infix>
             {}
@@ -310,8 +314,7 @@ grammar Spit::Grammar is Spit::Lang {
     rule EXPR($preclim?) {
         <termish>
         [
-            {}
-            <.check-prec($preclim,$<termish>[*-1].ast)>
+            [ <!{ $preclim }> || {} <.check-prec($preclim,$<termish>[*-1].ast)> ]
             <infix>
             [ <termish>  || {}<.expected("term after infix {$<infix>[*-1]<sym>.Str}")>  ]
         ]*
@@ -421,6 +424,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token infix:eq-infix { $<sym>=<eq-infix> <!before '='> }
     token infix:sym<=> { <eq-infix>?<sym> <!before \>> }
+    token infix:sym<.=>  { <sym> }
     token infix:sym<,>   { <sym> }
     token infix:sym<~~> { <sym> }
 

@@ -1,6 +1,6 @@
 use Test;
 
-plan 7;
+plan 10;
 my $a;
 $a = "init";
 {
@@ -31,4 +31,16 @@ is $a,"init","lexical scope works";
 {
     my Str $i = 1;
     is $i,"1","can override type";
+}
+
+{
+    my File $tmp .= tmp;
+    ok $tmp.exists, 'my File $tmp .= tmp';
+
+    my $str = "foo";
+    $str .= subst('o','e',:g);
+    is $str, 'fee', '$str .= ...';
+
+    $str .= ${sed 's/e/E/g' };
+    is $str, 'fEE', '.= ${ ... }';
 }
