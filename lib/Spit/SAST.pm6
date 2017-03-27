@@ -1317,17 +1317,18 @@ class SAST::While is SAST::Children {
     method stage2($ctx) {
         $!cond .= do-stage2(tBool,:desc<while conditional>);
         generate-topic-var(var => $!topic-var,:$!cond,blocks => ($!block,));
-        $!block .= do-stage2($ctx,:desc<while block return value>);
+        $!block .= do-stage2($ctx,:desc<while block return value>,:loop);
         self;
     }
     method children { $!cond,$!block,($!topic-var // Empty) }
-    method type { tAny }
+    method type { tList($!block.type) }
 }
 
 class SAST::Given is SAST::Children is rw {
     has SAST:D $.given is required;
     has SAST::Block:D $.block is required;
     has SAST::VarDecl $.topic-var;
+    has Spit::Type $!type;
 
     method stage2($ctx) {
         $!topic-var = dollar_(match => $!given.match,assign => $!given,:dont-depend);
@@ -1339,7 +1340,7 @@ class SAST::Given is SAST::Children is rw {
 
     method children { $!block,$!topic-var }
 
-    method type {$!block.type }
+    method type { $!type ||= tList($!block.type) }
 }
 
 class SAST::For is SAST::Children {

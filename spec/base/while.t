@@ -1,6 +1,6 @@
 use Test;
 
-plan 21;
+plan 24;
 
 {
     my $i = 0;
@@ -84,4 +84,18 @@ class Foo is Int {
 {
     my $i = 1;
     is .squared,64,'statement-mod while: $_ has correct value' if $i++ == 4 while Foo{$i}.times2;
+}
+
+{
+    my $j = 0;
+    my @a = while ++$j < 5 { "foo$j" }
+
+    is @a, <foo1 foo2 foo3 foo4>, "while loop as value";
+
+    is ( @(while ++$j < 5 { Cmd{"foo$j"},Cmd{"bar$j"} })).WHAT, List[Cmd],
+       'while becomes List[of-whatever-block-returns]';
+
+    $j = -1;
+    is (while ++$j < 3 {  <one two three>[$j].uc }).${ sed 's/E/z/g' }, <ONz TWO THRzz>,
+       "piping into command";
 }

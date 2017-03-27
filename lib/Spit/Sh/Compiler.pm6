@@ -435,6 +435,7 @@ multi method node(SAST::While:D $_) {
     |self.node(.block,:indent,:no-empty),
     "\n{$*pad}done";
 }
+multi method cap-stdout(SAST::While:D $_) { self.node($_) }
 #!Given
 multi method node(SAST::Given:D $_) {
     |(|self.node(.topic-var),'; ' if .topic-var.depended),
