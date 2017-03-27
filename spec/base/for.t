@@ -1,6 +1,6 @@
 use Test;
 
-plan 29;
+plan 35;
 
 for <one two three> {
 
@@ -122,5 +122,22 @@ for 4,5 {
     my @n = for <one two three> { "foo",$_ }
     is @n, <foo one foo two foo three>, "block returns a list";
 }
+
+{
+    for Cmd<echo printf> {
+        is .WHAT, 'Cmd', 'for Cmd<...> { .WHAT }';
+        ok .exists, 'for Cmd<...> { .exists }';
+    }
+}
+
+{
+    my @o = for <foo bar> { .chars }
+    is @o.WHAT, 'List[Int]',
+       'becomes List[whatever block returned] when assigning';
+
+    is ( @(for <foo bar> { .chars,.chars }) ).WHAT, 'List[Int]',
+       "block that returns List[Int] doesn't make expr return List[List[Int]]";
+}
+
 
 pass "statement-mod for $_" for ^3;

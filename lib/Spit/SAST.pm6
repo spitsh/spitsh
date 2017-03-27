@@ -28,8 +28,9 @@ sub tStr is export { state $ = class-by-name('Str')   }
 sub tBool is export { state $ = class-by-name('Bool') }
 multi tList is export { state $ = class-by-name('List') }
 multi tList(Spit::Type \param) {
-    my $glist = tList();
-    $glist.^parameterize(param);
+    my $list := tList();
+    return param if param ~~ $list;
+    $list.^parameterize(param);
 }
 sub tRegex is export { state $ = class-by-name('Regex') }
 sub tOS is export { state $ = class-by-name('OS') }
@@ -1345,6 +1346,7 @@ class SAST::For is SAST::Children {
     has SAST::Block $.block is rw;
     has SAST:D $.list is required;
     has SAST::VarDecl $.iter-var;
+    has $!type;
 
     method stage2($ctx) {
         $!list .= do-stage2(tList);
@@ -1365,7 +1367,7 @@ class SAST::For is SAST::Children {
     }
 
     method children { $!list,$!block,$!iter-var }
-    method type { $!block.type }
+    method type { $!type ||= tList($!block.type) }
 }
 
 class SAST::Empty does SAST {
