@@ -14,7 +14,7 @@ my %native = (
         deps => (),
     )),
     list  => Map.new((
-        body => q|printf %s "$*"|,
+        body => q|printf "%s\n" "$*"|,
         deps => ('IFS'),
     )),
     starts-with => Map.new((
@@ -242,6 +242,10 @@ multi method arg(SAST:D $_) { cs(self.cap-stdout($_)) }
 
 multi method cap-stdout(SAST:D $_) {
     self.scaf('e'),' ',|self.arg($_)
+}
+
+multi method loop-return(SAST:D $_) {
+    self.scaf('list'),' ',|self.arg($_);
 }
 
 multi method cond(SAST:D $_) {
@@ -697,6 +701,8 @@ multi method node(SAST::WriteToFile:D $wtf) {
 multi method node(SAST::Return:D $ret) {
     if $ret.impure {
         'R=',self.arg($ret.val);
+    } elsif $ret.loop {
+        self.loop-return($ret.val);
     } else {
         self.compile-in-ctx($ret.val,|%_);
     }
@@ -829,8 +835,16 @@ multi method cap-stdout(SAST::Itemize:D $_) { self.cap-stdout($_[0]) }
 #!List
 multi method cap-stdout(SAST::List:D $_) {
     if .children > 1 {
-           self.scaf('list'),|.children.map({ ' ', |self.arg($_) }).flat;
+        self.scaf('list'),|.children.map({ ' ', |self.arg($_) }).flat;
     } else {
         self.cap-stdout(.children[0]);
+    }
+}
+
+multi method loop-return(SAST::List:D $_) {
+    if .children > 1 {
+        self.cap-stdout($_);
+    } else {
+        self.loop-return(.children[0]);
     }
 }

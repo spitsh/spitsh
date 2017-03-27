@@ -1,6 +1,6 @@
 use Test;
 
-plan 27;
+plan 29;
 
 for <one two three> {
 
@@ -111,6 +111,16 @@ for 4,5 {
         $l++
     }
     is $l, 3, "a run-time empty loop doesn't iterate";
+}
+
+{
+    my @m = for <one two three> { "foo$_" }
+    is @m, <fooone footwo foothree>, "for loop as a value";
+}
+
+{
+    my @n = for <one two three> { "foo",$_ }
+    is @n, <foo one foo two foo three>, "block returns a list";
 }
 
 pass "statement-mod for $_" for ^3;

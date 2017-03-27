@@ -473,15 +473,17 @@ class SAST::Block is SAST::MutableChildren does SAST::Dependable {
         @!symbols[$type]{$name};
     }
 
-    method stage2($ctx,:$desc) is default {
+    method stage2($ctx,:$desc,:$loop) is default {
         my $*CURPAD = self;
-        my $returns := self.last-stmt;
+        my $last-stmt := self.last-stmt;
         for @.children {
-            $_ .= do-stage2(tAny) unless $_ =:= $returns;
+            $_ .= do-stage2(tAny) unless $_ =:= $last-stmt;
         }
-        if $returns {
-            $returns = SAST::Return.new(val => $returns,match => $returns.match) if $ctx !=== tAny;
-            $returns .= do-stage2($ctx,:desc<return value of block>);
+        if $last-stmt {
+            if $ctx !=== tAny() {
+                $last-stmt = SAST::Return.new(val => $last-stmt,match => $last-stmt.match,:$loop)
+            }
+            $last-stmt .= do-stage2($ctx,:desc<return value of block>);
         }
         self;
     }
@@ -532,6 +534,7 @@ class SAST::PhaserBlock is SAST::Children {
 class SAST::Return is SAST::Children {
     has $.val is rw;
     has $.impure is rw;
+    has $.loop is rw;
     method stage2($ctx) is default {
         self.val .= do-stage2($ctx,:desc("Return value didn't match block's return type"));
         self;
@@ -1357,7 +1360,7 @@ class SAST::For is SAST::Children {
         }
         $!iter-var.do-stage2(tAny);
         $!block.declare: $!iter-var;
-        $!block .= do-stage2($ctx);
+        $!block .= do-stage2($ctx.&derive-type,:loop);
         self;
     }
 
