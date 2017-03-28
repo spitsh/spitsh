@@ -24,8 +24,7 @@ grammar Spit::Grammar is Spit::Lang {
             # It seems to store grammar/action pairs.
             self.define_slang("MAIN",self,$*ACTIONS);
             for <q qq rx> {
-                # quietly: For some reason there is a "use of uninitialized value of type Spit::Quote::*"
-                quietly self.define_slang("Quote-$_",Spit::Quote::{$_},Spit::Quote::{$_ ~ '-Actions'});
+                self.define_slang("Quote-$_",Spit::Quote::{$_},Spit::Quote::{$_ ~ '-Actions'});
             }
         }
         <.newCU>
