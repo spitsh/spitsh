@@ -4,8 +4,10 @@ enum-class UNIXish is OS { }
 #| Specifications" for the shell enironment.
 #| See: http://pubs.opengroup.org/onlinepubs/9699919799/
 enum-class POSIX is UNIXish { }
+#| For OS's that have the BusyBox UNIX utilities
+enum-class BusyBox is UNIXish { }
 #| Alpine linux distribution: https://alpinelinux.org/
-enum-class Alpine is UNIXish { }
+enum-class Alpine is BusyBox { }
 #| For OS's that have [GNU core utilities](https://www.gnu.org/software/coreutils/coreutils.html)
 #| installed by default.
 enum-class GNU is POSIX { }
