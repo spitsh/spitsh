@@ -1,5 +1,5 @@
 use MONKEY-TYPING;
-constant @metachars = Qw[ } < ? ' " \ $ ; & ( ) | > *]; #>'
+constant @metachars = Qw[ } < ? ' " \ $ ; & ( ) | > * # ]; #>'
 
 role ShellElement { }
 
