@@ -10,10 +10,3 @@ class FD is Int { }
 class File { }
 
 enum-class OS { }
-
-#| Internal routine to echo values in junction. **dont' use this**
-sub ef($str --> Str) is native  { }
-#| Internal routine to echo values in junction. **dont' use this**
-sub et($str --> Str)  is native { }
-#| Joins arguments on a `\n` creating a `List`.
-sub list(*@list --> List) is native { }
