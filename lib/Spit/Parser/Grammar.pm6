@@ -497,10 +497,12 @@ grammar Spit::Grammar is Spit::Lang {
         $<src>=<.wrap: '/', /<R=.LANG('Quote-rx',:closer</>)>/, '/' , :desc<regex>>
     }
 
-    rule cmd {
-        '${'
-        [ <.ws> <cmd-body> <.ws> ] +% '|'
-        ['}' || <.expected("} to finish shell command")>]
+    token cmd {
+        $<cmd-pipe-chain>=<.wrap: '${',rule { <R=.cmd-pipe-chain> },'}'>
+    }
+
+    token cmd-pipe-chain {
+        [ <.ws> <cmd-body> <.ws> ]+ % '|'
     }
 
     token cmd-body {
@@ -518,7 +520,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token cmd-term {
         $<i-sigil>=<::('prefix:i-sigil')>*
-        (<var> | $<parens>=<::("term:parens")> <![<>]> |<quote>)
+        (<var> | $<parens>=<::("term:parens")> <![<>]> | <quote> | <cmd> )
         <postfix>*
     }
 

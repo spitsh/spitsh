@@ -753,14 +753,14 @@ method os   ($/) { make $*CURPAD.lookup(CLASS,$/.Str,match => $/).class }
 
 method p5regex ($/) { make $<src>.ast }
 
-method cmd ($/) {
-    my $cmd;
+method cmd ($/) { make $<cmd-pipe-chain>.ast }
 
+method cmd-pipe-chain ($/) {
+    my $cmd;
     for $<cmd-body>.map(*.ast) -> $next {
         $next.in = $cmd with $cmd;
         $cmd = $next;
     }
-
     make $cmd;
 }
 
