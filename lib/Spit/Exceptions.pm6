@@ -1,8 +1,11 @@
 use Spit::Constants;
 use Terminal::ANSIColor;
 
-sub line-start($match) {
-    $match.orig.substr(0,$match.from).lines.elems;
+multi line-start(Match:D $match,Str:D $orig = $match.orig) {
+    $orig.substr(0,$match.from).lines.elems;
+}
+multi line-start(Int:D $from,Str:D $orig) {
+    $orig.substr(0,$from).lines.elems;
 }
 
 sub gen-ctx(+@marks,
@@ -15,30 +18,30 @@ sub gen-ctx(+@marks,
            ) {
 
     $orig //= @marks[0]<match>.orig;
+    my @orig = $orig.comb;
 
-    $middle-line //= do if @marks == 1 {
-        @marks[0]<match>.&line-start;
-    } else {
-        ((@marks[0]<match>.&line-start +
-         @marks[1]<match>.&line-start)/2).Int
-    }
+                    # find the average
+    $middle-line //= (@marks.map({ line-start( .<from match>.first(*.defined), $orig) }).sum/@marks).Int;
 
     my $offset = 0;
 
-    for @marks -> (:$before,:$after,:$match) {
+    @marks .= sort({ .<to> || .<match>.to });
+
+    for @marks -> (:$before,:$after,:$match,:$from is copy, :$to is copy) {
+        $from //= $match.from; $to //= $match.to; # BUG in rakudo can't do it in signature
 
         if $before {
-            my $substr := $orig.substr-rw($match.from + $offset, $match.to + $offset);
-            $substr = $before ~ $substr;
-            $offset += $before.chars;
+            @orig[$from] = $before ~ @orig[$from];
         }
 
         if $after {
-            my $substr := $orig.substr-rw(0,$match.to + $offset);
-            $substr ~~ s|\s*$|$after$/|;
-            $offset += $after.chars;
+            my $insert = $to - 1;
+            $insert-- while @orig[$insert] ~~ /^\s*$/ and $insert > 0;
+            @orig[$insert] ~= $after;
         }
     }
+
+    $orig = @orig.join;
 
     my $start-line = $middle-line - ($lines/2).Int;
 
@@ -63,7 +66,7 @@ sub gen-ctx(+@marks,
     return @lines.join("\n");
 }
 
-my constant \GRAY = color("238");
+my constant \GRAY = color("242");
 my constant \YELLOW = color("yellow");
 
 class SX is Exception is rw {
@@ -87,12 +90,15 @@ class SX is Exception is rw {
 
     method gist {
         my $snippet := gen-ctx :before(GRAY), :after(RESET),
-        ${ :before(RESET() ~ $.mark-before), :after($.mark-after ~ RESET() ~ GRAY), :$.match };
+        ${ :before(RESET() ~ $.mark-before), :after($.mark-after ~ RESET() ~ GRAY), :$.match },
+        |self.extra-marks;
+
         self.ERROR ~ " $.message\n$!cu-name:$!line\n$snippet";
     }
 
     method mark-before { color("on_red") }
     method mark-after  { '' }
+    method extra-marks { Empty }
 
     method ERROR { colored("ERROR","red") ~ " while compiling $!cu-name:"}
 }
@@ -227,8 +233,45 @@ class SX::UndeclaredSpecial is SX {
 
 class SX::BadCall is SX {
     has $.declaration is required;
-    has $.reason is required;
-    method message { "Invalid call to {$.declaration.spit-gist}.\n$!reason" }
+    has $.reason;
+    method message { "Invalid call to {$.declaration.spit-gist}.\n$.reason" }
+}
+
+class SX::BadCall::WrongNumber is SX::BadCall {
+    has Int:D $.got is required;
+    has Int:D $.expected is required;
+    has @.arg-hints;
+    method reason {
+        ($!got > $!expected ?? "Too many" !! "Not enough") ~
+        " positional arguments. Expected $!expected, got $!got.";
+    }
+    method mark-before {
+        $!got > $!expected ?? callsame() !! ''
+    }
+
+    method mark-after {
+        if $!got !== 0  and $!got < $!expected {
+            colored(", $.hint↩",'green');
+        }
+    }
+
+    method extra-marks {
+        if $!got == 0 {
+            my ($from,$hint);
+            if $.match.orig.comb[$.match.to - 1] eq ')' {
+                $from = $.match.to - 1;
+                $hint = "$.hint↩";
+            } else {
+                $from = $.match.to;
+                $hint = " $.hint↩";
+            }
+
+            (${ :after(colored($hint,'green')), :$from, :to($from) },)
+        }
+    }
+
+    method hint { @.arg-hints.join(', ') }
+
 }
 
 

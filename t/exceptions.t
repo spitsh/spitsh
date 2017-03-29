@@ -39,7 +39,7 @@ throws-like { compile('my $*foo; say $*foo', :$name) },
 
 throws-like { compile('sub foo($a,$b) { }; foo("bar")',:$name)},
               SX::BadCall,"too few arguments",
-              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("bar")');
+              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("bar", $b↩)');
 
 throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) },
               SX::BadCall,"too many arguments",

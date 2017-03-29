@@ -770,24 +770,26 @@ class SAST::Call  is SAST::Children {
                 if (my $arg := $pos-args.pull-one) !=:= IterationEnd {
                     $arg .= do-stage2(
                         $param.type,
-                        :desc("Argument {$i + 1} to {$.declaration.spit-gist} doesn't match its type")
+                        :desc("argument {$i + 1} to {$.declaration.spit-gist} doesn't match its type")
                     );
                     $last-valid := $arg;
                 } else {
-                    SX::BadCall.new(
+                    SX::BadCall::WrongNumber.new(
                         :$.declaration,
-                        reason => "Not enough positional arguments. Expected {@pos-params.elems}, got {@!pos.elems}.",
+                        expected => +@pos-params,
+                        got => +@!pos,
                         match => ($last-valid andthen .match or $.match),
-                        after => ?$last-valid,
+                        arg-hints => @pos-params[+@!pos..*]».spit-gist,
                     ).throw;
                 }
             }
         }
 
         if (my $extra-arg := $pos-args.pull-one) !=:= IterationEnd {
-            SX::BadCall.new(
+            SX::BadCall::WrongNumber.new(
                 :$.declaration,
-                reason => "Too many positional arguments. Expected {@pos-params.elems}, got {@!pos.elems}.",
+                expected => +@pos-params,
+                got => +@!pos,
                 match => $extra-arg.match,
             ).throw;
         }
