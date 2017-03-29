@@ -110,10 +110,13 @@ grammar Spit::Quote::qq is Spit::Quote {
     token elem:escaped {
         '\\' [<backslash> || <.panic(qq|backslash sequence sequence|)>]
     }
-    token elem:var {
-        <?before '$'> <var=.LANG('MAIN','var')><index-accessor=.LANG('MAIN','index-accessor')>?
-        |
-        <?before '@'> <var=.LANG('MAIN','var')><index-accessor=.LANG('MAIN','index-accessor')>
+    token elem:sigily {
+        <?before '$'|'@'>
+        [
+            |$<sigily>=<.LANG('MAIN','var')>
+            |$<sigily>=<.LANG('MAIN','cmd')>
+        ]
+        <index-accessor=.LANG('MAIN','index-accessor')>?
     }
 }
 
@@ -126,12 +129,12 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
     method backslash:literal ($/) { make $/.Str }
 
     method elem:escaped ($/) { make $<backslash>.ast }
-    method elem:var ($/) {
+    method elem:sigily ($/) {
         make do with $<index-accessor>.ast {
-            .push($<var>.ast);
+            .push($<sigily>.ast);
             $_;
         } else {
-            $<var>.ast;
+            $<sigily>.ast;
         }
     }
 }

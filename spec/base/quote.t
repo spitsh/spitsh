@@ -1,6 +1,6 @@
 use Test;
 
-plan 16;
+plan 20;
 
 {
     is '\'', "'",'single quotes can be escaped';
@@ -44,4 +44,12 @@ plan 16;
 {
     is "\c[BELL]",'🔔','\c[uniname]';
     is "\c[TWO HEARTS, BUTTERFLY]","💕🦋",'\c[uniname,uniname]';
+}
+
+{
+    my $b = "foo bar";
+    is "$b baz", "foo bar baz",'variable interpolation';
+    is qq|$b baz|,"foo bar baz",'qq variable interpolation';
+    is "${printf 'foo bar'} baz", 'foo bar baz', 'cmd interpolation';
+    is qq|${printf 'foo bar'} baz|, 'foo bar baz', 'qq cmd interpolation';
 }
