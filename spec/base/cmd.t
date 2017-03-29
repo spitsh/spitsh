@@ -11,7 +11,6 @@ is ${printf "foo" | sed 's/foo/bar/'},"bar","pipe works";
 my $var = "foo";
 is $var.${sed 's/foo/bar/'},"bar","pipe works with variable as input";
 
-# , is optional after the first arg
 is ${'printf' '%s' 'win'},'win','quoted cmd';
 is ${"printf" '%s' 'win'},'win','double quoted cmd';
 is ${ (${printf 'printf'}) '%s' 'win'},'win','cmd inside parents inside cmd';
