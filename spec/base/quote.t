@@ -1,6 +1,6 @@
 use Test;
 
-plan 20;
+plan 22;
 
 {
     is '\'', "'",'single quotes can be escaped';
@@ -49,6 +49,8 @@ plan 20;
 {
     my $b = "foo bar";
     is "$b baz", "foo bar baz",'variable interpolation';
+    is "\$b baz", '$b baz', 'escape variable interpolation';
+    is "\\$b baz", '\\foo bar baz','escape backslash before variable interpolation';
     is qq|$b baz|,"foo bar baz",'qq variable interpolation';
     is "${printf 'foo bar'} baz", 'foo bar baz', 'cmd interpolation';
     is qq|${printf 'foo bar'} baz|, 'foo bar baz', 'qq cmd interpolation';

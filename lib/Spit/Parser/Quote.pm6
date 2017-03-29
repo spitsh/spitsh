@@ -107,8 +107,9 @@ grammar Spit::Quote::qq is Spit::Quote {
     token backslash:sym<n> { <.sym> }
     token backslash:sym<c> { 'c['$<unicode-name>=[ <!before ']'> . ]*']' }
     token backslash:literal { \W }
+    token backslash:backslash { '\\' }
     token elem:escaped {
-        '\\' [<backslash> || <.panic(qq|backslash sequence sequence|)>]
+        '\\' [<backslash> || <.panic(qq|backslash escape sequence|)>]
     }
     token elem:sigily {
         <?before '$'|'@'>
@@ -127,7 +128,7 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
             SX.new(message => "Unrecognised unicode name '{$match.Str}'",:$match).throw;
     }
     method backslash:literal ($/) { make $/.Str }
-
+    method backslash:backslash ($/) { make '\\\\' }
     method elem:escaped ($/) { make $<backslash>.ast }
     method elem:sigily ($/) {
         make do with $<index-accessor>.ast {
