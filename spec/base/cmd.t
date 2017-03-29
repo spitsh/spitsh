@@ -1,6 +1,6 @@
 use Test;
 
-plan 26;
+plan 23;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -13,10 +13,7 @@ is $var.${sed 's/foo/bar/'},"bar","pipe works with variable as input";
 
 # , is optional after the first arg
 is ${'printf' '%s' 'win'},'win','quoted cmd';
-is ${'printf' '%s' 'win'},'win','quoted cmd with ,';
 is ${"printf" '%s' 'win'},'win','double quoted cmd';
-is ${"printf" '%s' 'win'},'win','double quoted cmd with ,';
-is ${ (${printf 'printf'}) '%s' 'win'},'win','cmd from block expr with ,';
 is ${ (${printf 'printf'}) '%s' 'win'},'win','cmd from block expr';
 
 is ${printf 'foo' >X },'','>X';
