@@ -19,7 +19,7 @@ role Spit::Quote::curlies {
 role Spit::Quote::balanced {
 
     token elem:balanced {
-        <?{ $*opener ne $*closer }>
+        <?{ $*opener and $*opener ne $*closer }>
         $<opener>=$*opener <quoted> $<closer>=$*closer
         { $/.make: ($<opener>.Str,|$<quoted>.ast,$<closer>.Str) }
     }
