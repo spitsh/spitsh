@@ -1525,7 +1525,7 @@ class SAST::Eval is SAST::Children   {
     method children { $!src, }
 }
 
-sub make-rx($a){ rx/<$a>/ }
+sub make-rx($a){ rx｢<$a>｣ }
 class SAST::Regex is SAST::Children is rw {
     has SAST:D $.src is required;
     has SAST %.patterns;
