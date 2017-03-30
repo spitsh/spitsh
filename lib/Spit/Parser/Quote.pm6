@@ -20,7 +20,7 @@ role Spit::Quote::balanced {
 
     token elem:balanced {
         <?{ $*opener ne $*closer }>
-        $<opener>=$*opener <quoted(:$*opener,:$*closer)> $<closer>=$*closer
+        $<opener>=$*opener <quoted> $<closer>=$*closer
         { $/.make: ($<opener>.Str,|$<quoted>.ast,$<closer>.Str) }
     }
 }
