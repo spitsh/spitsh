@@ -53,7 +53,7 @@ augment File {
         say $file[1] #-> bar
     }
     method ~at-pos(#|[The index of the line to return]Int $i) {
-        $self.read[$i]
+        ${sed -n ($i+1 ~ 'p') $self}
     }
     #| Calls chmod(1) with the file as the last argument.
     #|{ .chmod(400) if File<foo.txt>.writeable }
