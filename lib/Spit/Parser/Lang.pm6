@@ -28,5 +28,5 @@ grammar Spit::Lang {
 
     method invalid(Str() $invalid){ SX::Invalid.new(match => self.MATCH,:$invalid).throw }
     method expected(Str:D $expected) { SX::Expected.new(:after,match => self.MATCH,:$expected).throw }
-
+    method panic(Str:D $panic) { SX.new(message => $panic, match => self.MATCH).throw }
 }
