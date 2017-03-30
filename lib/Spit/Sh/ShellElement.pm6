@@ -30,7 +30,7 @@ class Escaped does DynamicShellElement {
     has @.bits;
 
     method backslashes {
-        S:g/@metachars|\h/\\$// given @!bits.join #"
+        S:g/(@metachars|\h)/\\$0/ given @!bits.join #"
     }
 
     method in-SQ {
@@ -38,7 +38,12 @@ class Escaped does DynamicShellElement {
     }
 
     method in-DQ {
-        S:g/\"|\\<?before \"|\$>|\$/\\$// given @!bits.join; #"
+        S:g!(
+               |\"
+               |\\<?before \"|\$>|\$
+            )
+            !\\$0! #"
+            given @!bits.join;
     }
 
     method as-item {
