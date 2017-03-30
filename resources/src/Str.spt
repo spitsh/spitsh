@@ -93,5 +93,46 @@ augment Str {
     }
     method ?ends-with(#|[True if the string ends-with this]$ends-with) is native {  }
 
+    method ~match(Regex $r) on {
+        RHEL {
+            $self.${
+                :$r awk (
+                    'match($0, ENVIRON["r"], a){' ~
+                    'i = 0; while(a[i,"start"]) print a[i++]' ~
+                    '}'
+                )
+            }
+        }
+        GNU {
+            my $RE = $r.subst('!','\\!');
+            my $i = 0;
+            $i++ while $self.${
+                sed -nr !>X
+                (
+                    # slurp the input
+                    'H;1h;$!d;x;' ~
+                    # surround match with crazy delims
+                    "s!$RE!👻\\$i\\n🐚!;" ~
+                    # remove delims and print
+                    "s/.*👻|🐚.*//gp"
+                )
+            };
+            ""
+        }
+        BusyBox {
+            my $i = 0;
+            $i++ while $i < 10 and $self.${
+                :$r awk -v 'RS=^$' -v "i=$i" (
+                    '{r=ENVIRON["r"];' ~
+                    'if(!match($0,r)) exit 1;' ~
+                    '$0 = gensub(r, "👻\\\\"i"🐚",1);' ~
+                    'print gensub(/.*👻|🐚.*/,"","G")' ~
+                    '}'
+                )
+            };
+            ""
+        }
+    }
+
     method ~gist { $self }
 }
