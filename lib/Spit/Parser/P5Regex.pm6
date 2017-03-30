@@ -1,11 +1,10 @@
-use Spit::SAST;
-
+need Spit::Parser::Lang;
 # A lot of this copied from NQP p5 regex.
 # Lots of p5 regex stuff not parsed properly.
 # The purpose of this is to see if we can 'downgrade' the regex
 # to a shell pattern or extended grep like regex.
 
-grammar Spit::P5Regex {
+grammar Spit::P5Regex is Spit::Lang {
     token TOP(:$*stopper = '/') {
         :my %*RX;
         :my $*INTERPOLATE := 1;
@@ -69,7 +68,7 @@ grammar Spit::P5Regex {
         <?[$]> [$<backref>=\d+]
     }
     token cclass {
-        :my $astfirst := 0;
+        :my $astfirst = 0;
         '['
         $<sign>=['^'|<?>]
         [
