@@ -70,7 +70,7 @@ my constant \GRAY = color("242");
 my constant \YELLOW = color("yellow");
 
 class SX is Exception is rw {
-
+    has $.message;
     has $.line is required;
     has $.match is required;
     has $.cu-name is required;
