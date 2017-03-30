@@ -1,3 +1,16 @@
+## 0.0.12
+
+- Fixed lots of String escaping bugs
+- Added `rx{...}` Perl 6 like regex quote
+- BusyBox is now its own OS
+- Add Str.match, which matches against a regex and returns the match
+  and any capture groups. This is very much a WIP, but this at least
+  proves it's possible to return regex capture groups separately
+  **without** using perl.
+- add `.=` operator which works for calling methods and commands like:
+  - `my File $tmp .= tmp;`
+  - `my $foo = "foo"; $foo .= ${ sed "s/o/e/" };`
+
 ## 0.0.11
 
 - for and while loops can be used as values like
