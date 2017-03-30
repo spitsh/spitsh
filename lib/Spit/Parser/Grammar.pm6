@@ -406,10 +406,6 @@ grammar Spit::Grammar is Spit::Lang {
         <.longarrow> [ <type> || <.expected('A type to cast $_ to')> ]
     }
 
-    token term:regex {
-        <p5regex>
-    }
-
     proto token eq-infix {*}
 
     token eq-infix:sym<&&> { <sym>  }
@@ -492,10 +488,6 @@ grammar Spit::Grammar is Spit::Lang {
         #TODO: make sure it's a os
      }
     token type-name { <.identifier> }
-
-    token p5regex {
-        $<src>=<.wrap: '/', /<R=.LANG('Quote-rx',:closer</>)>/, '/' , :desc<regex>>
-    }
 
     token cmd {
         $<cmd-pipe-chain>=<.wrap: '${',rule { <R=.cmd-pipe-chain> },'}'>
@@ -594,6 +586,11 @@ grammar Spit::Grammar is Spit::Lang {
 
     token quote:sym<eval> {
         <sym>[$<args>=<.r-wrap:'(', /<R=.args>/,')',:desc<eval arguemnts>>]?<balanced-quote('Quote-q')>
+    }
+
+    token quote:regex {
+        |$<str>=<.wrap: '/', /<R=.LANG('Quote-rx',:closer</>)>/, '/' , :desc<regex>>
+        |'rx' $<str>=<.balanced-quote('Quote-rx')>
     }
 
     token ws {

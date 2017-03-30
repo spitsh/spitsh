@@ -483,9 +483,6 @@ method var-create($/,$decl-type) {
 
 method term:block ($/) { make $<block>.ast }
 method term:quote ($/)   { make $<quote>.ast  }
-method term:regex ($/) {
-    make SAST::Regex.new(src => $<p5regex>.ast);
-}
 method term:angle-quote ($/) { make $<angle-quote>.ast }
 method term:int ($/)   { make $<int>.ast    }
 method int ($/) { make SAST::IVal.new: val => $/.Int }
@@ -751,8 +748,6 @@ method type ($/) {
 }
 method os   ($/) { make $*CURPAD.lookup(CLASS,$/.Str,match => $/).class }
 
-method p5regex ($/) { make $<src>.ast }
-
 method cmd ($/) { make $<cmd-pipe-chain>.ast }
 
 method cmd-pipe-chain ($/) {
@@ -831,6 +826,7 @@ method quote:double-quote ($/) { make $<str>.ast andthen .match = $/;  }
 method quote:single-quote ($/) { make $<str>.ast andthen .match = $/; }
 method quote:sym<qq>      ($/) { make $<str>.ast andthen .match = $/; }
 method quote:sym<q>       ($/) { make $<str>.ast andthen .match = $/; }
+method quote:regex        ($/) { make SAST::Regex.new(src => $<str>.ast) andthen .match = $/; }
 method balanced-quote ($/)     { make $<str>.ast andthen .match = $/; }
 
 method angle-quote ($/) {
