@@ -5,12 +5,12 @@ need Spit::Parser::Lang;
 # to a shell pattern or extended grep like regex.
 
 grammar Spit::P5Regex is Spit::Lang {
-    token TOP(:$*stopper = '/') {
+    token TOP {
         :my %*RX;
         :my $*INTERPOLATE := 1;
         <nibbler>
     }
-    token rxstopper { $*stopper }
+
     token nibbler {
         :my $OLDRX := CALLERS::<%*RX>;
         :my %*RX;
@@ -28,9 +28,8 @@ grammar Spit::P5Regex is Spit::Lang {
     }
     token quantified_atom {
         <![|)]>
-        <!rxstopper>
         <atom>
-        [ <.ws> <!before <rxstopper> > <quantifier=p5quantifier> ]?
+        [ <.ws> <quantifier=p5quantifier> ]?
         <.ws>
     }
     token atom {
@@ -281,7 +280,7 @@ class Spit::P5Regex-Actions {
 
     method p5metachar:sym<.>($/) { make atom(bre => '.',ere => '.',case => '?') }
     method p5metachar:sym<^>($/) {
-        $*prev-atom andthen .case andthen ($_ = '' when '*');
+        $*prev-atom andthen .<case> andthen ($_ = '' when '*');
         make atom(:bre,:ere,:case(''));
     }
     method p5metachar:sym<$>($/) { make atom(:bre,:ere,:case('')) }
