@@ -1,6 +1,6 @@
 use Test;
 
-plan 31;
+plan 33;
 
 {
     ok "0","'0' is true";
@@ -81,10 +81,10 @@ plan 31;
     nok $str.contains("lorem ipsum"),'contains is case sensitive by default';
     ok $str.contains("lorem ipsum",:i),'.contains :i';
     ok $str.contains('LOREM',:i),'.contains with uc arg :i';
-}
-
-{
-    qq{if True {\n    foo\n}}.contains(qq{if True {\n    foo  a\n}})
+    ok qq{if True {\n    foo\n}}.contains(qq{if True {\n    foo\n}}),
+        'multi-line contains';
+    nok qq{if True {\n    foo\n}}.contains(qq{if True {\n    foo\n after}}),
+        'multi-line contains (false)';
 }
 
 {
