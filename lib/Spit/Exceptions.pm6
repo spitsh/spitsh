@@ -182,6 +182,16 @@ class SX::RoutineNotDefOnOS is SX {
 
 }
 
+class SX::OnBlockNotDefOnOS is SX {
+    has @.candidates;
+    has $.os is required;
+
+    method message {
+        “On block isn't defined on {$!os.name}.” ~
+        ("\nCandidates defined for: {@.candidates».name.join(', ')}." if @.candidates);
+    }
+}
+
 class SX::Redeclaration is SX {
     has $.name is required;
     has $.type is required;

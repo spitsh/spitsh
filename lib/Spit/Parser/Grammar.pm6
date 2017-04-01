@@ -155,6 +155,11 @@ grammar Spit::Grammar is Spit::Lang {
         )+
     }
 
+    rule statement-control:sym<on> {
+        <on-switch>
+        <.ENDSTMT>
+    }
+
     proto token declaration {*}
 
     rule new-class {

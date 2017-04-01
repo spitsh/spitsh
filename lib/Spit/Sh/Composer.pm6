@@ -415,6 +415,21 @@ multi method walk(SAST::CondReturn:D $THIS is rw) {
     }
 }
 
+multi method walk(SAST::OnBlock:D $THIS is rw) {
+    with $THIS.chosen-block {
+        $THIS = $_
+    } else {
+        $THIS .= stage3-node(
+            SAST::Doom,
+            exception => $THIS.make-new(
+                SX::OnBlockNotDefOnOS,
+                candidates => $THIS.os-candidates.map(*.key),
+                :$.os,
+            )
+        )
+    }
+}
+
 multi method walk(SAST::MethodCall:D $THIS is rw) {
     if $THIS.declaration === tStr.^find-spit-method('Bool')
        and (my $ct = $THIS.invocant.compile-time).defined {

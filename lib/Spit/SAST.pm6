@@ -1616,3 +1616,33 @@ class SAST::Itemize is SAST::MutableChildren {
 
     method type { self[0].type }
 }
+
+class SAST::OnBlock is SAST::Children does SAST::OSMutant {
+    has @.os-candidates;
+    has $.chosen-block is rw;
+    has $!dispatcher;
+
+    method stage2($ctx) {
+        @!os-candidates .= map( -> $os, $block {
+            cont-pair $os, $block.do-stage2($ctx)
+        }).flat;
+        self;
+    }
+
+    method mutate-for-os(Spit::Type $os) {
+        $!chosen-block = $.dispatcher.get('anon', $os);
+    }
+
+    method dispatcher {
+        $!dispatcher //= DispatchMap.new(anon => @.os-candidates).compose;
+    }
+
+    method children {
+        ($!chosen-block // |@!os-candidates.map(*.value) || Empty),
+    }
+
+    method type {
+        ($!chosen-block andthen .type) or
+        derive-common-parent @!os-candidates.map(*.value.type);
+    }
+}

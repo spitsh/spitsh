@@ -213,6 +213,10 @@ method statement-control:sym<when> ($/) {
     make $if;
 }
 
+method statement-control:sym<on> ($/) {
+    make SAST::OnBlock.new: os-candidates => $<on-switch>.ast;
+}
+
 sub declare-new-type($/,$name,\MetaType) {
     my $type := MetaType.new_type(:$name);
     my $CLASS := SAST::ClassDeclaration.new(class => $type);
