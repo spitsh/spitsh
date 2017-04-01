@@ -155,10 +155,17 @@ class SX::Invalid is SX {
 
 class SX::Expected is SX {
     has Str:D $.expected is required;
+    has $.hint is required;
 
     method message { "Expected $!expected." }
     method mark-before { '' }
-    method mark-after { colored('➧','red') }
+    method mark-after {
+        if $!hint {
+            colored("$!hint↩",'green');
+        } else {
+            colored('➧','red')
+        }
+    }
 }
 
 class SX::MethodNotFound is SX {

@@ -44,7 +44,7 @@ grammar Spit::Grammar is Spit::Lang {
     token eat-terminator {
         || <?{$*ENDSTMT ?? ($*ENDSTMT = False; True) !! False}>
         || <.terminator>
-        || <.expected("terminator")>
+        || <.expected("terminator", ';')>
     }
 
     token terminator {
