@@ -846,3 +846,6 @@ multi method loop-return(SAST::List:D $_) {
         self.loop-return(.children[0]);
     }
 }
+#!Doom
+# If we try and compile Doom we're doomed
+multi method arg(SAST::Doom:D $_)  { .exception.throw }

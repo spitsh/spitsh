@@ -595,8 +595,3 @@ multi method include(SAST::PhaserBlock:D $phaser-block is rw) {
     $*CU.phasers[$phaser-block.stage].push($phaser-block.block);
     $phaser-block .= stage3-node(SAST::Empty,:included);
 }
-
-# If we include a Doom we're doomed.
-multi method include(SAST::Doom:D $doom is rw)  {
-    $doom.exception.throw;
-}
