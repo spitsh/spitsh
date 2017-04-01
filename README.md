@@ -69,9 +69,9 @@ spit --in-docker=centos eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command ex
 Unfortunately on Debian the package is named 'netcat'. Let's deal with that:
 
 ``` perl
-constant Pkg $nc = given $*os {
-    when Debian { 'netcat' }
-    default     { 'nc' }
+constant Pkg $nc = on {
+    Debian { 'netcat' }
+    Any    { 'nc' } # the default
 };
 
 .install unless $nc;
