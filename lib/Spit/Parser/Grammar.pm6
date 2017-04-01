@@ -146,7 +146,7 @@ grammar Spit::Grammar is Spit::Lang {
                 <.ENDSTMT>
                 <.eat-terminator>
                 ||
-                <.expected('a valid when satement')>
+                <.invalid('when statement')>
             ]
             |
             'default' <block>
