@@ -1,6 +1,6 @@
 use Test;
 
-plan 30;
+plan 31;
 
 {
     sub foo() {
@@ -118,4 +118,13 @@ plan 30;
     my $a = check-re-enter();
     my $b = check-re-enter();
     nok $a == $b,'my $foo = ... as arg works more than once';
+}
+
+{
+    sub dolla($_) {
+        when 'foo' { pass  '$_ as parameter' }
+        default    { flunk '$_ as parameter' }
+    }
+
+    dolla("foo");
 }
