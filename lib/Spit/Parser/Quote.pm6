@@ -154,6 +154,6 @@ class Spit::Quote::rx-Actions is Spit::Quote::qq-Actions {
     }
 
     method elem:char-class ($/) {
-        make ('[', ('[' with $<escaped-square>), |$<TOP>.ast, ']')
+        make ('[', (']' with $<escaped-square>), |$<TOP>.ast, ']')
     }
 }
