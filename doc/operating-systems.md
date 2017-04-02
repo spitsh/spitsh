@@ -33,12 +33,15 @@ Right now the only two OS variants that pass the spec are Debian and RHEL.
         * [RHEL](#rhel)
           * [CentOS](#centos)
     * [BSD](#bsd)
-  * [Alpine](#alpine)
+  * [BusyBox](#busybox)
+    * [Alpine](#alpine)
 
 ### Alpine
  Alpine linux distribution: https://alpinelinux.org/
 ### BSD
  For OS's that are variants of the Berkely Software Distribution. See: [wikipedia](https://en.wikipedia.org/wiki/Berkeley_Software_Distribution). **note**: No BSD based OS is tested or working at all atm.
+### BusyBox
+ For OS's that have the BusyBox UNIX utilities
 ### CentOS
  CentOS linux distribution [CentOS](https://www.centos.org/)
 ### Debian

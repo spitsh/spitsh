@@ -1,3 +1,14 @@
+## 0.0.13
+
+- Added inline on blocks
+  ```perl6
+constant $foo = on {
+    Debian { 'debian' }
+    RHEL   { 'redhat'  }
+};
+```
+
+
 ## 0.0.12
 
 - Fixed lots of String escaping bugs

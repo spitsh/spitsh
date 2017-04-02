@@ -61,6 +61,23 @@ for @urls {
 
 
  Returns an lowercase version of the string
+## match
+>method match([Regex](./Regex.md) **$r** ⟶ [Str](./Str.md))
+
+
+ Returns a list of matches. The first element is the entiretly of the match. The other elements are the capture groups.
+```perl6
+my $regex = rx‘^(.+)://([^/]+)/?(.*)$’;
+my @m = 'https://github.com/spitsh/spitsh'.match($regex);
+say @m[0]; #-> https://github.com/spitsh/spitsh
+say @m[1]; #-> https
+say @m[2]; #-> github.com
+say @m[3]; #-> spitsh/spitsh
+```
+
+|Parameter|Description|
+|---------|-----------|
+|**$r**| The regular expression to match against|
 ## note
 >method note()
 
