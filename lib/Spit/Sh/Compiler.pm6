@@ -286,9 +286,6 @@ multi method arg(SAST::Var:D $var) {
     with $assign {
         if $assign ~~ SAST::Junction:D and $assign.dis {
             dq self.compile-assign($var,$assign);
-        } elsif $var ~~ SAST::VarDecl {
-            $*LATE-INIT{$name} = True if $*LATE-INIT.defined;
-            dq '${',$name,':=',|self.arg($assign),'}';
         } else {
             SX::NYI.new(feature => 'Non declaration assignment as an argument',node => $var).throw
         }
@@ -597,14 +594,10 @@ multi method node(SAST::RoutineDeclare:D $_) {
     # in MAIN altogether?
     .ann<compiled-already> = True;
     my $name = self.gen-name($_);
-    my $*LATE-INIT = {};
     my @compiled = do if .is-native {
         self.require-native(.name);
     } else {
         self.node(.chosen-block,:indent,:no-empty);
-    }
-    if $*LATE-INIT {
-        @compiled.prepend: "  $*pad",$*LATE-INIT.keys.map({ "$_=\"\"" }).join(" "),"\n";
     }
     $name,'()',|self.maybe-oneline-block(@compiled)
 }
