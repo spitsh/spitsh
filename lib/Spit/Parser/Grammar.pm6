@@ -340,7 +340,6 @@ grammar Spit::Grammar is Spit::Lang {
     token term:int { <int> }
     token int { \d+ }
     token term:var { <var> }
-    token term:special-var { <sigil>'*'$<name>=<.identifier> }
     token var { <sigil>$<name>=(<twigil>?<identifier>) }
 
     proto token twigil {*}
