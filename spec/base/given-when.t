@@ -82,8 +82,8 @@ plan 14;
         when /^foo$/ { pass 'anchor regex' }
     }
     given $c {
-        when /^oo$|^fo$/ { flunk 'alternationa and anchor' }
-        when /^foo$|^bar$/ { pass 'alternationa and anchor' }
+        when /^oo$|^fo$/ { flunk 'alternation and anchor' }
+        when /^foo$|^bar$/ { pass 'alternation and anchor' }
     }
 
     given $c {
