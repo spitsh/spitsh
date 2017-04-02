@@ -1,6 +1,6 @@
 use Test;
 
-plan 14;
+plan 18;
 
 {
     my $a = "foo";
@@ -87,6 +87,16 @@ plan 14;
     }
 
     given $c {
+        when /[asd]oo/  { flunk 'character class' }
+        when /[asdf]oo/ { pass 'character class' }
+    }
+
+    given $c {
+        when /[^asdf]oo/ { flunk 'negated character class' }
+        when /[^asd]oo/  { pass  'negated character class' }
+    }
+
+    given $c {
         when /fo$/ { flunk 'caseable regex with default' }
         when /^oo/ { flunk 'caseable regex with default' }
         default    { pass 'caseable regex with default'  }
@@ -95,6 +105,21 @@ plan 14;
     given $c {
         when /fo\so/ { flunk 'non-caseable regex' }
         when /fo(p|o)/ { pass 'non-caseable regex' }
+    }
+}
+
+{
+    my $d = '[foo]';
+    given $d {
+        when /^[foo]oo/    { flunk 'character class with []]' }
+        when /[[z]foo[]z]/ { pass  'character class with []]' }
+        default            { flunk 'character class with []]' }
+    }
+
+    given $d {
+        when /^[foo]oo/   { flunk 'pass escaped \\[' }
+        when /\[foo\]/    { pass 'pass escaped \\['  }
+        default           { flunk 'character class with []]' }
     }
 }
 
