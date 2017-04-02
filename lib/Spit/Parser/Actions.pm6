@@ -543,11 +543,7 @@ method term:sast ($/) {
 }
 
 method term:parens ($/) {
-    with $<itemizer> {
-        make SAST::Itemize.new(sigil => .Str, $<statement>.ast);
-    } else {
-        make $<statement>.ast
-    }
+    make $<statement>.ast
 }
 
 method term:cmd ($/) {
