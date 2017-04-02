@@ -328,8 +328,8 @@ grammar Spit::Grammar is Spit::Lang {
     rule args { <list> }
 
     token termish {
-        || <term><postfix>*
-        || [<prefix><.ws>]+<term><postfix>*
+        || <term> [<.ws><postfix>]*
+        || [<prefix><.ws>]+ <term> [<.ws><postfix>]*
     }
 
     proto token term {*}
@@ -445,11 +445,11 @@ grammar Spit::Grammar is Spit::Lang {
     proto token postfix {*}
 
     token postfix:method-call {
-        '.'$<name>=<.identifier>
+        '.'<.ws>$<name>=<.identifier>
         [ $<args>=<.r-wrap: '(',/<R=.args>/,')', :desc<method call arguments>> ]?
     }
     token postfix:cmd-call {
-        '.'<cmd>
+        '.'<.ws><cmd>
     }
 
     token postfix:sym<++>  { <sym> }

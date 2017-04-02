@@ -1,6 +1,6 @@
 use Test;
 
-plan 13;
+plan 15;
 
 {
     class Foo {
@@ -13,6 +13,10 @@ plan 13;
 
     is Foo.doit,"foo","basic static method call";
     is Bar.doit(),"bar","basic static method call again";
+    is Bar
+       .doit(),"bar", 'method call with \n before the dot';
+    is Bar.
+       doit(),"bar", 'method call with \n after teh dot';
 }
 
 {
