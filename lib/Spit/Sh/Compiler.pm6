@@ -41,7 +41,7 @@ my subset ShellStatus of SAST where {
     # 'or' and 'and' don't work here for some reason
     ($_ ~~ SAST::Neg|SAST::Cmp|SAST::EnumCmp|SAST::CmpRegex) ||
     ((.type ~~ tBool) && $_ ~~
-      SAST::Block|SAST::Cmd|SAST::Call|SAST::If|SAST::Quietly
+      SAST::Stmts|SAST::Cmd|SAST::Call|SAST::If|SAST::Quietly
     )
 }
 
@@ -340,7 +340,7 @@ multi method node(SAST::If:D $_,:$else) {
     |(with .else {
          when SAST::Empty   { Empty }
          when SAST::If    { "\n{$*pad}",|self.node($_,:else) }
-         when SAST::Block { "\n{$*pad}else\n",|self.node($_,:indent,:no-empty) }
+         when SAST::Stmts { "\n{$*pad}else\n",|self.node($_,:indent,:no-empty) }
      } elsif .type ~~ tBool() {
           # if false; then false; fi; actually exits 0 (?!)
           # So we have to make sure it exits 1 if the cond is false
@@ -542,7 +542,7 @@ multi method cap-stdout(SAST::Ternary:D $_,:$tight) {
     self.node($_,:$tight);
 }
 #!Block
-multi method node(SAST::Block:D $block,:$indent is copy,:$curlies,:$one-line,:$no-empty) {
+multi method node(SAST::Stmts:D $block,:$indent is copy,:$curlies,:$one-line,:$no-empty) {
     $indent ||= True if $curlies;
     my @compiled = self.compile-nodes($block.children,:$indent,:$one-line,:$no-empty);
     if $curlies {
@@ -552,7 +552,7 @@ multi method node(SAST::Block:D $block,:$indent is copy,:$curlies,:$one-line,:$n
     }
 }
 
-multi method arg(SAST::Block:D $_) {
+multi method arg(SAST::Stmts:D $_) {
     if .one-stmt -> $return {
         self.arg($return);
     } else {

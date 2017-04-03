@@ -437,45 +437,9 @@ class SAST::ConstantDecl is SAST::VarDecl {
     method assign-type { IMMUTABLE }
 }
 
-class SAST::Block is SAST::MutableChildren does SAST::Dependable {
-    has @.symbols;
-    has $.outer is rw;
-
-    multi method lookup(SymbolType $type,Str:D $name,Match :$match) {
-        @!symbols[$type]{$name}
-        || self.outer.?lookup($type,$name,:$match)
-        || ( $match && SX::Undeclared.new(
-            :$name,
-            :$type
-            :$match,
-        ).throw)
-        || Nil
-    }
-
-    multi method lookup(SAST::Declarable:D $sast) {
-        samewith($sast.symbol-type,$sast.name,match => $sast.match)
-    }
-
-    method declare(SAST::Declarable:D $sast) {
-        with @!symbols[$sast.symbol-type]{$sast.name} {
-            SX::Redeclaration.new(
-               name => $sast.name,
-               type => $sast.symbol-type,
-               match => $sast.match,
-               orig-match => .match
-            ).throw;
-        } else {
-            $sast.declared-in = self;
-            $_ = $sast;
-        }
-    }
-
-    method symbol(SymbolType $type,Str:D $name) {
-        @!symbols[$type]{$name};
-    }
+class SAST::Stmts is SAST::MutableChildren {
 
     method stage2($ctx,:$desc,:$loop) is default {
-        my $*CURPAD = self;
         my $last-stmt := self.last-stmt;
         for @.children {
             $_ .= do-stage2(tAny) unless $_ =:= $last-stmt;
@@ -510,16 +474,63 @@ class SAST::Block is SAST::MutableChildren does SAST::Dependable {
     }
 
     method type {
-        my $*CURPAD = self;
         if self.returns -> $_ {
             .type
         } else {
             tAny;
         }
     }
+}
+
+class SAST::Block is SAST::Stmts does SAST::Dependable {
+    has @.symbols;
+    has $.outer is rw;
+
+    method stage2($ctx,|c) {
+        my $*CURPAD = self;
+        callsame;
+    }
+
+    multi method lookup(SymbolType $type,Str:D $name,Match :$match) {
+        @!symbols[$type]{$name}
+        || self.outer.?lookup($type,$name,:$match)
+        || ( $match && SX::Undeclared.new(
+            :$name,
+            :$type
+            :$match,
+        ).throw)
+        || Nil
+    }
+
+    multi method lookup(SAST::Declarable:D $sast) {
+        samewith($sast.symbol-type,$sast.name,match => $sast.match)
+    }
+
+    method declare(SAST::Declarable:D $sast) {
+        with @!symbols[$sast.symbol-type]{$sast.name} {
+            SX::Redeclaration.new(
+               name => $sast.name,
+               type => $sast.symbol-type,
+               match => $sast.match,
+               orig-match => .match
+            ).throw;
+        } else {
+            $sast.declared-in = self;
+            $_ = $sast;
+        }
+    }
+
+    method symbol(SymbolType $type,Str:D $name) {
+        @!symbols[$type]{$name};
+    }
 
     method gist {
         $.node-name ~ " --> {$.type.^name}" ~ $.gist-children;
+    }
+
+    method type {
+        my $*CURPAD = self;
+        callsame;
     }
 }
 
@@ -1441,16 +1452,6 @@ class SAST::Blessed is SAST::MutableChildren is SAST::Type {
     method compile-time { self[0].?compile-time }
 
     method gist { self.SAST::Type::gist ~  $.gist-children }
-}
-
-class SAST::Stmts is SAST::MutableChildren {
-    method stage2($ctx) {
-        $_ .= do-stage2(tAny) for @.children[^(*-1)];
-        @.children[0] .= do-stage2($ctx);
-        self;
-    }
-
-    method type { @.children[*-1] }
 }
 
 class SAST::Range is SAST::MutableChildren {
