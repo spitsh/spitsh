@@ -500,7 +500,6 @@ method var ($/)   {
 }
 
 method term:name ($/) {
-    # Match moved to a sub to avoid clobbering $/
     my $name = $<name>.Str;
     make do if $<is-type> {
         my @params = $<class-params>.ast || Empty;
