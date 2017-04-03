@@ -548,10 +548,8 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token quote:sym<q> {
-        :my $qm;
         <sym> »
         $<str>=<.balanced-quote('Quote-q')>
-
     }
     # called when you know the next character is some kind of openning quote
     # but you don't know what it is yet.
