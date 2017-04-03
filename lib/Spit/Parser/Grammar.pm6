@@ -348,13 +348,9 @@ grammar Spit::Grammar is Spit::Lang {
     token term:block { <block> <.ENDSTMT> }
     token term:sym<self>  { <sym> }
     token term:name {
-        :my $is_type = False;
-        $<name>=<.identifier>
-        {
-            $is_type = ? $*CURPAD.lookup(CLASS,$<name>.Str);
-        }
+        $<name>=<.identifier> {}
         [
-            <?{ $is_type }>
+            <?{ $*CURPAD.lookup(CLASS,$<name>.Str); }>
             $<is-type>=<?>
             <class-params>?
             $<object>=(
