@@ -111,7 +111,8 @@ plan 31;
 {
     my $canary = 0;
     sub +check-re-enter is impure {
-        $*NULL.write(my $foo = ++$canary);
+        my $foo = ++$canary;
+        $*NULL.write($foo);
         $foo;
     }
 

@@ -6,7 +6,8 @@ plan 9;
     my FD $fd .= next-free;
     nok $fd.writable,"fd from .next-free shouldn't be open";
 
-    $fd.open-file-w(my File $tmp .= tmp);
+    my File $tmp .= tmp;
+    $fd.open-file-w($tmp);
     ok $fd.writable,"open after .redirect-to-file";
     $fd.write("hello");
     is $tmp.read,"hello",'.write';
