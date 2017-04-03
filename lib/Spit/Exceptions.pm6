@@ -36,7 +36,8 @@ sub gen-ctx(+@marks,
 
         if $after {
             my $insert = $to - 1;
-            $insert-- while @orig[$insert] ~~ /^\s*$/ and $insert > 0;
+            $insert = 0 if $insert < 0;
+            $insert-- while $insert > 0 and @orig[$insert] ~~ /^\s*$/;
             @orig[$insert] ~= $after;
         }
     }
