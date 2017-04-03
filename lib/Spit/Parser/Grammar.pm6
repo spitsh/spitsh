@@ -50,7 +50,7 @@ grammar Spit::Grammar is Spit::Lang {
     token terminator {
         | <.ws> $
         | <.ws> ';'
-        | <.ws> <?before '}'>
+        | <.ws> <?before '}'|')'>
     }
 
     token ENDSTMT { [<.ws> <?after \v\h*> { $*ENDSTMT = True }]? }
@@ -391,7 +391,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token term:parens {
-        $<statement>=<.wrap: '(',rule { '' <R=.statement> },')',:desc<parenthesized expression>>
+        $<statementlist>=<.wrap: '(',rule { '' <R=.statementlist> },')',:desc<parenthesized expression>>
     }
 
     rule term:cmd { <cmd> }

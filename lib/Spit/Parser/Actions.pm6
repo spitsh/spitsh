@@ -543,7 +543,14 @@ method term:sast ($/) {
 }
 
 method term:parens ($/) {
-    make $<statement>.ast
+    my @stmts = $<statementlist>.ast;
+    make do if not @stmts {
+        SAST::Empty.new;
+    } elsif @stmts == 1 {
+        @stmts[0];
+    } else {
+        SAST::Stmts.new(|@stmts)
+    }
 }
 
 method term:cmd ($/) {
