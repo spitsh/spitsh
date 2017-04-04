@@ -546,11 +546,29 @@ grammar Spit::Grammar is Spit::Lang {
 
 
     token quote:double-quote {
-        $<str>=<.wrap('"',/<R=.LANG('Quote-qq',:opener('"'),:closer('"'),:tweaks<curlies>)>/,'"',:desc<double-quoted string>)>
+        $<str>=<.wrap(
+            '"',
+            /<R=.LANG('Quote-qq',:opener('"'),:closer('"'),:tweaks<curlies>)>/,
+            '"', :desc<double-quoted string>)>
+    }
+    token quote:curly-double-quote {
+        $<str>=<.wrap(
+            '“',
+            /<R=.LANG('Quote-qq',:opener('“'),:closer('”'),:tweaks<curlies>)>/,
+            '”', :desc<double-quoted string>)>
     }
 
     token quote:single-quote {
-        $<str>=<.wrap("'",/<R=.LANG('Quote-q',:opener("'"),:closer("'"))>/,"'",:desc<quoted string>)>
+        $<str>=<.wrap(
+            "'",
+            /<R=.LANG('Quote-q',:opener("'"),:closer("'"))>/,
+            "'", :desc<quoted string>)>
+    }
+
+    token quote:curly-single-quote {
+        $<str>=<.wrap(
+            "‘",/<R=.LANG('Quote-q',:opener("‘"),:closer("’"))>/,
+            "’",:desc<quoted string>)>
     }
 
     token quote:sym<qq> {

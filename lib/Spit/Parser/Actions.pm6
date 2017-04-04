@@ -831,12 +831,16 @@ method output-redir($/) {
     make (@write,@append);
 }
 
-method quote:double-quote ($/) { make $<str>.ast andthen .match = $/;  }
-method quote:single-quote ($/) { make $<str>.ast andthen .match = $/; }
-method quote:sym<qq>      ($/) { make $<str>.ast andthen .match = $/; }
-method quote:sym<q>       ($/) { make $<str>.ast andthen .match = $/; }
+sub make-quote($/) { make $<str>.ast andthen .match = $/ }
+method quote:double-quote       ($/) { make-quote($/) }
+method quote:curly-double-quote ($/) { make-quote($/) }
+method quote:single-quote       ($/) { make-quote($/) }
+method quote:curly-single-quote ($/) { make-quote($/) }
+method quote:sym<qq>            ($/) { make-quote($/) }
+method quote:sym<q>             ($/) { make-quote($/) }
+method balanced-quote           ($/) { make-quote($/) }
 method quote:regex        ($/) { make SAST::Regex.new(src => $<str>.ast) andthen .match = $/; }
-method balanced-quote ($/)     { make $<str>.ast andthen .match = $/; }
+
 
 method angle-quote ($/) {
     my $val = $<str>.Str;
