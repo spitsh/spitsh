@@ -1,5 +1,5 @@
 use Test;
-plan 44;
+plan 46;
 
 if True {
    pass "basic if works";
@@ -259,4 +259,22 @@ if $true and $false {
 {
     is (if $true { "foo" } else { "bar" }).
         ${cat}, 'foo', 'piping result of if';
+}
+
+{
+    my @cmd = 'awk','/lose/{ print "lose"; exit 1; } { print "win" }';
+
+    my $res;
+
+    if ($res ~= "winner".${@cmd}; $?) {
+        is $res, "win", '$? command (true)';
+    } else {
+        flunk '$? command (false)';
+    }
+
+    if ($res ~= "loser".${@cmd}; $?) {
+        flunk '$? command (false)'
+    } else {
+        is $res,"winlose", '$? command (true)';
+    }
 }
