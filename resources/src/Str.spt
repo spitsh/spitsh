@@ -1,3 +1,4 @@
+my @/;
 #| **internal** matches a perl regex
 sub ?pre-match($str,$r) {
     $str.${perl -e '$_ = join("",<STDIN>); /@ARGV[0]/ or exit 1' $r};
