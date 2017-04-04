@@ -1,3 +1,27 @@
+## 0.0.14
+
+- `$?` variable representing the exit status of the last command
+  executed.
+- You can now have multiple statements inside `(...)`. E.g.
+  ```perl6
+  say ( say 'inside goes first!'; "the will print second");
+  ```
+  This is especially useful in conditionals
+  ```perl6
+  my $str = '';
+  my @a =  ^100;
+  my $i = 0;
+  $i++ while ($str ~= @a[$i]; $str.chars < 20);
+  say $str;
+  ```
+- `.match` now retruns a `Bool` and sets the new `@/` variable with the matches.
+  ```perl6
+  my $regex = rx‘^(.+)://([^/]+)/?(.*)$’;
+  if 'https://github.com/spitsh/spitsh'.match($regex) {
+      .say for @/;
+  }
+  ```
+
 ## 0.0.13
 
 - Added inline on blocks
