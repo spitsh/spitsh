@@ -1647,3 +1647,7 @@ class SAST::OnBlock is SAST::Children does SAST::OSMutant {
         derive-common-parent @!os-candidates.map(*.value.type);
     }
 }
+
+class SAST::LastExitStatus does SAST {
+    method type { $.ctx ~~ tBool() ?? tBool() !! tInt() }
+}

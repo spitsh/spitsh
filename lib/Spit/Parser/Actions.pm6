@@ -499,6 +499,9 @@ method var ($/)   {
     );
 }
 
+method term:special-var ($/) { make $<special-var>.ast }
+method special-var:sym<$?> ($/) { make SAST::LastExitStatus.new }
+
 method term:name ($/) {
     my $name = $<name>.Str;
     make do if $<is-type> {

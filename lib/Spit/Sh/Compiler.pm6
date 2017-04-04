@@ -41,7 +41,7 @@ my subset ShellStatus of SAST where {
     # 'or' and 'and' don't work here for some reason
     ($_ ~~ SAST::Neg|SAST::Cmp|SAST::EnumCmp|SAST::CmpRegex) ||
     ((.type ~~ tBool) && $_ ~~
-      SAST::Stmts|SAST::Cmd|SAST::Call|SAST::If|SAST::Quietly
+      SAST::Stmts|SAST::Cmd|SAST::Call|SAST::If|SAST::Quietly|SAST::LastExitStatus
     )
 }
 
@@ -135,6 +135,20 @@ method scaf($name) {
     my $scaf = $*depends.require-scaffolding($name);
     $scaf.depended = True;
     self.gen-name($scaf);
+}
+
+# gets a late reference to variable that's in the scaffolding.
+# At the time of commiting this is just needed for $*NULL.
+method scaf-ref($name,:$match) {
+    my $scaf = $*depends.require-scaffolding($name);
+    if $scaf ~~ SAST::Stmts {
+        $scaf .= last-stmt;
+    }
+    if $scaf.inline-value -> $inline {
+        $inline;
+    } else {
+        $scaf.gen-reference(:stage3,:$match);
+    }
 }
 
 method comp-depend($_){
@@ -542,6 +556,7 @@ multi method cap-stdout(SAST::Ternary:D $_,:$tight) {
     self.node($_,:$tight);
 }
 #!Block
+#!Stmts
 multi method node(SAST::Stmts:D $block,:$indent is copy,:$curlies,:$one-line,:$no-empty) {
     $indent ||= True if $curlies;
     my @compiled = self.compile-nodes($block.children,:$indent,:$one-line,:$no-empty);
@@ -559,6 +574,13 @@ multi method arg(SAST::Stmts:D $_) {
         cs self.node($_,:one-line);
     }
 }
+
+#!LastExitStatus
+multi method cond(SAST::LastExitStatus:D $_) {
+    'expr $? = 0 >', '&',self.arg(self.scaf-ref('*NULL',match => .match));
+}
+
+multi method arg(SAST::LastExitStatus:D $_) { '$?' }
 
 multi method node(SAST:D $_ where SAST::Increment|SAST::IntExpr) { ': ',|self.arg($_,:sink) }
 #!Increment
@@ -695,7 +717,17 @@ multi method node(SAST::Return:D $ret) {
     } elsif $ret.loop {
         self.loop-return($ret.val);
     } else {
-        self.compile-in-ctx($ret.val,|%_);
+        # If we're returning the exit status of the last cmd we can just do nothing
+        # because that's what will be retuned if we do.
+        if $ret.val ~~ SAST::LastExitStatus and $ret.ctx ~~ tBool() {
+            Empty;
+        }
+        elsif $ret.val.compile-time ~~ '' {
+            Empty;
+        }
+        else {
+            self.compile-in-ctx($ret.val,|%_);
+        }
     }
 }
 
