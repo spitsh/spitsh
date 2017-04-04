@@ -1,6 +1,6 @@
 use Test;
 
-plan 42;
+plan 44;
 
 {
     ok "0","'0' is true";
@@ -97,19 +97,28 @@ plan 42;
 
 {
     my $url = "https://irclog.perlgeek.de/perl6/2017-03-30";
-    my @m = $url.match(/.+:/);
-    is @m.elems,1, "successful match without capture group has one element";
-    is @m[0], "https:", 'it is the entirity of the matched text';
+    if $url.match(/.+:/) {
+        is @/.elems,1, "successful match without capture group has one element";
+        is @/[0], "https:", 'it is the entirity of the matched text';
+    }
 
-    @m = $url.match(/^(.+):\/\/([^/]+)\/?(.*)$/);
-    is @m.elems, 4, '3 capture groups means 4 elems';
-    is @m[0],$url,'0th element is the entire match';
-    is @m[1],'https','1st element is the scheme';
-    is @m[2],'irclog.perlgeek.de','2nd element is the host';
-    is @m[3], 'perl6/2017-03-30', '3rd element is the path';
+    if $url.match(/^(.+):\/\/([^/]+)\/?(.*)$/) {
+        is @/.elems, 4, '3 capture groups means 4 elems';
+        is @/[0],$url,'0th element is the entire match';
+        is @/[1],'https','1st element is the scheme';
+        is @/[2],'irclog.perlgeek.de','2nd element is the host';
+        is @/[3], 'perl6/2017-03-30', '3rd element is the path';
+    }
 
-    my @n = $url.match(rx‘^(.+)://([^/]+)/?(.*)$’);
+    if $url.match(rx‘^(.+)://([^/]+)/?(.*)$’) {
+        is @/.elems, 4, '3 capture groups means 4 elems (rx)';
+        is @/[2], 'irclog.perlgeek.de', '0th element is the entire match (rx)';
+    }
 
-    is @n.elems, 4, '3 capture groups means 4 elems (rx)';
-    is @n[2], 'irclog.perlgeek.de', '0th element is the entire match (rx)';
+    if $url.match(/^ftp/) {
+        flunk 'fail to match returns false';
+    } else {
+        nok @/, 'fail to match resets @/';
+        pass 'fail to match returns true';
+    }
 }

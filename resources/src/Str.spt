@@ -38,7 +38,8 @@ augment Str {
     #| Returns true if the string isn't empty
     method ?Bool { ${test $self} }
 
-    constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
+    constant $subst-awk = '
+    BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
     {
      while( (g || !i) && (i = index($0,t)) )
        $0 = substr($0,1,i-1) r substr($0,i + length(t));
@@ -104,44 +105,61 @@ augment Str {
         say @m[2]; #-> github.com
         say @m[3]; #-> spitsh/spitsh
     }
-    method ~match(#|[The regular expression to match against]Regex $r) on {
+    constant $awk-match = '! match($0,ENVIRON["r"]) { exit 1 }';
+    method ?match(#|[The regular expression to match against]Regex $r) on {
         RHEL {
-            $self.${
-                :$r awk (
-                    'match($0, ENVIRON["r"], a){' ~
-                    'i = 0; while(a[i,"start"]) print a[i++]' ~
+            @/ = $self.${
+                awk :$r (
+                    # gawk match lets you pass an array which will get filled with
+                    # all the matches
+                    '{'~
+                       'if (match($0,ENVIRON["r"],a)){' ~
+                           'i=0; while(a[i,"start"]) print a[i++]' ~
+                       '} else exit 1;' ~
                     '}'
                 )
-            }
+            };
+            $?;
         }
         GNU {
-            my $RE = $r.subst('!','\\!');
-            my $i = 0;
-            $i++ while $self.${
-                sed -nr !>X
-                (
-                    # slurp the input
-                    'H;1h;$!d;x;' ~
-                    # surround match with crazy delims
-                    "s!$RE!👻\\$i\\n🐚!;" ~
-                    # remove delims and print
-                    "s/.*👻|🐚.*//gp"
-                )
-            };
-            ""
+            # note: GNU doesn't mean it has gawk
+            if $self.${awk -v 'RS=^$' :$r $awk-match} {
+                my $RE = $r.subst('!','\\!');
+                @/ = {
+                    my $i = 0;
+                    $i++ while $self.${
+                        sed -nr !>X
+                        (
+                            # slurp the input
+                            'H;1h;$!d;x;' ~
+                            # surround match with crazy delims
+                            "s!$RE!👻\\$i\\n🐚!;" ~
+                            # remove delims and print
+                            "s/.*👻|🐚.*//gp"
+                        )
+                    };
+                    "";
+                };
+                $?;
+            }
         }
         BusyBox {
-            my $i = 0;
-            $i++ while $i < 10 and $self.${
-                :$r awk -v 'RS=^$' -v "i=$i" (
-                    '{r=ENVIRON["r"];' ~
-                    'if(!match($0,r)) exit 1;' ~
-                    '$0 = gensub(r, "👻\\\\"i"🐚",1);' ~
-                    'print gensub(/.*👻|🐚.*/,"","G")' ~
-                    '}'
-                )
-            };
-            ""
+            @/ = "";
+            if $self.${awk -v 'RS=^$' :$r $awk-match} {
+                @/ = {
+                    my $i = 0;
+                    $i++ while $i < 10 and $self.${
+                        awk :$r -v 'RS=^$' -v "i=$i" (
+                            '{' ~
+                            '$0 = gensub(ENVIRON["r"], "👻\\\\"i"🐚",1);' ~
+                            'print gensub(/.*👻|🐚.*/,"","G")' ~
+                            '}'
+                        )
+                    };
+                    "";
+                }
+                True;
+            }
         }
     }
 
