@@ -122,6 +122,7 @@ augment Str {
             $?;
         }
         GNU {
+            @/ = '';
             # note: GNU doesn't mean it has gawk
             if $self.${awk -v 'RS=^$' :$r $awk-match} {
                 my $RE = $r.subst('!','\\!');
@@ -140,7 +141,7 @@ augment Str {
                     };
                     "";
                 };
-                $?;
+                True;
             }
         }
         BusyBox {
