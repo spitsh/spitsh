@@ -50,3 +50,12 @@ ${printf "allo earth" >!}; #shorthand
 ${ls '/I/dont/exist' !> $*OUT}; #redirect STDERR to script's STDOUT
 my $error = ${ls '/I/dont/exist' !>~}; # capture STDERR into return value of cmd
 ```
+# @/
+ The match list variable. Like `$/` in Perl 6 it stores the what was match after a something is matched against a regex.
+```perl6
+my $text = "The file is: foo.txt";
+$text.match(/:\s*(.+)\.(.+)$/);
+say @/[0]; #-> : foo.txt
+say @/[1]; #-> foo
+say @/[2]; #-> txt
+```
