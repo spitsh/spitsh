@@ -790,7 +790,7 @@ method cmd-body ($/) {
         }
     }
 
-    my $cmd = @pos ?? SAST::Cmd.new(cmd => @pos.shift,|@pos,:%set-env) !! SAST::WriteToFile.new;
+    my $cmd = @pos ?? SAST::Cmd.new(|@pos,:%set-env) !! SAST::WriteToFile.new;
     $cmd.write = @write;
     $cmd.append = @append;
     make $cmd;

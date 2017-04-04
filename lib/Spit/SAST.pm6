@@ -596,14 +596,13 @@ class SAST::WriteToFile is SAST::Children is rw {
 }
 
 class SAST::Cmd is SAST::MutableChildren is rw {
-    has SAST $.cmd;
     has SAST $.in;
     has SAST @.write;
     has SAST @.append;
     has SAST %.set-env;
 
     method stage2($ctx) is default {
-        $_ .= do-stage2(tStr) for ($!cmd,$!in,|@.nodes,|%!set-env.values).grep(*.defined);
+        $_ .= do-stage2(tStr) for ($!in,|@.nodes,|%!set-env.values).grep(*.defined);
 
         for |@!write,|@!append <-> $in,$out {
             $in  .= do-stage2(tFD, :desc<Output redirection source>);
@@ -613,7 +612,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
     }
 
     method children {
-        ($!cmd,|@.nodes,$!in,|@!write,|@!append,|%!set-env.values).grep(*.defined)
+        (|@.nodes,$!in,|@!write,|@!append,|%!set-env.values).grep(*.defined)
     }
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:%!set-env) }

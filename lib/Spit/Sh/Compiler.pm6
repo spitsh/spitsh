@@ -666,8 +666,10 @@ multi method node(SAST::Cmd:D $cmd,:$silence) {
         $pipe-in = $cmd.in;
     }
 
-    my @cmd-body  = |(self.arg($cmd.cmd).itemize($cmd.itemize),
-                    |$cmd.nodes.map({ self.space-then-arg($_) })).flat;
+    my @cmd-body  = |$cmd.nodes.map({ $++
+                                      ?? self.space-then-arg($_)
+                                      !! self.arg($_).itemize(.itemize) }
+                                   ).flat;
     my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,:$stdin);
     my $pipe     := |(|self.cap-stdout($_),'|' with $pipe-in);
     |$pipe,
