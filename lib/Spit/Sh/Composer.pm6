@@ -563,10 +563,11 @@ multi method inline-call(SAST::Call:D $outer,SAST::CompileTimeVal:D $_) { $_ }
 multi method inline-call(SAST::Call:D $outer,$) { Nil }
 
 method add-scaffolding(SAST::Dependable:D $dep is rw)  {
+    my $before = $dep;
     self.walk($dep);
-    $!deps.add-scaffolding($dep);
+    $!deps.add-scaffolding($dep, name => $before.?name);
     for $dep.all-deps {
-        self.add-scaffolding($_)
+        self.add-scaffolding($_);
     }
 }
 
