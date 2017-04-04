@@ -164,7 +164,7 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
     if $decl ~~ SAST::ConstantDecl {
         self.walk($decl); # Walk the declaration early so we can inspect it for inlining
 
-        if $decl ~~ SAST::Block {
+        if $decl ~~ SAST::Stmts {
             $THIS.extra-depends.push($decl);
             $decl .= last-stmt;
         }
@@ -185,7 +185,7 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
 
 multi method walk(SAST::ConstantDecl:D $THIS is rw) {
     callsame;
-    if (my $block = $THIS.assign) ~~ SAST::Block:D {
+    if (my $block = $THIS.assign) ~~ SAST::Stmts:D {
         # Constant tucking:
         # constant $x = { side_effects(); get_value(); }
         # Can be changed to:
