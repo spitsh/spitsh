@@ -118,7 +118,7 @@ multi method gen-name(SAST::MethodDeclare:D $method) {
 }
 method !avoid-name-collision($decl,$name is copy = $decl.name,:$fallback) {
     $name ~~ s/^['*'|'?']//;
-    $name ~~ s:g/'-'/_/;
+    $name ~~ s:g/\W/_/;
     my $st = $decl.symbol-type;
     $st = SCALAR if $st == ARRAY;
     my $existing := @!names[$st]{$name};
