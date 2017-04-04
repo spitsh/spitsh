@@ -14,9 +14,9 @@ my $false = False;
     is $false ?? "true1" !! $false ?? "true2" !! "false","false","false ?? A !! false ?? B !! C";
 
     is $true ?? $true ?? "A" !! "B" !! "C","A",'true ?? true ?? A !! B !! C';
-    is $true ?? $false ?? "A" !! "B" !! "C","B",'true ?? true ?? A !! B !! C';
-    is $false ?? $true ?? "A" !! "B" !! "C","C",'true ?? true ?? A !! B !! C';
-    is $false ?? $false ?? "A" !! "B" !! "C","C",'true ?? true ?? A !! B !! C';
+    is $true ?? $false ?? "A" !! "B" !! "C","B",'true ?? false ?? A !! B !! C';
+    is $false ?? $true ?? "A" !! "B" !! "C","C",'false ?? true ?? A !! B !! C';
+    is $false ?? $false ?? "A" !! "B" !! "C","C",'false ?? false ?? A !! B !! C';
 }
 
 {
