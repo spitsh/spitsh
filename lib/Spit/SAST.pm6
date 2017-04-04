@@ -1275,7 +1275,8 @@ sub generate-topic-var(:$var! is rw,:$cond! is rw,:@blocks!) {
         $var.assign = $topic-val;
         .declare($var) for @blocks;
     } elsif $var {
-        SX.new(message => "Invalid declaration of topic variable {$var.gist}. Condition has no topic.",node => $var).throw;
+        SX.new(message => "Illegal declaration of topic variable {$var.spit-gist}. " ~
+                          "Condition has no topic.", node => $var).throw;
     }
 }
 
