@@ -422,8 +422,7 @@ class SAST::MaybeReplace is SAST::VarDecl {
 
     method replace-with {
         given $.assign {
-            when *.compile-time.defined { $_ }
-            when { .compile-time ~~ Spit::Type } { $_ }
+            when .compile-time !~~ Nil { $_ }
             when SAST::Var|SAST::Param|SAST::Invocant { $_ }
             default { Nil }
         }
@@ -432,7 +431,7 @@ class SAST::MaybeReplace is SAST::VarDecl {
 
 class SAST::ConstantDecl is SAST::VarDecl {
     method inline-value {
-        self.assign if self.assign andthen .compile-time;
+        self.assign if self.assign andthen .compile-time !~~ Nil;
     }
     method assign-type { IMMUTABLE }
 }
@@ -1248,7 +1247,7 @@ class SAST::Concat is SAST::MutableChildren {
     method type { tStr }
     method gist { @.children».gist.join(' ~ ') }
     method compile-time {
-        @.children.all.compile-time ?? @.children».compile-time.join !! Nil;
+        @.children.all.compile-time.defined ?? @.children».compile-time.join !! Nil;
     }
     method stage2($) {
         $_ .= do-stage2(tStr) for @.children;
@@ -1550,6 +1549,8 @@ class SAST::Regex is SAST::Children is rw {
     method compile-time {
         if $!src.compile-time -> $p5src {
             make-rx($p5src);
+        } else {
+            Nil
         }
     }
 }
