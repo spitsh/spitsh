@@ -453,6 +453,8 @@ multi method node(SAST::Given:D $_) {
     |self.node(.block,:curlies)
 }
 
+multi method cond(SAST::Given:D $_) { self.node($_) }
+
 multi method arg(SAST::Given:D $_) { cs self.node($_) }
 #!For
 multi method node(SAST::For:D $_) {
