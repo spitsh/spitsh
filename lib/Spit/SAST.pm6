@@ -1509,6 +1509,15 @@ class SAST::WHY is SAST::MutableChildren {
     }
 }
 
+class SAST::NAME is SAST::MutableChildren {
+    method type { tStr() }
+
+    method stage2($) {
+        self[0] .= do-stage2(tAny);
+        self;
+    }
+}
+
 class SAST::Eval is SAST::Children   {
     has %.opts;
     has SAST::SVal:D $.src is required;

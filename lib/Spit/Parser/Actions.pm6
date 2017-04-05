@@ -566,6 +566,7 @@ sub gen-method-call($/) {
         when 'WHAT' { return SAST::WHAT.new }
         when 'WHY'  { return SAST::WHY.new }
         when 'PRIMITIVE' { return SAST::PRIMITIVE.new }
+        when 'NAME' { return SAST::NAME.new }
     }
 
     SAST::MethodCall.new(

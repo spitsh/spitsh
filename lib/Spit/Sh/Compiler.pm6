@@ -878,3 +878,12 @@ multi method loop-return(SAST::List:D $_) {
 #!Doom
 # If we try and compile Doom we're doomed
 multi method arg(SAST::Doom:D $_)  { .exception.throw }
+
+multi method arg(SAST::NAME:D $_) {
+    if try self.gen-name($_[0]) -> $name {
+        escape $name;
+    } else {
+        SX.new(message => ‘value doesn't have name’, node => $_[0]).throw;
+
+    }
+}
