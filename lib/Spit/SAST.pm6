@@ -1341,7 +1341,6 @@ class SAST::Given is SAST::Children is rw {
     has SAST:D $.given is required;
     has SAST::Block:D $.block is required;
     has SAST::VarDecl $.topic-var;
-    has Spit::Type $!type;
 
     method stage2($ctx) {
         $!topic-var = dollar_(match => $!given.match,assign => $!given,:dont-depend);
@@ -1353,7 +1352,7 @@ class SAST::Given is SAST::Children is rw {
 
     method children { $!block,$!topic-var }
 
-    method type { $!type ||= tList($!block.type) }
+    method type { $!block.type }
 }
 
 class SAST::For is SAST::Children {
