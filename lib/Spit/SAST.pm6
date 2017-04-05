@@ -1326,6 +1326,7 @@ class SAST::While is SAST::Children {
     has SAST::Block $.block is rw;
     has $.until;
     has SAST::VarDecl $.topic-var;
+    has $!type;
 
     method stage2($ctx) {
         $!cond .= do-stage2(tBool,:desc<while conditional>);
@@ -1334,7 +1335,7 @@ class SAST::While is SAST::Children {
         self;
     }
     method children { $!cond,$!block,($!topic-var // Empty) }
-    method type { tList($!block.type) }
+    method type { $!type ||= tList($!block.type) }
 }
 
 class SAST::Given is SAST::Children is rw {
