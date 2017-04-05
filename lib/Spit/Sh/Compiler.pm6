@@ -660,45 +660,53 @@ multi method cap-stdout(SAST::Call:D $_) is default {
 }
 #!Cmd
 multi method node(SAST::Cmd:D $cmd,:$silence) {
-    my ($stdin,$pipe-in);
 
-    if $cmd.in ~~ SAST::FileContent {
-        $stdin = $cmd.in.file;
-    } elsif $cmd.in.defined {
-        $pipe-in = $cmd.in;
+    if $cmd.nodes == 0 {
+        my @cmd-body = self.cap-stdout($cmd.pipe-in);
+        self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,());
+    } else {
+        my @in = $cmd.in;
+        my $pipe-in;
+        if $cmd.pipe-in ~~ SAST::FileContent:D {
+            @in.push(0,$cmd.pipe-in.file);
+        } elsif $cmd.pipe-in.defined {
+            $pipe-in = $cmd.pipe-in;
+        }
+        my @cmd-body  = |$cmd.nodes.map({ $++
+                                          ?? self.space-then-arg($_)
+                                          !! self.arg($_).itemize(.itemize) }
+                                       ).flat;
+
+        my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,@in);
+        my $pipe     := |(|self.cap-stdout($_),'|' with $pipe-in);
+        |$pipe,
+        ("\n{$*pad}" if $pipe and $pipe.chars + $full-cmd.chars > $.chars-per-line-cap),
+        |$cmd.set-env.map({"{.key.subst('-','_',:g)}=",|self.arg(.value)," "}).flat,
+        |$full-cmd;
     }
-
-    my @cmd-body  = |$cmd.nodes.map({ $++
-                                      ?? self.space-then-arg($_)
-                                      !! self.arg($_).itemize(.itemize) }
-                                   ).flat;
-    my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,:$stdin);
-    my $pipe     := |(|self.cap-stdout($_),'|' with $pipe-in);
-    |$pipe,
-    ("\n{$*pad}" if $pipe and $pipe.chars + $full-cmd.chars > $.chars-per-line-cap),
-    |$cmd.set-env.map({"{.key.subst('-','_',:g)}=",|self.arg(.value)," "}).flat,
-    |$full-cmd;
 }
 
-method compile-cmd(@cmd-body,@write,@append,:$stdin) {
+method compile-cmd(@cmd-body,@out-write,@out-append,@in) {
     my @redir;
     my $eval;
-    for '>', @write,'>>',@append -> $sym,@list {
-        for @list -> $in,$out {
-            my $in-ct := $in.compile-time;
-            $eval = True unless $in-ct;
-            @redir.push: list ($in-ct ~~ 1 ?? '' !! self.arg($in));
+
+    my @redirs := 1,'>' ,@out-write,
+                  1,'>>',@out-append,
+                  0,«<» ,@in;
+
+    for @redirs -> $default-lhs, $sym, @list {
+        for @list -> $lhs,$rhs {
+            my $lhs-ct := $lhs.compile-time;
+            $eval = True without $lhs-ct;
+            @redir.push: list ($lhs-ct ~~ $default-lhs ?? '' !! self.arg($lhs));
             @redir.push($sym);
-            @redir.push: list ('&' if $out.type ~~ tFD()),($out.compile-time ~~ -1 ?? '-' !! |self.arg($out));
+            @redir.push: list ('&' if $rhs.type ~~ tFD()),
+                              ($rhs.compile-time ~~ -1 ?? '-' !! |self.arg($rhs));
         }
-    }
-    if $stdin {
-        @redir.append: '',q{<}; #>;
-        @redir.push: list ('&' if $stdin.type ~~ tFD()),self.arg($stdin);
     }
     if $eval {
         'eval ',escape(|@cmd-body," "),
-        |@redir.map(-> $in ,$sym,$out { |$in,escape($sym, $out.flat)}).flat;
+        |@redir.map(-> $in,$sym,$out { |$in,escape($sym, $out.flat) }).flat;
     } else {
         |@cmd-body,|(@redir.map(-> $a,$b,$c {' ',|$a,|$b,|$c}).flat if @redir) ;
     }
@@ -710,10 +718,6 @@ multi method cap-stdout(SAST::Cmd:D $_) {
     self.node($_);
 }
 
-#!WriteToFile
-multi method node(SAST::WriteToFile:D $wtf) {
-    self.compile-cmd(self.cap-stdout($wtf.in),$wtf.write,$wtf.append);
-}
 #!Return
 multi method node(SAST::Return:D $ret) {
     if $ret.impure {

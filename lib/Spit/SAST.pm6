@@ -577,44 +577,31 @@ class SAST::Elem is SAST::MutableChildren does SAST::Assignable {
     method spit-gist { $.elem-of.spit-gist ~ '[' ~ $!index.spit-gist ~ ']' }
 }
 
-class SAST::WriteToFile is SAST::Children is rw {
-    has SAST @.write;
-    has SAST @.append;
-    has SAST $.in;
-
-    method stage2($ctx) is rw {
-        $_ .= do-stage2(tStr) for @.children;
-        self;
-    }
-
-    method children { (|@!append,|@!write,$!in).grep(*.defined) }
-
-    method clone(|c) { callwith(|c,:@!write,:@!append) }
-
-    method type { tAny }
-}
-
 class SAST::Cmd is SAST::MutableChildren is rw {
-    has SAST $.in;
+    has SAST $.pipe-in;
+    has SAST @.in;
     has SAST @.write;
     has SAST @.append;
     has SAST %.set-env;
 
     method stage2($ctx) is default {
-        $_ .= do-stage2(tStr) for ($!in,|@.nodes,|%!set-env.values).grep(*.defined);
+        $_ .= do-stage2(tStr) for ($!pipe-in,|@.nodes,|%!set-env.values).grep(*.defined);
 
-        for |@!write,|@!append <-> $in,$out {
-            $in  .= do-stage2(tFD, :desc<Output redirection source>);
-            $out .= do-stage2(tStr,:desc<Output redirection destination>);
+        for |@!write,|@!append,|@!in <-> $lhs, $rhs {
+            $lhs  .= do-stage2(tFD, :desc<Redirection left-hand-side>);
+            $rhs  .= do-stage2(tStr,:desc<Redirection right-hand-side>);
+        }
+        if not ($!pipe-in and (@!write || @!append) or @.nodes) {
+            self.make-new(SX,message => ‘command can't be empty’).throw;
         }
         self;
     }
 
     method children {
-        (|@.nodes,$!in,|@!write,|@!append,|%!set-env.values).grep(*.defined)
+        ($!pipe-in,|@.nodes,|@!in,|@!write,|@!append,|%!set-env.values).grep(*.defined)
     }
 
-    method clone(|c) { callwith(|c,:@!write,:@!append,:%!set-env) }
+    method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
 
     method type { $.ctx }
 }

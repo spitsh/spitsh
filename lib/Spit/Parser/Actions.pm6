@@ -642,8 +642,8 @@ method infix:sym<.=> ($/) {
             $var;
         }
         when SAST::Cmd {
-            proceed if .in;
-            .in = $var.gen-reference(match => $var.match);
+            proceed if .pipe-in;
+            .pipe-in = $var.gen-reference(match => $var.match);
             $var.assign = $_;
             $var;
         }
@@ -700,9 +700,9 @@ method args ($/,|) {
 method postfix:cmd-call ($/) {
     my $first = $<cmd>.ast;
     my $last = $first;
-    $last = $last.in while $last.in;
+    $last = $last.pipe-in while $last.pipe-in;
     make -> $called-on {
-        $last.in = $called-on;
+        $last.pipe-in = $called-on;
         $first;
     };
 }
@@ -763,14 +763,14 @@ method cmd ($/) { make $<cmd-pipe-chain>.ast }
 method cmd-pipe-chain ($/) {
     my $cmd;
     for $<cmd-body>.map(*.ast) -> $next {
-        $next.in = $cmd with $cmd;
+        $next.pipe-in = $cmd with $cmd;
         $cmd = $next;
     }
     make $cmd;
 }
 
 method cmd-body ($/) {
-    my (SAST:D @pos,SAST:D %set-env,SAST:D @write,SAST:D @append);
+    my (SAST:D @pos,SAST:D %set-env,SAST:D @write,SAST:D @append,SAST:D @in);
     for $<cmd-arg> {
         with $_<cmd-term> {
             @pos.push: .ast;
@@ -784,17 +784,15 @@ method cmd-body ($/) {
         orwith $_<pair>.ast {
             %set-env{.key.compile-time} = .value;
         }
-        orwith $_<output-redir> {
-            my (@add-write,@add-append) := .ast;
+        orwith $_<redirection> {
+            my (@add-write,@add-append,@add-in) := .ast;
             @write.append(@add-write);
             @append.append(@add-append);
+            @in.append(@add-in);
         }
     }
 
-    my $cmd = @pos ?? SAST::Cmd.new(|@pos,:%set-env) !! SAST::WriteToFile.new;
-    $cmd.write = @write;
-    $cmd.append = @append;
-    make $cmd;
+    make SAST::Cmd.new(|@pos,:%set-env,:@write,:@append,:@in);
 }
 
 method cmd-term ($/) {
@@ -802,14 +800,14 @@ method cmd-term ($/) {
 }
 
 
-method output-redir($/) {
+method redirection($/) {
     my &make-fd =  { SAST::Blessed.new(class-name => 'FD',SAST::IVal.new(val => $_),match => $/) }
     my $src = $<src>;
     my @src-fd = (
         ($src<all> andthen (make-fd(1),make-fd(2)))
         or $src<fd> andthen .ast
         or ($src<err> && make-fd(2))
-        or make-fd(1);
+        or ($<in> ?? make-fd(0) !! make-fd(1) )
     );
 
     my $dst = $<dst>;
@@ -821,15 +819,17 @@ method output-redir($/) {
     ?? { $*SETTING.lookup(SCALAR,'*ERR').gen-reference(match => $dst<err>) }
     !! { $dst<fd>.ast.deep-clone };
 
-    my (@write,@append);
+    my (@write,@append,@in);
     for @src-fd -> $src-fd {
         if $<write> {
             @write.append: $src-fd,$gen-dst();
-        } else {
+        } elsif $<append> {
             @append.append: $src-fd,$gen-dst();
+        } else {
+            @in.append: $src-fd,$gen-dst();
         }
     }
-    make (@write,@append);
+    make (@write,@append,@in);
 }
 
 sub make-quote($/) { make $<str>.ast andthen .match = $/ }

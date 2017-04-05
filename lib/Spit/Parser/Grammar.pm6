@@ -514,7 +514,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token cmd-arg {
         | <cmd-term>
-        | <output-redir>
+        | <redirection>
         | $<pair>=<::("term:pair")>
         | $<bare>=[\w+|<.hyphen>]+
         | {} <.invalid('command argument. Try putting "(...)" around expressions')>
@@ -522,23 +522,23 @@ grammar Spit::Grammar is Spit::Lang {
 
     token cmd-term {
         $<i-sigil>=<::('prefix:i-sigil')>*
-        (<var> | $<parens>=<::("term:parens")> <![<>]> | <quote> | <cmd> )
+        (<var> | $<parens>=<::("term:parens")> <![<>›‹]> | <quote> | <cmd> )
         <postfix>*
     }
 
-    token output-redir {
+    token redirection {
         $<src>=(
             |$<all>='*'
-            |$<fd>=<.wrap: '(',/<R=.EXPR>/,')', :desc<source file descriptor>>
+            |$<fd>=<.wrap: '(',/<R=.EXPR>/,')', :desc<redirection left-hand-side>>
             |$<err>='!'
         )?
-        [$<append>='>>' | $<write>='>']
+        [$<append>='>>' | $<write>=<[>›]> | $<in>=<[<‹]>]
         $<dst>=(
             | $<null>='X'
             | $<cap>='~'
             | $<err>='!'
             | {} <.ws> [$<fd>=<.cmd-term> ||
-                        <.invalid('ouput redirection destination. Try putting "(...)" around expressions')>]
+                        <.invalid('redirection right-hand-side. Try putting "(...)" around expressions')>]
         )
     }
 

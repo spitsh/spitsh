@@ -385,7 +385,7 @@ multi method walk(SAST::CmpRegex:D $THIS is rw) {
 # as their original. See 'ef' and 'et' for why.
 sub acceptable-in-cond-return($_,$original) {
     when SAST::Cmd {
-        (not .write || .append || .in) and
+        (not .write || .append || .pipe-in || .in) and
         (.nodes[*-1] andthen .cloned === $original);
     }
     when SAST::MethodCall {
@@ -526,8 +526,7 @@ method inline-value($inner,$outer,$_ is raw) {
 }
 
 subset ChildSwapInline of SAST:D
-       where SAST::Call|SAST::Cmd|SAST::Increment|
-             SAST::WriteToFile|SAST::Neg;
+       where SAST::Call|SAST::Cmd|SAST::Increment|SAST::Neg;
 
 # CONSIDER:
 #   {
