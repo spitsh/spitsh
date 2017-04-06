@@ -2,7 +2,7 @@ my $TEST_COUNT = 0;
 my $TEST_PLAN = 0;
 sub plan(Int $n) is export  {
     $TEST_PLAN = $n;
-    say "1..{$n}";
+    say "1..$n";
 }
 
 sub ok (Bool $res,$msg) is export {
