@@ -7,6 +7,18 @@ need Spit::DependencyList;
 need Spit::Metamodel;
 need Spit::OptsParser;
 
+multi reduce-block(SAST::Stmts:D $block) {
+    if $block.children.all ~~ SAST::Empty {
+        $block.stage3-node(SAST::Empty);
+    } elsif $block.one-stmt -> $one-stmt {
+        $one-stmt;
+    } else {
+        $block;
+    }
+}
+
+multi reduce-block(SAST:D $non-block) { $non-block }
+
 has $!deps = Spit::DependencyList.new;
 has @.scaffolding;
 has %.opts;
@@ -69,19 +81,6 @@ multi method walk(SAST::ClassDeclaration:D $THIS is rw) {
     $THIS .= stage3-node(SAST::Empty);
 }
 
-
-multi method reduce-block(SAST::Block:D $block) {
-    if $block.children == 0 || $block.children.all ~~ SAST::Empty {
-        $block.stage3-node(SAST::Empty);
-    } elsif $block.one-stmt -> $one-stmt {
-        $one-stmt;
-    } else {
-        $block;
-    }
-}
-
-multi method reduce-block(SAST:D $non-block) { $non-block }
-
 multi method walk(SAST::While:D $THIS is rw) {
     with $THIS.cond.compile-time -> $cond {
         if not $cond {
@@ -94,7 +93,7 @@ multi method walk(SAST::While:D $THIS is rw) {
 multi method walk(SAST::If:D $THIS is rw,:$sub-if) {
     with $THIS.cond.compile-time -> $cond {
         if ?$cond {
-            $THIS = $sub-if ?? $THIS.then !! self.reduce-block($THIS.then);
+            $THIS = $sub-if ?? $THIS.then !! reduce-block($THIS.then);
         } else {
             if $THIS.else <-> $else {
                 $THIS = $else;
@@ -201,7 +200,7 @@ multi method walk(SAST::ConstantDecl:D $THIS is rw) {
 }
 
 multi method walk(SAST::Given:D $THIS is rw) {
-    if $THIS.topic-var.replace-with -> $val {
+    if $THIS.topic-var.replace-with {
         $THIS .= block;
     }
 }
@@ -428,6 +427,21 @@ multi method walk(SAST::OnBlock:D $THIS is rw) {
             )
         )
     }
+}
+
+
+multi method walk(SAST::Stmts:D $THIS is rw) {
+    if $THIS.returns -> $top-ret is raw {
+        if (my $child-stmts = $top-ret.val) ~~ SAST::Stmts {
+            use Spit::Util :remove;
+            if $THIS.nodes.&remove(* =:= $top-ret) {
+                $child-stmts.returns.ctx = $top-ret.ctx;
+                $THIS.nodes.append($child-stmts.nodes);
+            }
+        }
+    }
+
+    $THIS .= &reduce-block if $THIS.auto-inline;
 }
 
 multi method walk(SAST::MethodCall:D $THIS is rw) {

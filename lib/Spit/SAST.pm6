@@ -311,7 +311,7 @@ class SAST::CompUnit is SAST::Children {
 
     method do-stage2 {
         my $*CU = self;
-        $!block .= do-stage2(tAny());
+        $!block .= do-stage2(tAny(),:!auto-inline);
         self.stage2-done = True;
         self;
     }
@@ -437,8 +437,9 @@ class SAST::ConstantDecl is SAST::VarDecl {
 }
 
 class SAST::Stmts is SAST::MutableChildren {
+    has Bool:D $.auto-inline is rw = True;
 
-    method stage2($ctx,:$desc,:$loop) is default {
+    method stage2($ctx,:$desc,:$loop,:$!auto-inline = True) is default {
         my $last-stmt := self.last-stmt;
         for @.children {
             $_ .= do-stage2(tAny) unless $_ =:= $last-stmt;
@@ -537,7 +538,7 @@ class SAST::PhaserBlock is SAST::Children {
     has $.block is required;
     has Spit-Phaser $.stage is required;
 
-    method stage2 ($) { $!block .= do-stage2(tAny); self }
+    method stage2 ($) { $!block .= do-stage2(tAny,:!auto-inline); self }
     method children { $!block, }
     method type { tAny() }
 }
@@ -670,12 +671,10 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
         @!os-candidates .= flatmap: -> $os,$block { cont-pair $os,$block };
         for @.os-candidates {
             .value .= do-stage2(
-                $!is-native ?? tAny()
-                !! $.return-type,
-                :desc("Return value of block didn't match return type of $!name"));
-            with .value.returns {
-                .impure = $!impure;
-            }
+                $!is-native ?? tAny() !! $.return-type,
+                :!auto-inline,
+                :desc("return value of $.spit-gist didn't match return type of $!name"));
+            .impure = $!impure with .value.returns;
         }
         self;
     }
@@ -968,7 +967,7 @@ class SAST::ClassDeclaration does SAST::Declarable is SAST::Children {
     method type { tAny }
     method children { ($!block // Empty),  }
     method stage2 ($) {
-        $_ .= do-stage2(tAny) for self.children;
+        $_ .= do-stage2(tAny,:!auto-inline) for self.children;
         self;
     }
 }
@@ -1293,7 +1292,7 @@ class SAST::If is SAST::Children is rw {
             );
             $desc = 'if/unless block return value';
         }
-        $_ .= do-stage2($ctx,:$desc) for $!then,($!else // Empty);
+        $_ .= do-stage2($ctx,:$desc,:!auto-inline) for $!then,($!else // Empty);
         self;
     }
 
@@ -1317,7 +1316,7 @@ class SAST::While is SAST::Children {
     method stage2($ctx) {
         $!cond .= do-stage2(tBool,:desc<while conditional>);
         generate-topic-var(var => $!topic-var,:$!cond,blocks => ($!block,));
-        $!block .= do-stage2($ctx,:desc<while block return value>,:loop);
+        $!block .= do-stage2($ctx,:desc<while block return value>,:loop,:!auto-inline);
         self;
     }
     method children { $!cond,$!block,($!topic-var // Empty) }
@@ -1326,7 +1325,7 @@ class SAST::While is SAST::Children {
 
 class SAST::Given is SAST::Children is rw {
     has SAST:D $.given is required;
-    has SAST::Block:D $.block is required;
+    has SAST $.block is required;
     has SAST::VarDecl $.topic-var;
 
     method stage2($ctx) {
@@ -1362,7 +1361,7 @@ class SAST::For is SAST::Children {
         }
         $!iter-var.do-stage2(tAny);
         $!block.declare: $!iter-var;
-        $!block .= do-stage2($ctx.&derive-type,:loop);
+        $!block .= do-stage2($ctx.&derive-type,:loop,:!auto-inline);
         self;
     }
 
@@ -1571,7 +1570,7 @@ class SAST::Quietly is SAST::Children {
     has SAST $.null is rw;
 
     method stage2($ctx) {
-        $!block .= do-stage2($ctx);
+        $!block .= do-stage2($ctx,:!auto-inline);
         $!null = $*SETTING.lookup(SCALAR,'*NULL')
                           .gen-reference(match => $!block.match)
                           .do-stage2(tFD);

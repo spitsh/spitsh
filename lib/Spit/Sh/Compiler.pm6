@@ -570,11 +570,7 @@ multi method node(SAST::Stmts:D $block,:$indent is copy,:$curlies,:$one-line,:$n
 }
 
 multi method arg(SAST::Stmts:D $_) {
-    if .one-stmt -> $return {
-        self.arg($return);
-    } else {
-        cs self.node($_,:one-line);
-    }
+    cs self.node($_,:one-line);
 }
 
 #!LastExitStatus
