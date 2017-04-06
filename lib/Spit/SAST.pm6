@@ -68,7 +68,7 @@ role SAST is rw {
     has $.stage2-done is rw;
     has $.stage3-done is rw;
     has $.cloned is rw;
-    has Spit::Type $.ctx; # The type context the object was put in in stage2
+    has Spit::Type $.ctx is rw; # The type context the object was put in in stage2
     has $.included is rw;
     has @.extra-depends;
 
