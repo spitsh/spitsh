@@ -550,7 +550,7 @@ class SAST::Return is SAST::Children {
     has $.impure is rw;
     has $.loop is rw;
     method stage2($ctx) is default {
-        self.val .= do-stage2($ctx,:desc("Return value didn't match block's return type"));
+        self.val .= do-stage2($ctx,:desc("return value didn't match block's return type"));
         self;
     }
     method type { $!val.type }
@@ -591,8 +591,8 @@ class SAST::Cmd is SAST::MutableChildren is rw {
         $_ .= do-stage2(tStr) for ($!pipe-in,|@.nodes,|%!set-env.values).grep(*.defined);
 
         for |@!write,|@!append,|@!in <-> $lhs, $rhs {
-            $lhs  .= do-stage2(tFD, :desc<Redirection left-hand-side>);
-            $rhs  .= do-stage2(tStr,:desc<Redirection right-hand-side>);
+            $lhs  .= do-stage2(tFD, :desc<redirection left-hand-side>);
+            $rhs  .= do-stage2(tStr,:desc<redirection right-hand-side>);
         }
         if not ($!pipe-in and (@!write || @!append) or @.nodes) {
             self.make-new(SX,message => ‘command can't be empty’).throw;
@@ -759,7 +759,7 @@ class SAST::Call  is SAST::Children {
                 until (my $arg := $pos-args.pull-one) =:= IterationEnd {
                     $arg .= do-stage2(
                         $elem-type,
-                        :desc("Argument slurped by {$param.spit-gist} " ~
+                        :desc("argument slurped by {$param.spit-gist} " ~
                               "in {$.declaration.spit-gist} doesn't match its type")
                     );
                 }
@@ -795,7 +795,7 @@ class SAST::Call  is SAST::Children {
             if %named-params{$name} -> $param {
                 $arg .= do-stage2(
                     $param.type,
-                    :desc("Named argument {$param.spit-gist} to $!name doesn't match its type")
+                    :desc("named argument {$param.spit-gist} to $!name doesn't match its type")
                 );
             } else {
                 SX::BadCall.new(
