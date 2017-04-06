@@ -31,7 +31,7 @@ sub nnq { NoNeedQuote.new: bits => @_ }
 sub dq  { DoubleQuote.new: bits => @_ }
 sub escape { Escaped.new: bits => @_  }
 sub cs { DoubleQuote.new: bits => ('$(',|@_,')')}
-sub var { DoubleQuote::Var.new: name => $^a }
+sub var { DoubleQuote::Var.new: name => $^a, :$:is-int }
 
 sub lookup-method($class,$name) {
     $*SETTING.lookup(CLASS,$class).class.^find-spit-method($name);
@@ -304,7 +304,7 @@ multi method arg(SAST::Var:D $var) {
             SX::NYI.new(feature => 'Non declaration assignment as an argument',node => $var).throw
         }
     } else {
-        var $name
+        var $name, is-int => ($var.type ~~ tInt());
     }
 }
 

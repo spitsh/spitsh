@@ -71,8 +71,9 @@ class DoubleQuote does DynamicShellElement {
 # a vanilla variable.
 class DoubleQuote::Var does DynamicShellElement {
     has $.name;
+    has Bool $.is-int;
     method in-DQ(:$next) { ($next andthen .match(/^\w/)) ?? ('${',$!name,'}') !! ('$',$!name) }
-    method as-item { '"$',$!name,'"' }
+    method as-item { ('"' unless $!is-int),'$',$!name,('"' unless $!is-int) }
     method as-flat { '$',$!name }
     method contains(|) { False }
     method match(|) { False }
