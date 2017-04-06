@@ -666,19 +666,13 @@ multi method node(SAST::Cmd:D $cmd,:$silence) {
         self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,());
     } else {
         my @in = $cmd.in;
-        my $pipe-in;
-        if $cmd.pipe-in ~~ SAST::FileContent:D {
-            @in.push(0,$cmd.pipe-in.file);
-        } elsif $cmd.pipe-in.defined {
-            $pipe-in = $cmd.pipe-in;
-        }
         my @cmd-body  = |$cmd.nodes.map({ $++
                                           ?? self.space-then-arg($_)
                                           !! self.arg($_).itemize(.itemize) }
                                        ).flat;
 
         my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,@in);
-        my $pipe     := |(|self.cap-stdout($_),'|' with $pipe-in);
+        my $pipe     := |(|self.cap-stdout($_),'|' with $cmd.pipe-in);
         |$pipe,
         ("\n{$*pad}" if $pipe and $pipe.chars + $full-cmd.chars > $.chars-per-line-cap),
         |$cmd.set-env.map({"{.key.subst('-','_',:g)}=",|self.arg(.value)," "}).flat,
@@ -833,11 +827,6 @@ multi method arg(SAST::Range:D $_) {
 }
 #!Blessed
 multi method arg(SAST::Blessed:D $_) { self.arg($_[0]) }
-
-#!FileContent
-multi method arg(SAST::FileContent:D $_) {
-    dq '$(cat ',('<&' if .file.type ~~ tFD),|self.arg(.file),')' #'>'
-}
 
 #!Concat
 multi method arg(SAST::Concat:D $_) {

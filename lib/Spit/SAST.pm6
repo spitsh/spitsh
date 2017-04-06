@@ -1566,17 +1566,6 @@ class SAST::CmpRegex is SAST::Children is rw {
     }
 }
 
-class SAST::FileContent is SAST::Children {
-    has SAST:D $.file is required;
-
-    method stage2($ctx) {
-        $!file .= do-stage2(tStr);
-        self;
-    }
-    method type { tList }
-    method children { $!file,}
-}
-
 class SAST::Quietly is SAST::Children {
     has SAST::Block:D $.block is required;
     has SAST $.null is rw;

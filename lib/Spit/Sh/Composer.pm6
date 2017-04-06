@@ -436,12 +436,6 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
         $THIS .= stage3-node(SAST::BVal,val => ?$ct);
     }
 
-    elsif $THIS.declaration === tFile.^find-spit-method('read') or
-          $THIS.declaration === tFD.^find-spit-method('read')
-    {
-        $THIS .= stage3-node(SAST::FileContent,file => $THIS.invocant);
-    }
-
     elsif $THIS.declaration === tEnumClass.^find-spit-method('name')
           and $THIS.invocant.compile-time -> $ct
     {
@@ -506,7 +500,7 @@ method inline-value($inner,$outer,$_ is raw) {
         }
     }
     # if arg inside inner is a blessed value, try inlining the value
-    when SAST::Blessed|SAST::FileContent|SAST::Neg {
+    when SAST::Blessed|SAST::Neg {
         if self.inline-value($inner,$outer,.children[0]) -> $val {
             .children[0] = $val;
             # because we're changing child of a rather than the node itself
