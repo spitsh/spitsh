@@ -664,7 +664,9 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
 
     method symbol-type { SUB }
 
-    method gist { "sub {$!name}\(" ~ $!signature.gist ~ '){ ... }' }
+    method gist {
+        $.node-name ~ "($!name)" ~ $.gist-children;
+    }
     method spit-gist { "sub {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
@@ -688,7 +690,7 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
     }
 
     method children {
-        ($!chosen-block // |@!os-candidates.map(*.value) || Empty),$!signature;
+        $!signature, ($!chosen-block // |@!os-candidates.map(*.value) || Empty);
     }
 }
 
@@ -948,7 +950,7 @@ class SAST::Signature is SAST::Children {
     }
 
     method children { |@!pos,|%.named.values }
-    method gist{ self.children».gist.join(', ') }
+    method gist { $.node-name ~ '(' ~ $.spit-gist ~ ')' }
     method type { tAny }
     method clone(|c) {
         callwith(|c,:@!pos,:%!named);
