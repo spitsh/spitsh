@@ -465,11 +465,13 @@ class SAST::Stmts is SAST::MutableChildren {
     }
 
     method one-stmt is rw {
-        if @.children.grep({$_ !~~ SAST::PhaserBlock}) == 1 {
-            given self.last-stmt {
+        if @.children == 1 {
+            given @.children[0] {
                 when SAST::Return { .val }
                 default { $_ }
             }
+        } else {
+            Nil
         }
     }
 
