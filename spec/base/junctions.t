@@ -1,6 +1,6 @@
 use Test;
 
-plan 136;
+plan 138;
 
 my $true = True;
 my $false = False;
@@ -55,8 +55,19 @@ my $false = False;
     $y ||= 'foo}';
     is $y,'foo}', '||= with } in value';
     $y = False;
+    $y ||= 'foo$glarb\\}';
+    is $y, 'foo$glarb\\}','||= with \\} in value';
+    $y = False;
     $y ||= 'foo{';
     is $y, 'foo{', '||= with { in value';
+
+
+    my $z;
+    # Super weird situation where on bash's /bin/sh where you do
+    # "${a:='...'}" it will include the single quotes in a but if
+    # you do ${a:=...} outside of "" it won't (!?)
+    ($z ||= "\n") || flunk "shouldn't have got here";
+    is $z, "\n", '||= \\n}';
 }
 
 {

@@ -23,6 +23,7 @@ role DynamicShellElement does ShellElement {
     method itemize($!itemized) { self }
     method contains(|c) { self.Str.contains(|c) }
     method match(|c)    { self.Str.match(|c)    }
+    method in-or-equals { self.in-DQ }
 }
 
 # A literal string - it should be escaped for whatever quotes it appears in
@@ -37,12 +38,15 @@ class Escaped does DynamicShellElement {
         @!bits.join.subst("'","'\\''",:g);
     }
 
+    method in-or-equals {
+        S:g!('}' | \\<?before '}'>)!\\$0! given self.in-DQ;
+    }
+
     method in-DQ {
         S:g!(
-               |\"
-               |\\<?before \"|\$>|\$
-            )
-            !\\$0! #"
+               |'"'
+               |\\<?before '"'|\$>|\$
+            ) !\\$0!
             given @!bits.join;
     }
 

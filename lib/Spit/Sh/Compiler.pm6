@@ -319,7 +319,7 @@ multi method compile-assign($var,SAST::Junction:D $j) {
     }
     if $or-equals and $var.type ~~ tStr() {
         my $name = self.gen-name($var);
-        '${',$name,':=',|self.arg($j[1]),'}';
+        '${',$name,':="',|self.arg($j[1]).in-or-equals,'"}';
     } else {
         nextsame;
     }
