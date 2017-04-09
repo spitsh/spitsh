@@ -1,3 +1,17 @@
+## 0.0.15
+
+- new .NAME meta-method which returns the name of a variable
+  `$a.NAME` -> "a" or "a_1" etc
+- Better inlining of blocks all around
+- Reworked FD after investigating how `exec(1)` actually works:
+  - .open-w and .open-r been removed. They
+  both did the same thing. They are replaced with .dup which AFAICT is
+  what exec is actually doing when you use it with two file descriptors
+  - open-file-w/open-file-r has been renamed to open-w and open-r
+  - open-rw has been added
+  - writable has been renamed to is-open which is what it actually does.
+- Added FD.get and FD.getc (which isn't working on Debian/dash yet)
+
 ## 0.0.14
 
 - `$?` variable representing the exit status of the last command

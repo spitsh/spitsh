@@ -1,37 +1,70 @@
 # FD
  FD wraps an integer representing a file descriptor. Usually you don't create these directly but get them through calling other methods like `File.open-w()`.
-## close-w
->method close-w()
+## close
+>method close()
 
 
  Closes redirection for this file descriptor.
+## dup
+>method dup([FD](./FD.md) **$new-fd**)
+
+
+ Duplicate the invocant file descriptor into the argument file descriptor like `DUP(2)` if the argument file descriptor is open it will be closed before becoming the alias.
+
+|Parameter|Description|
+|---------|-----------|
+|**$new-fd**||
+## get
+>method get( ⟶ [Bool](./Bool.md))
+
+
+ Reads all data up to and **including** the next newline or up to the EOF and puts it into `$~`. The newline (if any) will be discarded.
+## getc
+>method getc([Int](./Int.md) **$n** ⟶ [Bool](./Bool.md))
+
+
+ Reads a fixed number of characters
+
+|Parameter|Description|
+|---------|-----------|
+|**$n**||
+## is-open
+>method is-open( ⟶ [Bool](./Bool.md))
+
+
+ Returns True if the file descriptor is open.
 ## next-free
 >method next-free( ⟶ [FD](./FD.md))
 
 
  Gets the next free file descriptor. **note:** This only kinda works.
-## open-file-w
->method open-file-w([File](./File.md) **$file**)
+## open-r
+>method open-r([File](./File.md) **$file**)
 
 
- Redirects output from the invocant file descriptor to the file.
+ Opens a file for reading from this file descriptor.
+
+|Parameter|Description|
+|---------|-----------|
+|**$file**| The file to open|
+## open-rw
+>method open-rw([File](./File.md) **$file**)
+
+
+ Opens a file for reading and writing from this file descriptor.
+
+|Parameter|Description|
+|---------|-----------|
+|**$file**| The file to open|
+## open-w
+>method open-w([File](./File.md) **$file**)
+
+
+ Opens a file for writing from this file descriptor.
 
 |Parameter|Description|
 |---------|-----------|
 |**$file**| The file to redirect to|
-## open-w
->method open-w([FD](./FD.md) **$dst**)
-
-
- Redirects output from the invocant file descriptor to the argument file descriptor.
-
-|Parameter|Description|
-|---------|-----------|
-|**$dst**| The file descriptor to redirect to|
-## read
->method read( ⟶ [Str](./Str.md))
-
-
 ## tty
 >method tty( ⟶ [Bool](./Bool.md))
 
@@ -41,11 +74,6 @@
 say $*OUT.tty;  #probably true
 say FD<42>.tty; #probably false
 ```
-## writable
->method writable( ⟶ [Bool](./Bool.md))
-
-
- Returns if the file descriptor is writable.
 ## write
 >method write([Str](./Str.md) **$data**)
 

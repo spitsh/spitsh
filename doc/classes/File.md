@@ -139,6 +139,10 @@ say $file[1] #-> bar
 ```perl6
  say File</etc/hosts>.name #->hosts
 ```
+## open-r
+>method open-r( ⟶ [FD](./FD.md))
+
+
 ## open-w
 >method open-w( ⟶ [FD](./FD.md))
 
