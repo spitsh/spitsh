@@ -1,7 +1,7 @@
 #|File descriptor connected to the STDOUT of the script by default.
 #|{ $*OUT.write("hello world") # same as print("hello world") }
 constant $*OUT = {
-    FD<3>.open-w(1);
+    FD<1>.dup(3);
     FD<3>;
 }
 
@@ -33,7 +33,7 @@ constant FD $?CAP = 1;
     }
 }
 constant $*NULL = {
-    FD<4>.open-file-w("/dev/null");
+    FD<4>.open-w("/dev/null");
     FD<4>;
 }
 
@@ -50,25 +50,43 @@ augment FD {
         ++$fd-count;
     }
 
-    #|Redirects output from the invocant file descriptor to the
-    #|argument file descriptor.
-    method open-w(#|[The file descriptor to redirect to] FD $dst) {
-        ${exec ($self)> $dst};
+    #| Opens a file for writing from this file descriptor.
+    method open-w(#|[The file to redirect to]File $file) {
+        ${exec ($self)› $file}
     }
 
-    #|Redirects output from the invocant file descriptor to the file.
-    method open-file-w(#|[The file to redirect to]File $file) {
-        ${exec ($self)> $file}
+    #| Opens a file for reading from this file descriptor.
+    method open-r(#|[The file to open] File $file) {
+        ${exec ($self)‹ $file}
+    }
+
+    #| Opens a file for reading and writing from this file descriptor.
+    method open-rw(#|[The file to open] File $file) {
+        ${exec ($self)‹ $file ($self)> $file}
+    }
+
+    #| Duplicate the invocant file descriptor into the argument file
+    #| descriptor like `DUP(2)` if the argument file descriptor is open
+    #| it will be closed before becoming the alias.
+    method dup (FD $new-fd) {
+        # you might think we need <> here but actually whether it's >
+        # < or <> it does the same thing. The LHS always becomes the
+        # alias to the RHS.
+        ${exec ($new-fd)> $self}
     }
 
     #| Closes redirection for this file descriptor.
-    method close-w() {
-        ${exec ($self)> (FD{-1}) };
+    method close() {
+        ${exec ($self)› (FD{-1}) };
     }
-    #| Returns if the file descriptor is writable.
-    method ?writable {
-        quietly { ${true >$self} }
+
+    #| Returns True if the file descriptor is open.
+    method ?is-open {
+        # note this works regardless of whether it's open for reading
+        # or writing.
+        quietly { ${true ›$self} }
     }
+
     #| Writes to the file descriptor.
     method write(#|[The data to write to the file descriptor]$data) {
         $data.${ > $self};

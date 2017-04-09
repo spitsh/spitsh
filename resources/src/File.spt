@@ -127,9 +127,16 @@ augment File {
     }
     method open-w(--> FD) is impure {
         my $fd = FD.next-free;
-        $fd.open-file-w($self);
+        $fd.open-w($self);
         $fd;
     }
+
+    method open-r(--> FD) is impure {
+        my $fd = FD.next-free;
+        $fd.open-r($self);
+        $fd;
+    }
+
     #| Returns the file's path (relative or absolute) as a [Str].
     #|{
         my File $file = 'foo.text';
