@@ -319,7 +319,7 @@ multi method compile-assign($var,SAST::Junction:D $j) {
     }
     if $or-equals and $var.type ~~ tStr() {
         my $name = self.gen-name($var);
-        '${',$name,':="',|self.arg($j[1]).in-or-equals,'"}';
+        '${',$name,':=', |self.arg($j[1]).in-or-equals,'}';
     } else {
         nextsame;
     }
@@ -831,10 +831,9 @@ multi method arg(SAST::Concat:D $_) {
     my $str = dq();
 
     my $last-var;
-    for @compiled.kv -> $i,$_ {
-        $str.bits.append(.in-DQ(next => @compiled[$i+1]));
+    for @compiled.reverse.kv -> $i,$_ {
+        $str.bits.prepend(.in-DQ(next => $str.bits.head));
     }
-
     $str;
 }
 #!Type

@@ -52,11 +52,12 @@ my $false = False;
     nok $x,'$x &&= "string", still false when $x is false';
 
     my $y;
+    my $glarb = "woot";
     $y ||= 'foo}';
     is $y,'foo}', '||= with } in value';
     $y = False;
-    $y ||= 'foo$glarb\\}';
-    is $y, 'foo$glarb\\}','||= with \\} in value';
+    $y ||= "foo$glarb\$glarb}";
+    is $y, 'foowoot$glarb}','||= with \\} in value';
     $y = False;
     $y ||= 'foo{';
     is $y, 'foo{', '||= with { in value';
