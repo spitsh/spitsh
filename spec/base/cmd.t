@@ -1,6 +1,6 @@
 use Test;
 
-plan 24;
+plan 25;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -46,4 +46,10 @@ my $a = <one two three>;
     is ${printf '%s-%s-%s' $(<one two three>) }, "$a--", '$() itemizes in cmd';
     is ${printf '%s-%s-%s' @($a) },              'one-two-three', '@($) flattens in cmd';
     is ${printf '%s-%s-%s' @$(<one two three>)}, 'one-two-three', '@$() flattens in cmd';
+}
+
+{
+    my File $file .= tmp;
+    $file.write(<one two three>);
+    is ${cat < $file},<one two three>, 'can read input from a file';
 }
