@@ -562,6 +562,10 @@ multi method node(SAST::Ternary:D $_,:$tight) {
 multi method cap-stdout(SAST::Ternary:D $_,:$tight) {
     self.node($_,:$tight);
 }
+
+multi method cond(SAST::Ternary:D $_,|c)  {
+    self.node($_,|c);
+}
 #!Block
 #!Stmts
 multi method node(SAST::Stmts:D $block,:$indent is copy,:$curlies,:$one-line,:$no-empty) {

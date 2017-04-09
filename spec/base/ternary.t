@@ -1,6 +1,6 @@
 use Test;
 
-plan 16;
+plan 17;
 
 my $true = True;
 my $false = False;
@@ -39,4 +39,8 @@ my $false = False;
     is $res,"win",'Alpine ~~ Debian ??';
     $res = Ubuntu ~~ Debian ?? "win" !! "lose";
     is $res,"win",'Ubuntu ~~ Debian ??';
+}
+
+{
+    (${true} ?? ${true} !! ${true}) && pass 'ternary as condition';
 }
