@@ -1,3 +1,5 @@
+my $~;
+
 #|File descriptor connected to the STDOUT of the script by default.
 #|{ $*OUT.write("hello world") # same as print("hello world") }
 constant $*OUT = {
@@ -92,8 +94,25 @@ augment FD {
         $data.${ > $self};
     }
 
-    # No tests yet
-    method ~read { $self.${cat} }
+    #| Reads all data up to and **including** the next newline or up
+    #| to the EOF and puts it into `$~`. The newline (if any) will be
+    #| discarded.
+    method ?get on {
+        Debian {
+            ${read -r  $~.NAME ‹ $self} || $~;
+        }
+        Any {
+            ${read -r -u $self $~.NAME} || $~;
+        }
+    }
+    #| Reads a fixed number of characters
+    method ?getc(Int $n) on {
+        Any {
+            ${read -r -u $self -n $n $~.NAME}
+                ?? ($~ ||= "\n")
+                !! $~;
+        }
+    }
 
     #| Returns whether this file descriptor is linked to a terminal.
     #|{

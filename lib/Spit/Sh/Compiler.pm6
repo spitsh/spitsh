@@ -94,7 +94,12 @@ method check-stage3($node) {
 
 multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.name,:$fallback)  {
     self.check-stage3($decl);
-    $name = 'M' if $decl.name eq '/';
+    $name = do given $name {
+        when '/' { 'M' }
+        when '~' { 'B' }
+        default { $_ }
+    };
+
     do with $decl.ann<shell_name> {
         $_;
     } else {

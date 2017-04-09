@@ -345,6 +345,7 @@ grammar Spit::Grammar is Spit::Lang {
         [
             |$<name>=(<twigil>?<identifier>)
             |$<name>='/' <?{ $<sigil>.Str eq '@' }>
+            |$<name>='~' <?{ $<sigil>.Str eq '$' }>
         ]
     }
 
