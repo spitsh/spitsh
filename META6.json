@@ -7,6 +7,7 @@
     "provides" : {
         "Spit::Compile" : "lib/Spit/Compile.pm6",
         "Spit::Constants" : "lib/Spit/Constants.pm6",
+        "Spit::Util"      : "lib/Spit/Util.pm6",
         "Spit::DependencyList" : "lib/Spit/DependencyList.pm6",
         "Spit::Doc::Markdown"  : "lib/Spit/Doc/Markdown.pm6",
         "Spit::Metamodel"      : "lib/Spit/Metamodel.pm6",
