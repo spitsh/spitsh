@@ -93,15 +93,6 @@ requires [rakudo](https://github.com/rakudo/rakudo) and something to
 install Perl 6 ecosystem modules with
 like [zef](https://github.com/ugexe/zef).
 
-**note** [rakudo star](http://rakudo.org/how-to-get-rakudo/) is too
-far behind at the moment. You need to build from rakudo/nom because
-Spit uses some features recently added to rakudo. Hopefully it will
-keep compatibility with rakudo star in the future.
-
-**note** Spit is very slow atm because it can't precompile its core
-SETTING. It has to fully parse the whole SETTING every time you run a
-program. Hopefully this can be fixed soon.
-
 ```shell
 zef install Spit
 ```
@@ -110,6 +101,11 @@ and run
 spit eval 'say "hello world"'
 ```
 To check it's working.
+
+**note** [rakudo star](http://rakudo.org/how-to-get-rakudo/) is too
+far behind at the moment. You need to build from rakudo/nom because
+Spit uses some features recently added to rakudo. Hopefully it will
+keep compatibility with rakudo star in the future.
 
 ## Documentation
 

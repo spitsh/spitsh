@@ -1,3 +1,8 @@
+## 0.0.16
+
+- Precompilation of CORE setting and core modules. Compilation is much faster now.
+
+
 ## 0.0.15
 
 - new .NAME meta-method which returns the name of a variable

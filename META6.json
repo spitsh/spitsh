@@ -1,7 +1,7 @@
 {
     "name" : "Spit",
     "perl" : "6.c",
-    "version" : "0.0.15",
+    "version" : "0.0.16",
     "description" : "The Spook in the Shell Script (Spit-sh) compiler",
     "authors" : ["Lloyd Fournier lloyd.fourn@gmail.com"],
     "provides" : {
@@ -15,8 +15,8 @@
         "Spit::Repo"           : "lib/Spit/Repo.pm6",
         "Spit::SAST"           : "lib/Spit/SAST.pm6",
         "Spit::Exceptions"     : "lib/Spit/Exceptions.pm6",
-        "Spit::SETTING"        : "lib/Spit/SETTING.pm6",
-        "Spit::Sh::Compiler"   : "lib/Spit/Sh/Compiler.pm6",
+        "Spit::PRECOMP"        : "lib/Spit/PRECOMP.pm6",
+        "Spit::Sh::Comiler"   : "lib/Spit/Sh/Compiler.pm6",
         "Spit::Sh::Composer"   : "lib/Spit/Sh/Composer.pm6",
         "Spit::Sh::ShellElement" : "lib/Spit/Sh/ShellElement.pm6",
         "Spit::SpitDoc"        : "lib/Spit/SpitDoc.pm6",
