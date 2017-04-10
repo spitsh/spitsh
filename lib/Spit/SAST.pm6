@@ -243,6 +243,7 @@ role SAST::Declarable does SAST::Dependable {
 }
 
 role SAST::OSMutant {
+    has $.mutated is rw;
     method mutate-for-os($os) {...}
 }
 

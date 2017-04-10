@@ -48,12 +48,15 @@ method clone-node($node is rw) {
     } else {
         $node = $_ = $node.clone(:cloned($node));
     }
-
-    $node.mutate-for-os($.os) if $node ~~ SAST::OSMutant;
 }
 
 proto method walk(SAST:D $sast is rw,|) {
     self.clone-node($sast);
+
+    if $sast ~~ SAST::OSMutant and not $sast.mutated {
+        $sast.mutate-for-os($.os);
+        $sast.mutated = True;
+    }
 
     if not $sast ~~ SAST::ClassDeclaration and $sast ~~ SAST::Children {
         for $sast.children {
