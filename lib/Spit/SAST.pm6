@@ -73,13 +73,17 @@ role SAST is rw {
     has @.extra-depends;
 
     method do-stage2(Spit::Type \ctx,:$desc,|args){
-        X::AdHoc.new(
-            payload => "node {self.WHICH} ({self.gist}) re-stage2. First stage2 at:\n $!stage2-done",
+        SX::BugTrace.new(
+            desc => "do-stage2 called on {self.WHICH} twice",
+            node => self,
+            bt => Backtrace.new
         ). throw if $.stage2-done;
-        X::AdHoc.new(
-            payload => "node of type {self.^name} stage2 with Spit::Type type object",
+        SX::BugTrace.new(
+            desc => "node of type {self.^name} has stage2 called with Spit::Type as context",
+            node => self,
+            bt => Backtrace.new
         ).throw if ctx === Spit::Type;
-        $.stage2-done = Backtrace.new;
+        $!stage2-done = True;
         $!ctx = ctx;
         my SAST:D $res = self.stage2(ctx,|args);
         $res = coerce $res,ctx,:$desc;

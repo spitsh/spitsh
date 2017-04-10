@@ -355,18 +355,26 @@ class SX::NYI is SX {
 }
 
 class SX::Bug is SX {
-    has $.desc is required;
+    has $.desc;
     method message {
-        "$!desc - This is a bug";
+        "$.desc.\nThis is a bug. Please report it to: github.com/spitsh/spitsh/issues.";
     }
 }
 
-class SX::CompStageNotCompleted is SX {
+class SX::BugTrace is SX::Bug {
+    has $.bt is required;
+    method gist {
+        callsame() ~ "\n----------\nPerl 6 Backtrace:\n" ~
+        $.bt.Str;
+    }
+}
+
+class SX::CompStageNotCompleted is SX::Bug {
     has $.stage is required;
     has $.node is required;
 
-    method message {
-        "Compilation stage $!stage for {$.node.WHICH}({$.node.gist}) hasn't been completed. This is a bug."
+    method desc {
+        "Compilation stage $!stage for {$.node.WHICH}({$.node.gist}) hasn't been completed"
     }
 
 }
