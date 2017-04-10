@@ -24,8 +24,11 @@ class Spit::DependencyList {
     }
 
     method add-scaffolding($scaf,:$name) {
-        $scaf.make-new(SX::Bug, desc => "scaffolding ($scaf.gist) which isn't stage3 tried to be added").throw
-            unless $scaf.stage3-done;
+        $scaf.make-new(
+            SX::Bug,
+            desc => "tried to add scaffolding ($scaf.gist) which isn't stage3 to dependency list"
+        ).throw  unless $scaf.stage3-done;
+
         die "Scaffolding can't be a synthetic node" unless $scaf.cloned;
         %!scaf-by-orig{$scaf.cloned} = $scaf;
         %!scaf-by-name{$name} = $scaf if $name;
