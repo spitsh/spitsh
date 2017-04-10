@@ -1,11 +1,24 @@
 use Spit::Compile;
+use Spit::PRECOMP;
+need Spit::SAST;
+need Spit::Exceptions;
 
 role Spit::Repo {
 
     method load(|c(:$repo-type,:$id!,:$debug)) {
         my $name = ($_ ~ '<' with $repo-type) ~ $id ~ ('>' if $repo-type);
-        with self.resolve(|c) -> $src {
-            compile($src,:target<stage2>,:$name,:$debug);
+        with self.resolve(|c) {
+            when Str { compile($_,:target<stage2>,:$name,:$debug) }
+            when SAST::CompUnit {
+                proceed unless .stage2-done;
+                $_;
+            }
+            default {
+                SX::Bug.new(
+                    desc => "{self.gist} returned an invalid SAST::CompUnit ({.gist})" ~
+                    " while trying to load '$name'";
+                ).throw;
+            }
         }
     }
     proto method resolve(|) {*};
@@ -27,14 +40,12 @@ class Spit::Repo::File does Spit::Repo {
 
 class Spit::Repo::Core does Spit::Repo {
     sub get-core-module($id) {
-        if $id eq 'Test' {
-            %?RESOURCES{"core-lib/$id.spt"}.slurp;
-        }
+        %core-lib{$id} andthen .return;
     }
 
     multi method resolve(:$repo-type!,:$id!) {
         if $repo-type eq 'core' {
-            get-core-module($id) || die "No such core module '$id'";
+            get-core-module($id);
         }
 
     }

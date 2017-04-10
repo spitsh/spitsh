@@ -8,7 +8,7 @@ need Spit::Sh::Compiler;
 need Spit::SAST;
 
 sub compile  ($input is copy,
-              :$no-setting,
+              :$*SETTING is copy,
               :$debug,
               :$target = 'compile',
               :%opts,
@@ -18,12 +18,12 @@ sub compile  ($input is copy,
               *%,
              ) is export {
 
-    my $*SETTING;
-    if not $no-setting {
+    # SETTING being false
+    without $*SETTING {
         my \before = now;
         my $*DEBUG_SETTING = $debug;
-        $ = ?(require Spit::SETTING <$SETTING>);
-        $*SETTING = $SETTING;
+        $ = ?(require Spit::PRECOMP <$SETTING>);
+        $_ = $SETTING;
     }
 
     my $*CU-name = $name;
