@@ -51,8 +51,8 @@ method clone-node($node is rw) {
 }
 
 proto method walk(SAST:D $sast is rw,|) {
-    return if $sast.stage3-done;
     self.clone-node($sast);
+    return if $sast.stage3-done;
 
     if $sast ~~ SAST::OSMutant and not $sast.mutated {
         $sast.mutate-for-os($.os);
