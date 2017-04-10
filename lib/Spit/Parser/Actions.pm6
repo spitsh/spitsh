@@ -80,36 +80,32 @@ method EXPR-and-mod ($/) {
 method pragma:sym<use>($/) {
     my $spec = $<EXPR>.ast;
     my $match = $/; # BUG? $/ is being reset inside CATCH
-    if $<lib-type> {
-        die "lib NYI";
+
+    my %use = ($<identifier> andthen id => .Str)
+    || (repo-type => $<repo-type>.Str,
+        id => $<angle-quote>.ast.val);
+    my $CU;
+
+    for @*repos -> $repo {
+        ($CU = $repo.load(|%use,:$.debug)) && last;
+        CATCH {
+            SX::ModuleLoad.new(
+                :$repo,
+                exception => $_,
+                |%use,
+                :$match,
+            ).throw;
+        }
+    }
+    if $CU {
+        my @exported := $CU.exported;
+        for SymbolType::.values -> $symbol-type {
+            for @exported[$symbol-type].?values {
+                $*CURPAD.declare($_);
+            }
+        }
     } else {
-        my %use = ($<identifier> andthen id => .Str)
-                   || (repo-type => $<repo-type>.Str,
-                       id => $<angle-quote>.ast.val);
-        my $CU;
-        for @*repos -> $repo {
-
-            ($CU = $repo.load(|%use,:$.debug)) && last;
-            CATCH {
-                SX::ModuleLoad.new(
-                    :$repo,
-                    exception => $_,
-                    |%use,
-                    :$match,
-                ).throw;
-            }
-        }
-        if $CU {
-            my @exported := $CU.exported;
-            for SymbolType::.values -> $symbol-type {
-                for @exported[$symbol-type].?values {
-                    $*CURPAD.declare($_);
-                }
-            }
-        } else {
-            SX::ModuleNotFound.new(|%use,:@*reps).throw;
-        }
-
+        SX::ModuleNotFound.new(|%use,:@*reps).throw;
     }
     make SAST::Empty.new;
 }

@@ -88,7 +88,7 @@ grammar Spit::Grammar is Spit::Lang {
     rule pragma:sym<use> {
         <sym>
         [
-            || 'lib' $<lib-type>=<.identifier><angle-quote>
+            || 'lib' <.ws> { SX::NYI.new(feautre => '"use lib"').throw }
             || $<repo-type>=<.identifier><angle-quote>
             || <identifier>
         ]
