@@ -579,6 +579,10 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
             return
         }
     }
+    # Re-walk replacement. It's possible after inlining further optimizations
+    # can be done.
+    $replacement.stage3-done = False;
+    self.walk($replacement);
     $replacement;
 }
 
