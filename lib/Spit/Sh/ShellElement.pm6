@@ -1,12 +1,12 @@
 use MONKEY-TYPING;
-constant @metachars = Qw[ } < ? ' " \ $ ; & ( ) | > * # ]; #>'
+
+# using constant here goofs for some reason
+my $metachar-re = BEGIN rx/\s|<[}<?'"\\$;&()|>*#]>/;
 
 role ShellElement {
     method in-or-equals {
-        S:g!('}' | \\<?before '}'>)!\\$0! given self.in-DQ.join;
+        S:g!'}' | \\<?before '}'>!\\$/! given self.in-DQ.join;
     }
-    method contains-metachar(*@metachars) { ?self.match(/@metachars/) }
-    method starts-with-ident { ?self.match(/^\w/) }
 }
 
 # Make Str a shell element that is just pasted raw into the shell
@@ -32,32 +32,35 @@ role DynamicShellElement does ShellElement {
 
 # A literal string - it should be escaped for whatever quotes it appears in
 class Escaped does DynamicShellElement {
-    has @.bits;
+    has $.str is required;
 
     method backslashes {
-        S:g/(@metachars|\h)/\\$0/ given @!bits.join #"
+        S:g!$metachar-re!\\$/! given $!str;
     }
 
     method in-SQ {
-        @!bits.join.subst("'","'\\''",:g);
+        $!str.subst("'","'\\''",:g);
     }
 
     method in-DQ(:$next) {
-            S:g!(
-                |'"'
-                |\\ [ <?[\\$"]> || $ <?{$next andthen .match(/^<?[\\$"]>/)}> ]
-                |'$'
-            ) !\\$0! given @!bits.join;
+        S:g!
+            |'"'
+            |\\ [ <?[\\$"]> || $ <?{$next andthen .match(/^<?[\\$"]>/)}> ]
+            |'$'
+        !\\$/! given $!str;
     }
 
     method as-item {
-        return "''" if not @!bits or @!bits.all eq '';
-        if @!bits.first({.contains-metachar("'")}) {
-            '"',self.in-DQ,'"';
-        } elsif @!bits.first(*.contains-metachar(@metachars)|/\s/) {
-            "'",|@!bits,"'"
-        } else {
+        return "''" if not $!str;
+                                # can't \ to quote vertical whitespace in shell
+        if $!str.chars == 1 and $!str !~~ /\v/ {
             self.backslashes;
+        } elsif $!str.contains("'") {
+            '"',self.in-DQ,'"';
+        } elsif  $!str ~~ $metachar-re {
+            "'$!str'"
+        } else {
+            $!str
         }
     }
 
@@ -76,11 +79,9 @@ class DoubleQuote does DynamicShellElement {
 class DoubleQuote::Var does DynamicShellElement {
     has $.name;
     has Bool $.is-int;
-    method in-DQ(:$next) { ($next andthen .starts-with-ident) ?? ('${',$!name,'}') !! ('$',$!name) }
+    method in-DQ(:$next) { ($next andthen m/^\w/) ?? ('${',$!name,'}') !! ('$',$!name) }
     method as-item { ('"' unless $!is-int),'$',$!name,('"' unless $!is-int) }
     method as-flat { '$',$!name }
-    method contains-metachar(|) { False }
-    method starts-with-ident { False }
 }
 
 # an element that will has the same meaning inside and outside ""
@@ -90,5 +91,4 @@ class NoNeedQuote does DynamicShellElement {
     method in-DQ { @!bits }
     method as-item { @!bits }
     method as-flat { @!bits }
-    method contains-metachar(|) { False }
 }

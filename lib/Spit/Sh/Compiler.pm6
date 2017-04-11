@@ -29,7 +29,7 @@ my %native = (
 
 sub nnq { NoNeedQuote.new: bits => @_ }
 sub dq  { DoubleQuote.new: bits => @_ }
-sub escape { Escaped.new: bits => @_  }
+sub escape { Escaped.new: str => @_.join  }
 sub cs { DoubleQuote.new: bits => ('$(',|@_,')')}
 sub var { DoubleQuote::Var.new: name => $^a, :$:is-int }
 
