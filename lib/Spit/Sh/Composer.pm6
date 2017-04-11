@@ -589,6 +589,14 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
 multi method inline-call(SAST::Call:D $outer,SAST::CompileTimeVal:D $_) { $_ }
 
 multi method inline-call(SAST::Call:D $outer,$) { Nil }
+multi method inline-call(SAST::Call:D $outer,SAST::Var:D $inner) {
+    given $inner.declaration {
+        when SAST::Invocant   { $outer[0] }
+        when SAST::PosParam   { $outer.pos[.ord] }
+        when SAST::NamedParam { $outer.named{.name} || $outer.stage3-node(SAST::BVal, val => False) }
+        default { $inner }
+    }
+}
 
 method add-scaffolding(SAST::Dependable:D $dep is rw)  {
     my $before = $dep;
