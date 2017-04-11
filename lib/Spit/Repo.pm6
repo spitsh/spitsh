@@ -1,5 +1,4 @@
 use Spit::Compile;
-use Spit::PRECOMP;
 need Spit::SAST;
 need Spit::Exceptions;
 
@@ -39,16 +38,13 @@ class Spit::Repo::File does Spit::Repo {
 }
 
 class Spit::Repo::Core does Spit::Repo {
-    sub get-core-module($id) {
-        %core-lib{$id} andthen .return;
-    }
+    use Spit::PRECOMP;
 
     multi method resolve(:$repo-type!,:$id!) {
         if $repo-type eq 'core' {
-            get-core-module($id);
+            get-CORE-lib($id) andthen .return;
         }
-
     }
 
-    multi method resolve(:$id!) { get-core-module($id) }
+    multi method resolve(:$id!) { get-CORE-lib($id) andthen .return }
 }

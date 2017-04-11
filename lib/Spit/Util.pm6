@@ -28,7 +28,11 @@ sub get-globalish($short-name) is export(:get-globalish) {
     $*REPO.need(CompUnit::DependencySpecification.new(:$short-name)).handle.globalish-package;
 }
 
-sub light-load($short-name,:$target = $short-name) is export(:light-load) {
-    $*REPO.need(CompUnit::DependencySpecification.new(:$short-name)).handle.globalish-package\
-          .&descend-WHO($target);
+sub light-load($short-name,:$target = $short-name,:$export-target) is export(:light-load) {
+    my $handle := $*REPO.need(CompUnit::DependencySpecification.new(:$short-name)).handle;
+    with $export-target {
+        $handle.export-package<ALL>.WHO.{$_};
+    } else {
+        $handle.globalish-package.&descend-WHO($target);
+    }
 }

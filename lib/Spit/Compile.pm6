@@ -16,7 +16,7 @@ sub compile  ($input is copy,
 
     # SETTING being false
     without $*SETTING {
-        $_ = (once light-load 'Spit::PRECOMP', target => '$SETTING')
+        $_ = (once light-load 'Spit::PRECOMP', export-target => '&get-SETTING')()
     }
 
     my $*CU-name = $name;
