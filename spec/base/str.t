@@ -1,6 +1,6 @@
 use Test;
 
-plan 44;
+plan 46;
 
 {
     ok "0","'0' is true";
@@ -108,6 +108,11 @@ plan 44;
         is @/[1],'https','1st element is the scheme';
         is @/[2],'irclog.perlgeek.de','2nd element is the host';
         is @/[3], 'perl6/2017-03-30', '3rd element is the path';
+
+        if @/[2].matches(/^irclog\.perlgeek\.de/) {
+            nok @/[3].matches(/^perl5/),'.matches basic match';
+            ok  @/[3].matches(/^perl6/),‘matches doesn't clobber @/’;
+        }
     }
 
     if $url.match(rx‘^(.+)://([^/]+)/?(.*)$’) {

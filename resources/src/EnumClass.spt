@@ -14,6 +14,6 @@ augment EnumClass {
         say Ubuntu ~~ Debian; # true
     }
     method ?has-member(#|[A string to match against the enum's members] $enum) {
-        $enum.match(/^($self)$/)
+        $enum.matches(/^($self)$/)
     }
 }

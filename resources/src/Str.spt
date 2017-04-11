@@ -97,8 +97,6 @@ augment Str {
     }
     method ?ends-with(#|[True if the string ends-with this]$ends-with) is native {  }
 
-    constant $awk-match = '! match($0,ENVIRON["r"]) { exit 1 }';
-
     #| Returns true if the the string matches the regex and sets the
     #| `@/` match variable to the match and its capture groups (one per line).
     #|{
@@ -128,7 +126,7 @@ augment Str {
         GNU {
             @/ = '';
             # note: GNU doesn't mean it has gawk
-            if $self.${awk -v 'RS=^$' :$r $awk-match} {
+            if $self.matches($r) {
                 my $RE = $r.subst('!','\\!');
                 @/ = {
                     my $i = 0;
@@ -150,7 +148,7 @@ augment Str {
         }
         BusyBox {
             @/ = "";
-            if $self.${awk -v 'RS=^$' :$r $awk-match} {
+            if $self.matches($r) {
                 @/ = {
                     my $i = 0;
                     $i++ while $i < 10 and $self.${
@@ -166,6 +164,26 @@ augment Str {
                 True;
             }
         }
+    }
+
+    #| Returns true if the string matches the regex and **doesn't**
+    #| set or modify `@/` match variable.
+    #|{
+        my $regex = rx‘^(.+)://([^/]+)/?(.*)$’;
+        my $url = 'https://github.com/spitsh/spitsh';
+        if $url.match($regex) {
+            my $host = @/[2];
+            if $host.matches(/(www\.)?github.com/) {
+                # @/ is preserved.
+                my @user-repo = @/[3].split('/');
+                say "The owner is @user-repo[0]. The repo is @user-repo[1]";
+            } else {
+                say "it's not github";
+            }
+        }
+    }
+    method ?matches(Regex $r) {
+        $self.${awk :$r -v 'RS=^$' '! match($0,ENVIRON["r"]) { exit 1 }'};
     }
 
     method ~gist { $self }
