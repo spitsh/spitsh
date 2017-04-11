@@ -40,14 +40,6 @@ augment Str {
     #| Returns true if the string isn't empty
     method ?Bool { ${test $self} }
 
-    constant $subst-awk = '
-    BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
-    {
-     while( (g || !i) && (i = index($0,t)) )
-       $0 = substr($0,1,i-1) r substr($0,i + length(t));
-     print;
-    }';
-
     #| Returns the string with the target string replaced by a replacement string.
     #| Does not modify the original string.
     #|{
@@ -59,6 +51,13 @@ augment Str {
     method ~subst(#|[The string to be replaced]$target,
                   #|[The string to replace it with]$replacement,
                   #|[Turns on global matching]Bool :$g){
+        constant $subst-awk = '
+        BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
+        {
+          while( (g || !i) && (i = index($0,t)) )
+          $0 = substr($0,1,i-1) r substr($0,i + length(t));
+          print;
+        }';
         $self.${awk -v "g=$g" $subst-awk :T($target) :R($replacement)};
     }
     #| Returns true if the string contains `$needle`.
