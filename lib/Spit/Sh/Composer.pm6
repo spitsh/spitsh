@@ -537,7 +537,7 @@ method inline-value($inner,$outer,$_ is raw) {
         if self.inline-value($inner,$outer,.children[0]) -> $val {
             .children[0] = $val;
             # because we're changing child of a rather than the node itself
-            # we'll need to re-walk to it has a chance to re-optimize itself.
+            # we'll need to re-walk it so it has a chance to re-optimize itself.
             .stage3-done = False;
             self.walk($_);
             $_;
