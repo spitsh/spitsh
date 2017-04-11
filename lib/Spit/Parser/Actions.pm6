@@ -343,6 +343,7 @@ method make-routine ($/,$type,:$static) {
     $*ROUTINE = do given $type {
         when 'sub' { SAST::SubDeclare.new(:$name) }
         when 'method'  {
+            SX.new(message => 'methdod declared outside of a class').throw unless $*CLASS;
             my $r = SAST::MethodDeclare.new(:$name,:$static);
             unless $static {
                 for <$ @> {
