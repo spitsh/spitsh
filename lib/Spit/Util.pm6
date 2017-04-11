@@ -36,3 +36,12 @@ sub light-load($short-name,:$target = $short-name,:$export-target) is export(:li
         $handle.globalish-package.&descend-WHO($target);
     }
 }
+
+sub sha1(Str:D $str --> Str:D) is export(:sha1) {
+    use nqp;
+    return nqp::sha1($str);
+}
+
+sub touch(IO::Path:D $path) is export(:touch) {
+    $path.spurt(' ',:append);
+}

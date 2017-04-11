@@ -186,4 +186,6 @@ augment Str {
     }
 
     method ~gist { $self }
+
+    method ?ACCEPTS($b) { $self eq $b }
 }

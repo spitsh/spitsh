@@ -1,4 +1,5 @@
 use Spit::Compile;
+use Spit::Util :sha1, :touch;
 
 sub slurp-SETTING {
     <base EnumClass os List FD core-subs Any File Str Int Bool Pkg Cmd Locale checks>
@@ -14,17 +15,28 @@ my constant $SETTING = compile(
         :target<stage2>,
         :!SETTING,
         :name<SETTING>,
+        :debug(%*ENV<SPIT_DEBUG_SETTING>)
     ).block;
+my constant $src-sha1 = sha1($src);
+
 
 sub get-SETTING is export {
     once do if %*ENV<SPIT_SETTING_DEV> {
-        compile(
-            slurp-SETTING(),
-            :target<stage2>,
-            :!SETTING,
-            :name<SETTING>,
-            :debug(%*ENV<SPIT_DEBUG_SETTING>),
-        ).block;
+        my $now-src = slurp-SETTING();
+
+        if $src-sha1 ne sha1 $now-src {
+            my $this-file = $?FILE.subst(/' ('[<![)]>.]*')'/,'').IO;
+            if $this-file.w {
+                touch $this-file;
+                note "SETTING was outdated. Re-run to recompile it.";
+                exit(0);
+            }
+            else {
+                die "'$this-file' isn't writbale so I can't recompile the SETTING";
+            }
+        } else {
+            $SETTING;
+        }
     } else {
         $SETTING;
     }
