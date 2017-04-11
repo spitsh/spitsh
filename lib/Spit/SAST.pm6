@@ -83,9 +83,9 @@ role SAST is rw {
             node => self,
             bt => Backtrace.new
         ).throw if ctx === Spit::Type;
-        $!stage2-done = True;
         $!ctx = ctx;
         my SAST:D $res = self.stage2(ctx,|args);
+        $!stage2-done = True;
         $res = coerce $res,ctx,:$desc;
         $res;
     }
