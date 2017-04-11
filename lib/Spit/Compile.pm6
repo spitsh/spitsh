@@ -21,7 +21,6 @@ sub compile  ($input is copy,
     # SETTING being false
     without $*SETTING {
         my \before = now;
-        my $*DEBUG_SETTING = $debug;
         $ = ?(require Spit::PRECOMP <$SETTING>);
         $_ = $SETTING;
     }

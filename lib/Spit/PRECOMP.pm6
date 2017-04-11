@@ -10,7 +10,6 @@ constant $SETTING is export =  compile(
     :target<stage2>,
     :!SETTING,
     :name<SETTING>,
-    debug => ($*DEBUG_SETTING || False),
 ).block;
 
 constant %core-lib is export = {
