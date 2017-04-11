@@ -39,7 +39,7 @@ sub lookup-method($class,$name) {
 
 my subset ShellStatus of SAST where {
     # 'or' and 'and' don't work here for some reason
-    ($_ ~~ SAST::Neg|SAST::Cmp|SAST::EnumCmp|SAST::CmpRegex) ||
+    ($_ ~~ SAST::Neg|SAST::Cmp) ||
     ((.type ~~ tBool) && $_ ~~
       SAST::Stmts|SAST::Cmd|SAST::Call|SAST::If|SAST::Quietly|SAST::LastExitStatus
     )
@@ -69,14 +69,11 @@ method scaffolding {
     (SCALAR,'*NULL'),
     (SUB,'et'),
     (SUB,'ef'),
-    (SUB,'re-match'),
-    (SUB,'pre-match'),
     (SUB,'e')
          {
         my $sast = $*SETTING.lookup(|$_) || die "scaffolding {$_.gist} doesn't exist";
         @a.push: $sast;
     }
-    @a.push(lookup-method('EnumClass','has-member'));
     @a;
 }
 
@@ -400,12 +397,14 @@ method try-case($if is copy) {
             (my \cond = $if.cond) ~~ SAST::Cmp && cond.sym eq 'eq'
                 && ($topic = cond[0]; $pattern := |self.arg(cond[1]))
             or
-            cond ~~ SAST::CmpRegex && (my $case := cond.re.patterns<case>)
-                && ($topic = cond.thing; $pattern := $case.val)
-            )
+            cond ~~ SAST::MethodCall && cond.declaration.cloned === (once lookup-method 'Str','match')
+                && (my $re := cond.pos[0]) ~~ SAST::Regex && (my $case = $re.patterns<case>)
+                && ($topic = cond[0]; $pattern := $case.val)
             or
-            cond ~~ SAST::EnumCmp && (cond.enum ~~ SAST::Type) # ie we know at compile time
-                && ($topic = cond.check; $pattern := cond.enum.class-type.^types-in-enum».name.join('|'))
+            cond ~~ SAST::MethodCall && cond.declaration.cloned === (once lookup-method 'EnumClass','has-member')
+                && (my $enum := cond[0].compile-time) ~~ Spit::Type
+                && ($topic = cond.pos[0]; $pattern := $enum.^types-in-enum».name.join('|'))
+            )
           {
               $common-topic //= $topic;
               if (given $common-topic {
@@ -781,16 +780,6 @@ multi method cond(SAST::Cmp:D $cmp) {
     '[ ',|self.arg($cmp[0])," $shell-sym ",|self.arg($cmp[1]),' ]';
 }
 
-#!EnumCmp
-multi method cond(SAST::EnumCmp:D $cmp) {
-    my $check := do if $cmp.check ~~ SAST::Type {
-        escape $cmp.check.class-type.^name;
-    }  else {
-        self.arg($cmp.check);
-    }
-    self.scaf('has-member'),' ',|self.arg($cmp.enum),' ',|$check;
-}
-
 #!BVal
 multi method arg (SAST::BVal:D $_) { .val ?? '1' !! '""' }
 multi method cond(SAST::BVal:D $_) { .val ?? 'true' !! 'false' }
@@ -805,18 +794,6 @@ multi method arg(SAST::Eval:D $_) { self.arg(.compiled) }
 #!Regex
 multi method arg(SAST::Regex:D $_) { self.arg(.src) }
 multi method cap-stdout(SAST::Regex:D $_) { self.cap-stdout(.pre) }
-#!CmpRegex
-multi method cond(SAST::CmpRegex:D $_) {
-    if .re ~~ SAST::Regex {
-        if .re.patterns<ere> -> $ere  {
-            self.scaf('re-match'),' ',|self.arg(.thing),' ',|self.arg($ere);
-        } else {
-            self.scaf('pre-match'),' ',|self.arg(.thing),' ',|self.arg(.re.patterns<pre>);
-        }
-    } else {
-        self.scaf('pre-match'),' ',|self.arg(.thing),' ',|self.arg(.re);
-    }
-}
 #!Range
 multi method arg(SAST::Range:D $_) {
     cs 'seq ',

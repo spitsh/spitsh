@@ -58,7 +58,6 @@ class SAST::PhaserBlock {...}
 class SAST::Invocant {...}
 class SAST::Type {...}
 class SAST::RoutineDeclare { ... }
-class SAST::CmpRegex {...}
 class SAST::Cmd {...}
 class SAST::Accepts {...}
 
@@ -1011,15 +1010,6 @@ class SAST::Cmp is SAST::MutableChildren {
     method type { tBool }
 }
 
-class SAST::EnumCmp is SAST::Children is rw {
-    has SAST:D $.enum is required;
-    has SAST:D $.check is required;
-
-    method type { tBool }
-
-    method children { $!enum,$!check }
-}
-
 class SAST::Increment is SAST::MutableChildren {
     has $.pre;
     has $.decrement = False;
@@ -1536,14 +1526,14 @@ class SAST::Regex is SAST::Children is rw {
 
     method type { $.ctx ~~ tBool() ?? $.ctx !! tRegex() }
     method stage2($ctx){
-        $!src .= do-stage2(tAny);
         if $ctx ~~ tBool() {
-            self.stage2-node(
-                SAST::CmpRegex,
-                thing => SAST::Var.new(name => '_',:$.match,:sigil<$>).do-stage2(tAny),
-                re => self,
-            );
+            self.make-new(
+                SAST::Accepts,
+                SAST::Var.new(sigil => '$',name => '_', :$.match),
+                self
+            ).do-stage2(tBool);
         } else {
+            $!src .= do-stage2(tAny);
             self;
         }
     }
@@ -1556,21 +1546,6 @@ class SAST::Regex is SAST::Children is rw {
         } else {
             Nil
         }
-    }
-}
-
-class SAST::CmpRegex is SAST::Children is rw {
-    has SAST $.re;
-    has SAST $.thing;
-
-    method children { $!re,$!thing }
-
-    method type { tBool }
-
-    method stage2($)  {
-        $!thing .= do-stage2(tStr);
-        $!re .= do-stage2(tRegex);
-        self;
     }
 }
 

@@ -8,13 +8,6 @@
     say @/[2]; #-> txt
 }
 my @/;
-#| **internal** matches a perl regex
-sub ?pre-match($str,$r) {
-    $str.${perl -e '$_ = join("",<STDIN>); /@ARGV[0]/ or exit 1' $r};
-}
-#| **internal** matches a ERE
-sub ?re-match($str,$r) { $str.${grep -Eq $r} }
-
 #| The Str class is the base primitive class of Spit-sh. It represents
 #| a string in the shell. Since all shell constructs are made out of
 #| strings all types inherits from this class.

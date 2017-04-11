@@ -311,21 +311,6 @@ multi method walk(SAST::Cmp:D $THIS is rw) {
     compile-time-infix($THIS,SAST::BVal);
 }
 
-multi method walk(SAST::EnumCmp:D $THIS is rw) {
-    if $THIS.check.compile-time -> $a {
-        if $THIS.enum.compile-time -> Spit::Type $b {
-            my $val = do given $a {
-                when Str { so $b.^types-in-enum».name.first($a) }
-                when Spit::Type { $a ~~ $b }
-            };
-            $THIS .= stage3-node(SAST::BVal,:$val);
-        }
-    } elsif $THIS.check.ostensible-type.enum-type {
-        $THIS.check = $THIS.stage3-node(SAST::MethodCall, name => 'name', $THIS.check);
-        self.walk($THIS.check);
-    }
-}
-
 multi method walk(SAST::Accepts:D $THIS is rw) {
     my $thing   = $THIS[0];
     my $against =  $THIS[1];
@@ -334,14 +319,26 @@ multi method walk(SAST::Accepts:D $THIS is rw) {
         when .type ~~ tBool() { $THIS = $against }
 
         when *.ostensible-type.enum-type {
-            $THIS .= stage2-node(SAST::EnumCmp,enum => $against,check => $thing);
+            $THIS .= stage2-node(
+                SAST::MethodCall,
+                name => 'has-member',
+                declaration => (once tEnumClass.^find-spit-method('has-member')),
+                $against,
+                pos => ($thing,),
+            );
             self.walk($THIS);
         }
         when SAST::Type {
             $THIS .= stage3-node(SAST::BVal,val => so($thing.ostensible-type ~~ $against.class-type));
         }
         when .type ~~ tRegex() {
-            $THIS .= stage2-node(SAST::CmpRegex,:$thing,re => $against);
+            $THIS .= stage2-node(
+                SAST::MethodCall,
+                name => 'match',
+                declaration => (once tRegex().^find-spit-method('match')),
+                $thing,
+                pos => ($against,),
+            );
             self.walk($THIS);
         }
         when .type ~~ tStr()  {
@@ -369,15 +366,6 @@ multi method walk(SAST::Regex:D $THIS is rw) {
         }
     } else {
         $THIS.patterns<pre> = $THIS.src;
-    }
-}
-
-multi method walk(SAST::CmpRegex:D $THIS is rw) {
-    if $THIS.thing.compile-time -> $thing {
-        my $p5regex := $THIS.re.compile-time;
-        if $p5regex.defined {
-            $THIS .= stage3-node(SAST::BVal,val => $thing.match($p5regex).so);
-        }
     }
 }
 
@@ -448,17 +436,45 @@ multi method walk(SAST::Stmts:D $THIS is rw) {
 }
 
 multi method walk(SAST::MethodCall:D $THIS is rw) {
-    if $THIS.declaration === tStr.^find-spit-method('Bool')
-       and (my $ct = $THIS.invocant.compile-time).defined {
-        $THIS .= stage3-node(SAST::BVal,val => ?$ct);
+    my \ENUMC_NAME = once tEnumClass.^find-spit-method('name');
+
+    if $THIS.declaration === (once tStr.^find-spit-method('Bool'))
+       and (my $ct = $THIS.invocant.compile-time).defined
+    {
+       $THIS .= stage3-node(SAST::BVal, val => ?$ct);
     }
 
-    elsif $THIS.declaration === tEnumClass.^find-spit-method('name')
+    elsif $THIS.declaration === ENUMC_NAME
           and $THIS.invocant.compile-time -> $ct
     {
         $THIS .= stage3-node(SAST::SVal,val => $ct.name);
     }
 
+    elsif $THIS.declaration === (once tEnumClass.^find-spit-method('has-member')) {
+        my $enum := $THIS[0];
+        my $candidate := $THIS.pos[0];
+
+        if $candidate.compile-time -> $a {
+            if $enum.compile-time -> Spit::Type $b {
+                my $val = do given $a {
+                    when Str { so $b.^types-in-enum».name.first($a) }
+                    when Spit::Type { $a ~~ $b }
+                };
+                $THIS .= stage3-node(SAST::BVal,:$val);
+            }
+        }
+        # If the thing we're chekcing for membership is a enum we have to reduce it
+        # to it's name first.
+        elsif $candidate.ostensible-type.enum-type {
+            $candidate = $THIS.stage2-node(
+                SAST::MethodCall,
+                name => 'name',
+                declaration => ENUMC_NAME,
+                $candidate,
+            );
+            self.walk($candidate);
+        }
+    }
     else {
         callsame;
     }
