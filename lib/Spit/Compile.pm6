@@ -34,33 +34,39 @@ sub compile  ($input is copy,
         return $input if $target eq 'stage1';
     }
 
-    if $input.isa('SAST::CompUnit') and not $input.stage2-done {
-        note "$name contextualzing.." if $debug;
-        my \before = now;
-        $input .= do-stage2();
-        note "$name contextualzing ✔ {now - before}" if $debug;
-        return $input if $target eq 'stage2';
-    }
+    if $input.isa('SAST::CompUnit') {
 
-    my $compiler = (once light-load 'Spit::Sh::Compiler').new(:%opts);
+        if not $input.stage2-done {
+            note "$name contextualzing.." if $debug;
+            my \before = now;
+            $input .= do-stage2();
+            note "$name contextualzing ✔ {now - before}" if $debug;
+            return $input if $target eq 'stage2';
+        }
 
-    if $input.isa('SAST::CompUnit') and $input.stage2-done {
-        note "$name composing.." if $debug;
-        my \before = now;
-        (once light-load 'Spit::Sh::Composer').new(
-            :%opts,
-            scaffolding => $compiler.scaffolding,
-            :$no-inline,
-        ).walk($input);
-        note "$name composing ✔ {now - before}" if $debug;
-        return $input if $target eq 'stage3'
-    }
+        my $compiler = (once light-load 'Spit::Sh::Compiler').new(:%opts);
 
-    if $input.isa('SAST::CompUnit') and $input.stage3-done {
-        note "$name compiling.." if $debug;
-        my \before = now;
-        $input = $compiler.compile($input);
-        note "$name compiling ✔ {now - before}" if $debug;
+        if not $input.stage3-done {
+            note "$name composing.." if $debug;
+            my \before = now;
+            (once light-load 'Spit::Sh::Composer').new(
+                :%opts,
+                scaffolding => $compiler.scaffolding,
+                :$no-inline,
+            ).walk($input);
+            note "$name composing ✔ {now - before}" if $debug;
+            return $input if $target eq 'stage3'
+        }
+
+        if $input.stage3-done {
+            note "$name compiling.." if $debug;
+            my \before = now;
+            $input = $compiler.compile($input);
+            note "$name compiling ✔ {now - before}" if $debug;
+        }
+
+    } else {
+        die "Can't compile a {$input.^name}";
     }
 
     $input;
