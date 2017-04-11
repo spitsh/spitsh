@@ -576,8 +576,6 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
             return if $*char-count > $max;
             $try-switch.switch: $switch;
         } else {
-            # Nodes without children are probably ok just to leave where they are but
-            # give up if we have a node with children
             return
         }
     }
