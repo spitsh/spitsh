@@ -1,11 +1,7 @@
 # A home for the main compilation pipeline entrypoint
 unit module Spit::Compile;
 
-need Spit::Parser::Grammar;
-need Spit::Parser::Actions;
-need Spit::Sh::Composer;
-need Spit::Sh::Compiler;
-need Spit::SAST;
+use Spit::Util :get-globalish, :light-load;
 
 sub compile  ($input is copy,
               :$*SETTING is copy,
@@ -20,15 +16,13 @@ sub compile  ($input is copy,
 
     # SETTING being false
     without $*SETTING {
-        my \before = now;
-        $ = ?(require Spit::PRECOMP <$SETTING>);
-        $_ = $SETTING;
+        $_ = (once light-load 'Spit::PRECOMP', target => '$SETTING')
     }
 
     my $*CU-name = $name;
     if $input ~~ Str {
-        my $parser = Spit::Grammar.new;
-        my $actions = Spit::Actions.new(:$outer,:$debug);
+        my $parser  = (once light-load 'Spit::Parser::Grammar', target => 'Spit::Grammar').new;
+        my $actions = (once light-load 'Spit::Parser::Actions', target => 'Spit::Actions').new(:$outer,:$debug);
         my $*ACTIONS = $actions;
         note "$name parsing.. " if $debug;
         my \before = now;
@@ -40,7 +34,7 @@ sub compile  ($input is copy,
         return $input if $target eq 'stage1';
     }
 
-    if $input ~~ SAST::CompUnit and not $input.stage2-done {
+    if $input.isa('SAST::CompUnit') and not $input.stage2-done {
         note "$name contextualzing.." if $debug;
         my \before = now;
         $input .= do-stage2();
@@ -48,12 +42,12 @@ sub compile  ($input is copy,
         return $input if $target eq 'stage2';
     }
 
-    my $compiler = Spit::Sh::Compiler.new(:%opts);
+    my $compiler = (once light-load 'Spit::Sh::Compiler').new(:%opts);
 
-    if $input ~~ SAST::CompUnit and $input.stage2-done {
+    if $input.isa('SAST::CompUnit') and $input.stage2-done {
         note "$name composing.." if $debug;
         my \before = now;
-        Spit::Sh::Composer.new(
+        (once light-load 'Spit::Sh::Composer').new(
             :%opts,
             scaffolding => $compiler.scaffolding,
             :$no-inline,
@@ -62,7 +56,7 @@ sub compile  ($input is copy,
         return $input if $target eq 'stage3'
     }
 
-    if $input ~~ SAST::CompUnit and $input.stage3-done {
+    if $input.isa('SAST::CompUnit') and $input.stage3-done {
         note "$name compiling.." if $debug;
         my \before = now;
         $input = $compiler.compile($input);
