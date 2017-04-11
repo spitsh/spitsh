@@ -14,7 +14,8 @@ sub compile  ($input is copy,
               *%,
              ) is export {
 
-    # SETTING being false
+    # if we are compiling the SETTING itself $*SETTING will be set to False so
+    # it won't trigger this.
     without $*SETTING {
         $_ = (once light-load 'Spit::PRECOMP', export-target => '&get-SETTING')()
     }
