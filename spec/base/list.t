@@ -103,12 +103,12 @@ plan 41;
     my @g = <one two three four>;
     @g[0] = "un";
     is @g[0],'un','overwrite [0]';
-    @g[2] = "troix";
-    is @g[2],'troix','overwrite [2]';
+    @g[2] = "trois";
+    is @g[2],'trois','overwrite [2]';
     @g[3] = 'quatre';
     is @g[3],'quatre','overwrite [3]';
-    @g[4] = 'cinque';
-    is @g[4],'cinque','assign to next position';
+    @g[4] = 'cinq';
+    is @g[4],'cinq','assign to next position';
 }
 
 {
