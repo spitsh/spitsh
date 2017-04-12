@@ -3,46 +3,11 @@
 
 
  Prints the message to stdout and then exits
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
-# e
->sub e([Str](../Str.md) **$str** ⟶ [Str](../Str.md))
-
-
- Internal routine to echo values. **Don't use this**.
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
-# ef
->sub ef([Str](../Str.md) **$str** ⟶ [Str](../Str.md))
-
-
- Internal routine to echo values in junction. **dont' use this**
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
-# et
->sub et([Str](../Str.md) **$str** ⟶ [Str](../Str.md))
-
-
- Internal routine to echo values in junction. **dont' use this**
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
 # flunk
 >sub flunk([Str](../Str.md) **$msg**)
 
 
  Prints a message and dies angrily ✘.
-
-|Parameter|Description|
-|---------|-----------|
-|**$msg**||
 # is
 >sub is([Str](../Str.md) **$a**, [Str](../Str.md) **$b**, [Str](../Str.md) **$msg**)
 
@@ -62,37 +27,16 @@ is File</etc/meaning-of-life.cfg>.read,'42',"configured with correct MOL";
 
 
  Joins arguments on a `\n` creating a `List`.
-
-|Parameter|Description|
-|---------|-----------|
-|***@list**||
 # nok
 >sub nok([Bool](../Bool.md) **$cond**, [Str](../Str.md) **$msg**)
 
 
  The negated form of `ok`. Succeeds when the $cond is false.
-
-|Parameter|Description|
-|---------|-----------|
-|**$cond**||
-|**$msg**||
-# not
->sub not([Bool](../Bool.md) **$thing** ⟶ [Bool](../Bool.md))
-
-
-
-|Parameter|Description|
-|---------|-----------|
-|**$thing**||
 # note
 >sub note([Str](../Str.md) **$str** ⟶ [Bool](../Bool.md))
 
 
  Prints its argument to `$*ERR` with a newline.
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
 # ok
 >sub ok([Bool](../Bool.md) **$cond**, [Str](../Str.md) **$msg**)
 
@@ -111,45 +55,13 @@ ok True,"";
 
 
  Prints a message with a friendly ✔.
-
-|Parameter|Description|
-|---------|-----------|
-|**$msg**||
-# pre-match
->sub pre-match([Str](../Str.md) **$str**, [Str](../Str.md) **$r** ⟶ [Bool](../Bool.md))
-
-
- **internal** matches a perl regex
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
-|**$r**||
 # print
 >sub print([Str](../Str.md) **$str**)
 
 
  Prints its argument to `$*OUT` with no newline.
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
-# re-match
->sub re-match([Str](../Str.md) **$str**, [Str](../Str.md) **$r** ⟶ [Bool](../Bool.md))
-
-
- **internal** matches a ERE
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||
-|**$r**||
 # say
 >sub say([Str](../Str.md) **$str** ⟶ [Bool](../Bool.md))
 
 
  Prints its argument to `$*OUT` with a newline
-
-|Parameter|Description|
-|---------|-----------|
-|**$str**||

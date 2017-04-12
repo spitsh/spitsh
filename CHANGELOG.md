@@ -1,3 +1,10 @@
+## 0.0.17
+- add Str.matches which is like .match but doesn't set `@/`.
+- ~~ and ACCEPTS have been overhauled. Classes now can have their own
+  .ACCEPTS method which controls what ~~ returns.
+- `SPIT_SETTING_DEV=1` can be set when you are working on core code to
+  recompile the SETTING after you make changes.
+
 ## 0.0.16
 
 - Precompilation of CORE setting and core modules. Compilation is much faster now.

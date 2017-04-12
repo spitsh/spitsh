@@ -13,7 +13,7 @@
 
 |Parameter|Description|
 |---------|-----------|
-|**$new-fd**||
+|**$new-fd**| The file descriptor to use as the alias|
 ## get
 >method get( ⟶ [Bool](./Bool.md))
 
@@ -27,7 +27,7 @@
 
 |Parameter|Description|
 |---------|-----------|
-|**$n**||
+|**$n**| The number of characters to read|
 ## is-open
 >method is-open( ⟶ [Bool](./Bool.md))
 

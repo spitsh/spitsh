@@ -75,11 +75,6 @@ for <one two three> {
 my @a = <one two three>;
 @a[1] = "deux";
 ```
-
-|Parameter|Description|
-|---------|-----------|
-|**$pos**||
-|**$item**||
 ## shift
 >method shift( ⟶ [List](./List.md))
 

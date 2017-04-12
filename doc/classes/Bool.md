@@ -7,6 +7,11 @@ say ("foo" eq "bar").WHAT; #-> Bool
 say False; #-> ''
 say True;  #-> '1'
 ```
+## ACCEPTS
+>method ACCEPTS([Str](./Str.md) **$b** ⟶ [Bool](./Bool.md))
+
+
+ Simply returns the value of the invocant regardless of the argument.
 ## Int
 >method Int( ⟶ [Int](./Int.md))
 

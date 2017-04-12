@@ -4,6 +4,11 @@
 say "foo" ~~ Str; # true
 say <one two three> ~~ Str; #true
 ```
+## ACCEPTS
+>method ACCEPTS([Str](./Str.md) **$b** ⟶ [Bool](./Bool.md))
+
+
+ Returns True if the invocant and argument string are equal.
 ## Bool
 >method Bool( ⟶ [Bool](./Bool.md))
 
@@ -52,10 +57,6 @@ for @urls {
 |Parameter|Description|
 |---------|-----------|
 |**$ends-with**| True if the string ends-with this|
-## gist
->method gist( ⟶ [Str](./Str.md))
-
-
 ## lc
 >method lc( ⟶ [Str](./Str.md))
 
@@ -79,6 +80,25 @@ if 'https://github.com/spitsh/spitsh'.match($regex) {
 |Parameter|Description|
 |---------|-----------|
 |**$r**| The regular expression to match against|
+## matches
+>method matches([Regex](./Regex.md) **$r** ⟶ [Bool](./Bool.md))
+
+
+ Returns true if the string matches the regex and **doesn't** set or modify `@/` match variable.
+```perl6
+my $regex = rx‘^(.+)://([^/]+)/?(.*)$’;
+my $url = 'https://github.com/spitsh/spitsh';
+if $url.match($regex) {
+    my $host = @/[2];
+    if $host.matches(/(www\.)?github.com/) {
+        # @/ is preserved.
+        my @user-repo = @/[3].split('/');
+        say "The owner is @user-repo[0]. The repo is @user-repo[1]";
+    } else {
+        say "it's not github";
+    }
+}
+```
 ## note
 >method note()
 

@@ -13,6 +13,8 @@ if File</etc/foo.conf>.contains($outdated) {
 
 
  In Bool context, Files return [.exists](#exists)
+
+
 ## append
 >method append([Str](./Str.md) **$data**)
 
@@ -44,10 +46,6 @@ say $file[1] #-> bar
 ```perl6
  say File</etc/foo>.child('foo.cfg') #-> /etc/foo/foo.cfg
 ```
-
-|Parameter|Description|
-|---------|-----------|
-|**$name**||
 ## chmod
 >method chmod([Str](./Str.md) **$mode**)
 
@@ -143,11 +141,19 @@ say $file[1] #-> bar
 >method open-r( ⟶ [FD](./FD.md))
 
 
+ Opens the file and returns a FD that can be read from.
+```perl6
+my File $file = 'foo.txt';
+$file.write(<The quick brown fox jumped over the lazy dog>);
+my $fd = $file.open-r;
+$fd.get() && say $~; #-> The
+$fd.get() && say $~; #-> quick
+```
 ## open-w
 >method open-w( ⟶ [FD](./FD.md))
 
 
- Opens the file and returns a [FD] that can be written to.
+ Opens the file and returns a FD that can be written to.
 ```perl6
 my File $file = 'foo.txt';
 my $fd = $file.open-w;
@@ -267,7 +273,7 @@ my $tmpfile = File.tmp; # Will be removed at the end
 
 |Parameter|Description|
 |---------|-----------|
-|**$data**||
+|**$data**| The string to write to the file|
 ## x
 >method x( ⟶ [Bool](./Bool.md))
 

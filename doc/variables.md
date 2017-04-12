@@ -29,17 +29,17 @@ say "It's some other kind of Ubuntu XD"
 my $res = ${ls /etc '/I/dont/exist' *>~};
 say "ls returned $res";
 ```
+# $*OUT
+ File descriptor connected to the STDOUT of the script by default.
+```perl6
+ $*OUT.write("hello world") # same as print("hello world")
+```
 # $*NULL
  File descriptor redirected to '/dev/null' by default. 'X' is a short alias for `$*NULL` in `${..}` commands.
 ```perl6
 if ${command -v perl >X} {
     say "perl exists";
 }
-```
-# $*OUT
- File descriptor connected to the STDOUT of the script by default.
-```perl6
- $*OUT.write("hello world") # same as print("hello world")
 ```
 # $*ERR
  File descriptor connected to the STDERR of the script.  '!' is a short alias for `$*ERR` in `${..}` commands.
