@@ -1003,7 +1003,7 @@ class SAST::Cmp is SAST::MutableChildren {
 
     method stage2($) {
         my $type = do given $!sym {
-            when '=>'|'<='|'<'|'>'|'=='|'!=' { tInt }
+            when '>='|'<='|'<'|'>'|'=='|'!=' { tInt }
             default { tStr }
         }
         $_ .= do-stage2($type,:desc("arguments to $!sym comparison must be {$type.^name}")) for @.children;
