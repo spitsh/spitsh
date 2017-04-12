@@ -2,7 +2,7 @@ need JSON5::Tiny::Grammar;
 need JSON5::Tiny::Actions;
 use JSON5::Tiny;
 
-use Spit::SAST;
+need Spit::SAST;
 
 # for wrapping an expressiona for evaluation in stage3
 class Spit::LateParse is rw {
