@@ -187,5 +187,6 @@ augment Str {
 
     method ~gist { $self }
 
+    #| Returns True if the invocant and argument string are equal.
     method ?ACCEPTS($b) { $b eq $self }
 }

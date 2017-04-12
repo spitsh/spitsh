@@ -15,5 +15,6 @@ augment Bool {
     #| .gist returns "True" or "False".
     method ~gist { $self ?? "True" !! "False" }
 
+    #| Simply returns the value of the invocant regardless of the argument.
     method ?ACCEPTS($b) { $self }
 }
