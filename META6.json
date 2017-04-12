@@ -44,6 +44,7 @@
         "src/core-subs.spt",
         "src/os.spt",
         "src/Regex.spt",
+        "src/PID.spt",
         "core-lib/Test.spt"
     ],
     "source-url" : "https://github.com/spitsh/spitsh.git",

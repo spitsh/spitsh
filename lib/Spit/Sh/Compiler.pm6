@@ -588,6 +588,9 @@ multi method cond(SAST::LastExitStatus:D $_) {
 
 multi method arg(SAST::LastExitStatus:D $_) { '$?' }
 
+#!CurrentPID
+multi method arg(SAST::CurrentPID:D $) { '$$' }
+
 multi method node(SAST:D $_ where SAST::Increment|SAST::IntExpr) { ': ',|self.arg($_,:sink) }
 #!Increment
 multi method arg(SAST::IntExpr:D $_) { nnq '$((', |self.int-expr($_),'))' }

@@ -37,6 +37,7 @@ sub tOS is export { state $ = class-by-name('OS') }
 sub tFD is export { state $ = class-by-name('FD') }
 sub tFile is export { state $ = class-by-name('File')  }
 sub tEnumClass is export { state $ = class-by-name('EnumClass')  }
+sub tPID is export { state $ = class-by-name('PID')  }
 
 class SAST::IntExpr   {...}
 class SAST::Var       {...}
@@ -1629,4 +1630,8 @@ class SAST::OnBlock is SAST::Children does SAST::OSMutant {
 
 class SAST::LastExitStatus does SAST {
     method type { $.ctx ~~ tBool() ?? tBool() !! tInt() }
+}
+
+class SAST::CurrentPID does SAST {
+    method type { tPID }
 }

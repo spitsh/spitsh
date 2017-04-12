@@ -343,15 +343,18 @@ grammar Spit::Grammar is Spit::Lang {
     token var {
         <sigil>
         [
-            |$<name>=(<twigil>?<identifier>)
-            |$<name>='/' <?{ $<sigil>.Str eq '@' }>
-            |$<name>='~' <?{ $<sigil>.Str eq '$' }>
+            | [
+                |$<name>=(<twigil>?<identifier>)
+                |$<name>='/' <?{ $<sigil>.Str eq '@' }>
+                |$<name>='~' <?{ $<sigil>.Str eq '$' }>
+              ]
+            | <?after '$'> <special-var>
         ]
     }
 
-    token term:special-var { <special-var> }
     proto token special-var {*}
-    token special-var:sym<$?> { <sym> }
+    token special-var:sym<?> { <sym> }
+    token special-var:sym<$> { <sym> }
 
     proto token twigil {*}
     token twigil:sym<*> { <sym> }
@@ -381,7 +384,12 @@ grammar Spit::Grammar is Spit::Lang {
     }
     rule var-and-type($decl-type = 'my') {
         <type>? <var>
-        { $/.make($*ACTIONS.var-create($/,$decl-type) ) }
+        {
+            if $<var><special-var> {
+                self.invalid("variable declaration. You can't declare a special variable");
+            }
+            $/.make($*ACTIONS.var-create($/,$decl-type) )
+        }
     }
 
     token term:pair {

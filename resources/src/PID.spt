@@ -1,0 +1,7 @@
+augment PID {
+    method Bool { $self.exists }
+    method ?exists on {
+        Alpine { File{"/proc/$self"}.exists }
+        Any    { ${ps -p $self >X} }
+    }
+}

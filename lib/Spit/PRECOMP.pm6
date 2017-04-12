@@ -2,7 +2,7 @@ use Spit::Compile;
 use Spit::Util :sha1, :touch;
 
 sub slurp-SETTING {
-    <base EnumClass os List FD core-subs Any File Str Int Bool Regex Pkg Cmd Locale checks>
+    <base EnumClass os List FD core-subs Any File Str Int Bool Regex Pkg Cmd Locale PID checks>
     .map({ %?RESOURCES{"src/$_.spt"}.slurp })
     .join("\n");
 }

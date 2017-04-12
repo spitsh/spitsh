@@ -493,14 +493,18 @@ method int ($/) { make SAST::IVal.new: val => $/.Int }
 method term:var ($/)   { make $<var>.ast }
 
 method var ($/)   {
-    make SAST::Var.new(
-        name => $<name>.Str,
-        sigil => $<sigil>.Str,
-    );
+    with $<special-var> {
+        make .ast;
+    } else {
+        make SAST::Var.new(
+            name => $<name>.Str,
+            sigil => $<sigil>.Str,
+        );
+    }
 }
 
-method term:special-var ($/) { make $<special-var>.ast }
-method special-var:sym<$?> ($/) { make SAST::LastExitStatus.new }
+method special-var:sym<?> ($/) { make SAST::LastExitStatus.new }
+method special-var:sym<$> ($/) { make SAST::CurrentPID.new }
 
 method term:name ($/) {
     my $name = $<name>.Str;

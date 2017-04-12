@@ -8,5 +8,8 @@ class Regex is Str  {}
 
 class FD is Int { }
 class File { }
+class PID is Int { }
+
+constant PID $?PID = $$;
 
 enum-class OS { }
