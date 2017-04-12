@@ -1,10 +1,11 @@
 use lib 'lib';
-use Spit::SETTING;
+use Spit::PRECOMP;
 use Spit::Constants;
 need Spit::Doc::Markdown;
 
 
 sub MAIN(|) {
+    my $SETTING = get-SETTING();
     my \SDM = Spit::Doc::Markdown;
     {
         my $dir = "doc/classes/".IO;
