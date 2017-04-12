@@ -38,7 +38,7 @@ augment Str {
          }
     }
     #| Returns true if the string isn't empty
-    method ?Bool { ${test $self} }
+    method Bool { ${test $self} }
 
     #| Returns the string with the target string replaced by a replacement string.
     #| Does not modify the original string.

@@ -44,5 +44,5 @@ class Pkg {
     }
 
     #| In Bool context Pkgs return `.installed`
-    method ?Bool { $self.installed }
+    method Bool { $self.installed }
 }

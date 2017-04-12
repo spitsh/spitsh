@@ -14,7 +14,7 @@ augment File {
     #| Alias for .exists
     method ?e      { $self.exists }
     #| In Bool context, Files return [.exists](#exists)
-    method ?Bool { $self.exists }
+    method Bool { $self.exists }
     #| Returns True if the file is a directory]
     method ?dir    { ${test -d $self} }
     #| Alias for .dir

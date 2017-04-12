@@ -10,5 +10,5 @@ class Cmd {
             say "$ua is here, it can be our http user agent";
         }
     }
-    method ?Bool { $self.exists }
+    method Bool { $self.exists }
 }

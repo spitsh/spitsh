@@ -42,7 +42,7 @@ augment List {
         my @a = <one two three>;
         say +@a; #-> 3
     }
-    method +Int   { $self.elems }
+    method Int { $self.elems }
     #| Push an element onto the end of the list. If the list doesn't
     #| end in a newline one will be added before adding the new data.
     #|{
