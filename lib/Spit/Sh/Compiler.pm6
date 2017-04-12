@@ -290,7 +290,7 @@ multi method node(SAST::Var:D $var) {
         }
         @var;
     } elsif $var ~~ SAST::VarDecl {
-        $name,'=',($var.decl-type ~~ tInt() ?? '0' !! "''");
+        $name,'=',($var.type ~~ tInt() ?? '0' !! "''");
     } else {
         ': $',$name;
     }
