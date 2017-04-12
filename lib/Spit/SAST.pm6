@@ -59,7 +59,7 @@ class SAST::Invocant {...}
 class SAST::Type {...}
 class SAST::RoutineDeclare { ... }
 class SAST::Cmd {...}
-class SAST::Accepts {...}
+class SAST::ACCEPTS {...}
 
 role SAST is rw {
     has Match:D $.match is required is rw;
@@ -843,6 +843,7 @@ class SAST::Call  is SAST::Children {
 class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     has $!gen-sig;
     has $!type;
+    has $.topic;
 
     method invocant is rw { self[0] }
     method type {
@@ -881,7 +882,7 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     method children { $.invocant,|@.pos,|%.named.values }
 
     method topic {
-        if $.type ~~ tBool() {
+        $!topic //= do if $.type ~~ tBool() {
             $.invocant.topic
         } else {
             self;
@@ -1275,14 +1276,17 @@ class SAST::If is SAST::Children is rw {
     method stage2($ctx) is default {
         my $desc;
         if $!when {
-            $!cond .= do-stage2(tStr,:desc<when condition>);
-            if $!cond.type !~~ tBool() {
-                $!cond = self.stage2-node(
-                    SAST::Accepts,
-                    SAST::Var.new(sigil => '$',name => '_', match => $!cond.match).do-stage2(tAny),
-                    $!cond,
-                )
-            }
+            $!cond = self.make-new(
+                SAST::ACCEPTS,
+                (
+                    $*CURPAD.lookup(SCALAR,'_') ??
+                    # It's valid to use 'when' when $_ doesn't
+                    # exist. So just set it to False by default.
+                    SAST::Var.new(sigil => '$',name => '_', match => $!cond.match) !!
+                    SAST::BVal.new(val => False, match => $!cond.match)
+                ),
+                $!cond,
+            ).do-stage2(tBool);
             $desc = 'when block return value';
         } else {
             $!cond .= do-stage2(tBool,:desc<If/unless condition>);
@@ -1454,11 +1458,24 @@ class SAST::Range is SAST::MutableChildren {
     method itemize { False }
 }
 
-class SAST::Accepts is SAST::MutableChildren {
+class SAST::ACCEPTS is SAST::MutableChildren {
     method type { tBool }
-    method stage2($) {
-        $_ .= do-stage2(tAny) for @.children;
-        self;
+    method stage2($ctx) {
+        if self[1] ~~ SAST::Type and not self[1].class-type.enum-type {
+            $_ .= do-stage2(tAny) for @.children;
+            self.stage2-node(
+                SAST::BVal,
+                val => so(self[0].ostensible-type ~~ self[1].class-type)
+            );
+        } else {
+            SAST::MethodCall.new(
+                self[1],
+                name => 'ACCEPTS',
+                pos => self[0],
+                topic => self[0],
+                :$.match,
+            ).do-stage2($ctx);
+        }
     }
 }
 
@@ -1529,7 +1546,7 @@ class SAST::Regex is SAST::Children is rw {
     method stage2($ctx){
         if $ctx ~~ tBool() {
             self.make-new(
-                SAST::Accepts,
+                SAST::ACCEPTS,
                 SAST::Var.new(sigil => '$',name => '_', :$.match),
                 self
             ).do-stage2(tBool);

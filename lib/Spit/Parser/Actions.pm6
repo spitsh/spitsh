@@ -660,7 +660,7 @@ method infix:sym<,>  ($/) {
     }
 }
 
-method infix:sym<~~> ($/) { make SAST::Accepts.new }
+method infix:sym<~~> ($/) { make SAST::ACCEPTS.new }
 
 method infix:comparison ($/) { make SAST::Cmp.new(sym => $<sym>.Str)  }
 

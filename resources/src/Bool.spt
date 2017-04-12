@@ -14,4 +14,6 @@ augment Bool {
     method +Int { $self ?? 1 !! 0 }
     #| .gist returns "True" or "False".
     method ~gist { $self ?? "True" !! "False" }
+
+    method ?ACCEPTS($b) { $self }
 }

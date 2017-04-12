@@ -311,48 +311,6 @@ multi method walk(SAST::Cmp:D $THIS is rw) {
     compile-time-infix($THIS,SAST::BVal);
 }
 
-multi method walk(SAST::Accepts:D $THIS is rw) {
-    my $thing   = $THIS[0];
-    my $against =  $THIS[1];
-
-    given $against {
-        when .type ~~ tBool() { $THIS = $against }
-
-        when *.ostensible-type.enum-type {
-            $THIS .= stage2-node(
-                SAST::MethodCall,
-                name => 'has-member',
-                declaration => (once tEnumClass.^find-spit-method('has-member')),
-                $against,
-                pos => ($thing,),
-            );
-            self.walk($THIS);
-        }
-        when SAST::Type {
-            $THIS .= stage3-node(SAST::BVal,val => so($thing.ostensible-type ~~ $against.class-type));
-        }
-        when .type ~~ tRegex() {
-            $THIS .= stage2-node(
-                SAST::MethodCall,
-                name => 'match',
-                declaration => (once tRegex().^find-spit-method('match')),
-                $thing,
-                pos => ($against,),
-            );
-            self.walk($THIS);
-        }
-        when .type ~~ tStr()  {
-            $THIS .= stage2-node(
-                SAST::Cmp,
-                sym => 'eq',
-                $thing,
-                $against,
-            );
-            self.walk($THIS);
-        }
-    }
-}
-
 multi method walk(SAST::Regex:D $THIS is rw) {
     with $THIS.src.compile-time {
         if Spit::P5Regex.parse($_,:actions(Spit::P5Regex-Actions)) -> $match {
@@ -450,7 +408,7 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
         $THIS .= stage3-node(SAST::SVal,val => $ct.name);
     }
 
-    elsif $THIS.declaration === (once tEnumClass.^find-spit-method('has-member')) {
+    elsif $THIS.declaration === (once tEnumClass.^find-spit-method('ACCEPTS')) {
         my $enum := $THIS[0];
         my $candidate := $THIS.pos[0];
 
@@ -462,17 +420,6 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
                 };
                 $THIS .= stage3-node(SAST::BVal,:$val);
             }
-        }
-        # If the thing we're chekcing for membership is a enum we have to reduce it
-        # to it's name first.
-        elsif $candidate.ostensible-type.enum-type {
-            $candidate = $THIS.stage2-node(
-                SAST::MethodCall,
-                name => 'name',
-                declaration => ENUMC_NAME,
-                $candidate,
-            );
-            self.walk($candidate);
         }
     }
     else {

@@ -13,7 +13,9 @@ augment EnumClass {
         say RHEL.has-member('Ubuntu'); # false
         say Ubuntu ~~ Debian; # true
     }
-    method ?has-member(#|[A string to match against the enum's members] $enum) {
-        $enum.matches(/^($self)$/)
+    method ?has-member(#|[A string to match against the enum's members] $candidate) {
+        $candidate.matches(/^($self)$/)
     }
+
+    method ?ACCEPTS(EnumClass $b) { $self.has-member($b.name) }
 }

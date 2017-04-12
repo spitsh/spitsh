@@ -2,4 +2,6 @@
 augment Int {
     #| Ints are true in Bool context if they are not equal to 0
     method ?Bool { $self != 0 }
+
+    method ?ACCEPTS(Int $b) { $b == $self }
 }
