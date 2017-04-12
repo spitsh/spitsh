@@ -41,7 +41,7 @@ ok Kangaroo ~~ Biological-Class,'Kangaroo ~~ Biological-Class';
     nok $mamals ~~ $kangaroos,'$mamals !~~ $kangaroos';
     ok $kangaroos ~~ $mamals,'$kangaroos ~~ $mamals';
     ok $marsupials ~~ $mamals,'$marsupials ~~ $mamals';
-    nok $mamals ~~ $marsupials,'$marsupials !~~ $mamals';
+    nok $mamals ~~ $marsupials,'$mamals !~~ $marsupials';
     nok $kangaroos ~~ $copepods, '$kangaroos !~~ $copepods';
     nok $copepods ~~ $mamals, '$copepods !~~ $mamals';
     is $mamals.name,"Mamalia",'.name';
