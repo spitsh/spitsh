@@ -49,6 +49,7 @@ method generate-dot-md(*@things,:$path,:$intro = '',:$*lvl = 0){
 
 
 multi method doc(SAST::Var:D $_) {
+    return unless .docs;
     my $decl = do given .declaration {
         when SAST::ConstantDecl { 'constant'}
         default { 'variable' }
@@ -85,12 +86,12 @@ method make-os-tree($top,:$*lvl = 0){
 }
 
 multi method doc(SAST::ClassDeclaration:D $_ where *.class.enum-type) {
+    return unless .docs;
     self.heading: .name,{ self.body(.docs) }
 }
 
 multi method doc(SAST::ClassDeclaration:D $_) {
-
-    my @parents = .class.^parents(:local).grep(*.so).map({ (',' if $++), self.gen-type-link($_) } ).flat;
+    return unless .docs;
     self.heading: .name, {
         self.body(.docs),
         do for .class.^spit-methods.sort(*.name) {
@@ -102,7 +103,7 @@ multi method doc(SAST::ClassDeclaration:D $_) {
 }
 
 multi method doc(SAST::RoutineDeclare:D $_) {
-
+    return unless .docs;
     self.heading: .name, {
         self.block-quote({
             .declarator,' ',.name,'(',self.doc(.signature),
@@ -115,11 +116,12 @@ multi method doc(SAST::RoutineDeclare:D $_) {
 }
 
 method param-list(@params){
-    if @params {
+    my @docd-params = @params.grep(*.docs);
+    if @docd-params {
         "\n",
         '|Parameter|Description|',"\n",
         '|---------|-----------|',"\n",
-        flat do for @params {
+        flat do for @docd-params {
             '|',|self.bold({.spit-gist}),'|',|self.body(.docs,:one-line),'|',"\n";
         }
 
