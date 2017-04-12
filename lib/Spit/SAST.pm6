@@ -845,11 +845,13 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     has $!type;
 
     method invocant is rw { self[0] }
-    method type { $!type ||= self.declaration.reified-return-type(:reify($.invocant.type)) }
+    method type {
+        $!type ||= self.declaration.reified-return-type(:reify($.invocant.ostensible-type));
+    }
     method gen-sig {
         $!gen-sig //= do {
             my $sig = self.declaration.signature;
-            if $.invocant.type.parameterized {
+            if $.invocant.ostensible-type.parameterized {
                 $sig := $sig.clone;
                 for $sig.children {
                     $_ .= clone;

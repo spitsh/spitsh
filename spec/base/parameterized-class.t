@@ -1,6 +1,6 @@
 use Test;
 
-plan 18;
+plan 19;
 
 {
     class Foo[Type] {
@@ -13,7 +13,7 @@ plan 18;
     }
 
     ok Foo[Int].doit ~~ Int,"Foo[Int].method returns Int";
-
+    is Foo[Int].doit.WHAT, 'Int', '.method.WHAT is "Int"';
     is Foo[Int].echo(5),5,"Foo[Int].echo --> Int";
     is Foo[Str].echo("str"),"str","Foo[Str].echo --> Str";
     is Foo[Int].aug-echo(5),5,"Foo[Int].aug-echo --> Int";

@@ -2,7 +2,7 @@ use Spit::Compile;
 use Test;
 use Spit::Exceptions;
 use Terminal::ANSIColor;
-plan 10;
+plan 11;
 
 my $name = 'syntax-tests';
 throws-like { compile( '"', :$name) },
@@ -47,3 +47,13 @@ throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) },
 
 throws-like { compile('my $a = "foo"; $a .= "foo".${cat}',:$name) },
               SX::Invalid, '.= to a command that already has input';
+
+throws-like {
+    compile name => 'parameterized class bad call',
+    q:to/END/;
+    class Foo[Type] {
+        static method echo(Type $a --> Type) { $a }
+    }
+    Foo[Int].echo("blah");
+    END
+}, SX::TypeCheck,"wrong type of argument to parameterized class method";
