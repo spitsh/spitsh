@@ -1521,7 +1521,6 @@ class SAST::Eval is SAST::Children   {
     method children { $!src, }
 }
 
-sub make-rx($a){ rx｢<$a>｣ }
 class SAST::Regex is SAST::Children is rw {
     has SAST:D $.src is required;
     has SAST %.patterns;
@@ -1541,14 +1540,6 @@ class SAST::Regex is SAST::Children is rw {
     }
 
     method children { $!src, }
-
-    method compile-time {
-        if $!src.compile-time -> $p5src {
-            make-rx($p5src);
-        } else {
-            Nil
-        }
-    }
 }
 
 class SAST::Quietly is SAST::Children {
