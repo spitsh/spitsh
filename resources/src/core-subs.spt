@@ -1,10 +1,9 @@
-#| Internal routine to echo values in junction. **dont' use this**
 sub ef($str --> Str) is native  { }
-#| Internal routine to echo values in junction. **dont' use this**
 sub et($str --> Str)  is native { }
+
 #| Joins arguments on a `\n` creating a `List`.
 sub list(*@list --> List) is native { }
-#| Internal routine to echo values. **Don't use this**.
+
 sub e($str --> Str) { ${printf '%s' $str} }
 #| Prints its argument to `$*OUT` with a newline
 sub ?say($str)  { ${printf '%s\\n' $str > $*OUT}  }

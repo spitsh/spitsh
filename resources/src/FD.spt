@@ -70,7 +70,7 @@ augment FD {
     #| Duplicate the invocant file descriptor into the argument file
     #| descriptor like `DUP(2)` if the argument file descriptor is open
     #| it will be closed before becoming the alias.
-    method dup (FD $new-fd) {
+    method dup (#|[The file descriptor to use as the alias] FD $new-fd) {
         # you might think we need <> here but actually whether it's >
         # < or <> it does the same thing. The LHS always becomes the
         # alias to the RHS.
@@ -106,7 +106,7 @@ augment FD {
         }
     }
     #| Reads a fixed number of characters
-    method ?getc(Int $n) on {
+    method ?getc(#|[The number of characters to read]Int $n) on {
         Any {
             ${read -r -u $self -n $n $~.NAME}
                 ?? ($~ ||= "\n")
