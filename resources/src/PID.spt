@@ -1,5 +1,8 @@
+#| The PID class represents an integer process ID.
 augment PID {
+    #| In Bool context the PID returns the result of `.exists`
     method Bool { $self.exists }
+    #| Returns true if the process exists on the system.
     method ?exists on {
         Alpine { File{"/proc/$self"}.exists }
         Any    { ${ps -p $self >X} }

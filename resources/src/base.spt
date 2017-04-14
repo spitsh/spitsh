@@ -10,6 +10,9 @@ class FD is Int { }
 class File { }
 class PID is Int { }
 
+#| The process ID of top-level script. It is not the same as `$$`
+#| which may be different if used inside a sub-process. It can be used
+#| to kill the top level process from a child process.
 constant PID $?PID = $$;
 
 enum-class OS { }
