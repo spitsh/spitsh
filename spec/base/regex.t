@@ -1,6 +1,6 @@
 use Test;
 
-plan 18;
+plan 36;
 
 ok "foo" ~~ /oo$/,'basic re match (true)';
 nok "foo" ~~ /ar$/,'basic re match (false)';
@@ -53,4 +53,44 @@ nok "foo" ~~ /ar$/,'basic re match (false)';
         nok @/, 'fail to match resets @/';
         pass 'fail to match returns true';
     }
+}
+
+{
+    nok 'dude' ~~ /^\d/, ‘\d doesn't match a literal 'd'’;
+    ok 'dude'  ~~ /\D/,  ‘\D does match a literal 'd'’;
+    ok '123'   ~~ /^\d/, '\d does match a number';
+    nok '123'  ~~ /^\D/, ‘\D doesn't match a number’;
+}
+
+{
+    my $sentence = 'The quick brown fox jumped over the lazy dog.';
+    if $sentence ~~ /^\w+(\s+\w+)+\.$/ {
+        is @/[0], $sentence, 'The whole sentence was put in @/';
+        is @/[1], ' dog',    'The capture group holds the last capture';
+    }
+    nok $sentence ~~ /^\W+(\s+\w+)+\.$/, ‘\W doesn't match what \w did’;
+    nok $sentence ~~ /^\W+(\S+\w+)+\.$/, ‘\S doesn't match what \s did’;
+}
+
+{
+    nok '[fo]' ~~ rx[^[fo]$],  ‘using rx[] doesn't mean they match literally’;
+    ok  'fo'   ~~ rx[^[of]+$], 'rx[] preserves [] metachar';
+}
+
+{
+    ok  'zzz' ~~ /^z{3}$/, ‘{n} the right amount’;
+    nok 'zzz' ~~ /^z{2}$/, ‘{n} one less than the right amount’;
+    nok 'zzz' ~~ /^z{4}$/, ‘{n} one more than the right amount’;
+
+    ok  'zzzz'    ~~ /^z{2,4}$/, '{n,m} with m repeat';
+    ok  'zz'      ~~ /^z{2,4}$/, '{n,m} with n repeat';
+    nok 'z'       ~~ /^z{2,4}$/, '{n,m} with n - 1 repeat';
+    nok 'zzzzz'   ~~ /^z{2,4}$/, '{n,m} with n + 1 repeat';
+}
+
+{
+    my $interpolate = /\([Oo^*][_.-][Oo^*]\)/;
+    ok '<(o_O)><(^_^)><(*-*)>' ~~ /^<$interpolate><$interpolate><$interpolate>$/,
+    'Three separated variable interpoldations';
+    ok '<(o_O)><(^_^)><(*-*)>' ~~ /^(<$interpolate>)+$/,'interpolated regex+';
 }
