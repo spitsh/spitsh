@@ -1,6 +1,6 @@
 use Test;
 
-plan 36;
+plan 37;
 
 ok "foo" ~~ /oo$/,'basic re match (true)';
 nok "foo" ~~ /ar$/,'basic re match (false)';
