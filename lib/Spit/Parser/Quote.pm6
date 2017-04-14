@@ -48,7 +48,7 @@ grammar Spit::Quote is Spit::Lang {
     }
 
     token quoted {
-        [ $<bit>=<.elem> || <!before $*opener|$*closer>$<bit>=. ]*
+        [ $<bit>=<.elem> || <!before $*opener|$*closer>$<bit>=[\w+||.] ]*
     }
 
     proto token elem {*};
