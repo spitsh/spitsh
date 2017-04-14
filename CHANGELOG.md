@@ -1,3 +1,15 @@
+## 0.0.18
+- Regex system redesigned and re-implemented
+  - regex parsing is now done during the parse phase (no more 2-pass parsing)
+  - The compiler now has the responsibility of inserting
+    interpolations into the regex pattern that is eventually chosen
+
+- Add PID class which is a blessed int representing a process ID
+- Add $?PID which holds the PID for the main script
+- Add $$ which gives access to the shell's $$
+- spit eval now reads from STDIN if it doesn' have an argument
+
+
 ## 0.0.17
 - add Str.matches which is like .match but doesn't set `@/`.
 - ~~ and ACCEPTS have been overhauled. Classes now can have their own

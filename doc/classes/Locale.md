@@ -3,7 +3,6 @@
 ## encoding
 >method encoding( ⟶ [Str](./Str.md))
 
-
  Gets the encoding the current terminal is using.
 ```perl6
 if Local.encoding eq 'UTF-8' {

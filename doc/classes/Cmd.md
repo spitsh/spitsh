@@ -3,7 +3,6 @@
 ## Bool
 >method Bool( ⟶ [Bool](./Bool.md))
 
-
  Cmd returns `.exists` in Bool context
 ```perl6
 if Cmd<curl> || Cmd<wget> -> $ua {
@@ -12,7 +11,6 @@ if Cmd<curl> || Cmd<wget> -> $ua {
 ```
 ## exists
 >method exists( ⟶ [Bool](./Bool.md))
-
 
  Returns true if the command can be found in the current shell enironment.
 ```perl6

@@ -50,6 +50,8 @@ ${printf "allo earth" >!}; #shorthand
 ${ls '/I/dont/exist' !> $*OUT}; #redirect STDERR to script's STDOUT
 my $error = ${ls '/I/dont/exist' !>~}; # capture STDERR into return value of cmd
 ```
+# $?PID
+ The process ID of top-level script. It is not the same as `$$` which may be different if used inside a sub-process. It can be used to kill the top level process from a child process.
 # @/
  The match list variable. Like `$/` in Perl 6 it stores the what was match after a something is matched against a regex.
 ```perl6

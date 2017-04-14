@@ -10,15 +10,12 @@ say True;  #-> '1'
 ## ACCEPTS
 >method ACCEPTS([Str](./Str.md) **$b** ⟶ [Bool](./Bool.md))
 
-
  Simply returns the value of the invocant regardless of the argument.
 ## Int
 >method Int( ⟶ [Int](./Int.md))
 
-
  In Int context, Bools become a 1 if True or a 0 if False.
 ## gist
 >method gist( ⟶ [Str](./Str.md))
-
 
  .gist returns "True" or "False".

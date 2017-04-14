@@ -7,26 +7,21 @@ say <one two three> ~~ Str; #true
 ## ACCEPTS
 >method ACCEPTS([Str](./Str.md) **$b** ⟶ [Bool](./Bool.md))
 
-
  Returns True if the invocant and argument string are equal.
 ## Bool
 >method Bool( ⟶ [Bool](./Bool.md))
-
 
  Returns true if the string isn't empty
 ## bytes
 >method bytes( ⟶ [Int](./Int.md))
 
-
  Returns the number of bytes in the string.
 ## chars
 >method chars( ⟶ [Int](./Int.md))
 
-
  Returns the number of characters in the string. **note:** This will depend on the locale of the terminal the script is running in.
 ## contains
 >method contains([Str](./Str.md) **$needle**, [Bool](./Bool.md) **:$i** ⟶ [Bool](./Bool.md))
-
 
  Returns true if the string contains `$needle`.
 ```perl6
@@ -41,7 +36,6 @@ say "Hello, World".contains('wo',:i); #-> True
 |**:$i**| Turns on case insensitive matching|
 ## ends-with
 >method ends-with([Str](./Str.md) **$ends-with** ⟶ [Bool](./Bool.md))
-
 
  Returns true if the string ends with the argument.
 ```perl6
@@ -60,11 +54,9 @@ for @urls {
 ## lc
 >method lc( ⟶ [Str](./Str.md))
 
-
  Returns an lowercase version of the string
 ## match
 >method match([Regex](./Regex.md) **$r** ⟶ [Bool](./Bool.md))
-
 
  Returns true if the the string matches the regex and sets the `@/` match variable to the match and its capture groups (one per line).
 ```perl6
@@ -82,7 +74,6 @@ if 'https://github.com/spitsh/spitsh'.match($regex) {
 |**$r**| The regular expression to match against|
 ## matches
 >method matches([Regex](./Regex.md) **$r** ⟶ [Bool](./Bool.md))
-
 
  Returns true if the string matches the regex and **doesn't** set or modify `@/` match variable.
 ```perl6
@@ -102,16 +93,13 @@ if $url.match($regex) {
 ## note
 >method note()
 
-
  Prints the string to stderr
 ## say
 >method say()
 
-
  Prints the string to stdout
 ## split
 >method split([Str](./Str.md) **$sep** ⟶ [List](./List.md))
-
 
  Splits the string on a separator. Returns the string with each instance of the `$sep` replaced with `\n` as a [List].
 
@@ -120,7 +108,6 @@ if $url.match($regex) {
 |**$sep**| The separator to split on|
 ## starts-with
 >method starts-with([Str](./Str.md) **$starts-with** ⟶ [Bool](./Bool.md))
-
 
  Returns true if the string starts with the argument.
 ```perl6
@@ -139,7 +126,6 @@ for @urls {
 ## subst
 >method subst([Str](./Str.md) **$target**, [Str](./Str.md) **$replacement**, [Bool](./Bool.md) **:$g** ⟶ [Str](./Str.md))
 
-
  Returns the string with the target string replaced by a replacement string. Does not modify the original string.
 ```perl6
 my $a = "food";
@@ -155,6 +141,5 @@ say $a;
 |**:$g**| Turns on global matching|
 ## uc
 >method uc( ⟶ [Str](./Str.md))
-
 
  Returns an uppercase version of the string
