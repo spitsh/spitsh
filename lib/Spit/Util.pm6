@@ -43,5 +43,11 @@ sub sha1(Str:D $str --> Str:D) is export(:sha1) {
 }
 
 sub touch(IO::Path:D $path) is export(:touch) {
-    $path.spurt(' ',:append);
+    my $fh = $path.open(:w,:r);
+    $fh.seek(-1,SeekFromEnd);
+    my $byte = $fh.read(1);
+    $fh.seek(-1,SeekFromEnd);
+    $fh.write($byte);
+    $fh.close;
+    Nil;
 }
