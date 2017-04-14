@@ -126,7 +126,7 @@ augment Str {
             @/ = '';
             # note: GNU doesn't mean it has gawk
             if $self.matches($r) {
-                my $RE = $r.subst('!','\\!');
+                my $RE = $r.subst('#','\\#');
                 @/ = {
                     my $i = 0;
                     $i++ while $self.${
@@ -135,7 +135,7 @@ augment Str {
                             # slurp the input
                             'H;1h;$!d;x;' ~
                             # surround match with crazy delims
-                            "s!$RE!👻\\$i\\n🐚!;" ~
+                            "s#$RE#👻\\$i\\n🐚#;" ~
                             # remove delims and print
                             "s/.*👻|🐚.*//gp"
                         )
@@ -181,8 +181,22 @@ augment Str {
             }
         }
     }
-    method ?matches(Regex $r) {
-        $self.${awk :$r -v 'RS=^$' '! match($0,ENVIRON["r"]) { exit 1 }'};
+    method ?matches(Regex $r) on {
+        Debian {
+            my $RE = $r.subst('#','\\#');
+            $self.${
+                sed -nr
+                (
+                    # slurp the input
+                    'H;1h;$!d;x;' ~
+                    # quit with exit code 1 if it doesn't match
+                    "\\#$RE#!q1"
+                )
+            }
+        }
+        Any {
+            $self.${awk :$r -v 'RS=^$' '! match($0,ENVIRON["r"]) { exit 1 }'};
+        }
     }
 
     method ~gist { $self }
