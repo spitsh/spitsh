@@ -844,7 +844,7 @@ method quote:curly-single-quote ($/) { make-quote($/) }
 method quote:sym<qq>            ($/) { make-quote($/) }
 method quote:sym<q>             ($/) { make-quote($/) }
 method balanced-quote           ($/) { make-quote($/) }
-method quote:regex        ($/) { make SAST::Regex.new(src => $<str>.ast) andthen .match = $/; }
+method quote:regex              ($/) { make-quote($/) }
 
 
 method angle-quote ($/) {

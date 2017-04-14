@@ -23,7 +23,7 @@
         "Spit::Parser::Grammar" : "lib/Spit/Parser/Grammar.pm6",
         "Spit::Parser::Actions" : "lib/Spit/Parser/Actions.pm6",
         "Spit::Parser::Lang"    : "lib/Spit/Parser/Lang.pm6",
-        "Spit::Parser::P5Regex" : "lib/Spit/Parser/P5Regex.pm6",
+        "Spit::Parser::Regex" : "lib/Spit/Parser/Regex.pm6",
         "Spit::Parser::Quote"   : "lib/Spit/Parser/Quote.pm6"
     },
     "depends" : ["DispatchMap","JSON5::Tiny","Terminal::ANSIColor"],

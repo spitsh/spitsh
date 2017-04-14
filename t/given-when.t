@@ -2,7 +2,7 @@ use Spit::Compile;
 use Test;
 use Spit::Exceptions;
 
-plan 1;
+plan 2;
 
 ok compile(
     q{
@@ -15,3 +15,15 @@ ok compile(
     },
     name => 'given-when-test',
 ).contains("esac"),'given "foo" .. when /../ ends up us a switch statement';
+
+ok compile(
+    q{
+        my $c = "foo";
+        given $c {
+            when /fooo/ { say "yo" }
+            when /f.*/ { say "yo" }
+        }
+    },
+    name => 'no-double-stars',
+) ~~ all(*.contains('esac'), !*.contains('**')),
+    ‘regex ending in .* doens't duplicate ** when it becomes a case’;

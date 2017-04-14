@@ -2,7 +2,7 @@ need Spit::Exceptions;
 need Spit::Parser::Lang;
 need Spit::Parser::Quote;
 use Spit::Constants;
-use Spit::Parser::P5Regex;
+need Spit::Parser::Regex;
 need Spit::SpitDoc;
 
 # ripped form rakudo
@@ -23,9 +23,10 @@ grammar Spit::Grammar is Spit::Lang {
             # Just copied this "define_slang" from what TimToady did with rakudo.
             # It seems to store grammar/action pairs.
             self.define_slang("MAIN",self,$*ACTIONS);
-            for <q qq rx> {
+            for <q qq> {
                 self.define_slang("Quote-$_",Spit::Quote::{$_},Spit::Quote::{$_ ~ '-Actions'});
             }
+            self.define_slang('Regex',Spit::Regex, Spit::Regex-Actions);
         }
         <.newCU>
         ^<statementlist>$
@@ -624,8 +625,8 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token quote:regex {
-        |$<str>=<.wrap: '/', /<R=.LANG('Quote-rx',:closer</>)>/, '/' , :desc<regex>>
-        |'rx' $<str>=<.balanced-quote('Quote-rx')>
+        |$<str>=<.wrap: '/', /<R=.LANG('Regex',:closer</>)>/, '/' , :desc<regex>>
+        |'rx' $<str>=<.balanced-quote('Regex')>
     }
 
     token ws {

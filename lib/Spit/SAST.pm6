@@ -1540,8 +1540,8 @@ class SAST::Eval is SAST::Children   {
 }
 
 class SAST::Regex is SAST::Children is rw {
-    has SAST:D $.src is required;
-    has SAST %.patterns;
+    has Str:D %.patterns;
+    has SAST:D @.placeholders;
 
     method type { $.ctx ~~ tBool() ?? $.ctx !! tRegex() }
     method stage2($ctx){
@@ -1552,12 +1552,12 @@ class SAST::Regex is SAST::Children is rw {
                 self
             ).do-stage2(tBool);
         } else {
-            $!src .= do-stage2(tAny);
+            $_ .= do-stage2(tStr) for @!placeholders;
             self;
         }
     }
 
-    method children { $!src, }
+    method children { @!placeholders }
 }
 
 class SAST::Quietly is SAST::Children {

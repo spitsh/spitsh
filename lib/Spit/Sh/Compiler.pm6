@@ -399,7 +399,7 @@ method try-case($if is copy) {
             or
             cond ~~ SAST::MethodCall && cond.declaration.cloned === (once lookup-method 'Str','match')
                 && (my $re := cond.pos[0]) ~~ SAST::Regex && (my $case = $re.patterns<case>)
-                && ($topic = cond[0]; $pattern := $case.val)
+                && ($topic = cond[0]; $pattern := self.compile-pattern($case,$re.placeholders).in-DQ)
             or
             cond ~~ SAST::MethodCall && cond.declaration.cloned === (once lookup-method 'EnumClass','has-member')
                 && (my $enum := cond[0].compile-time) ~~ Spit::Type
@@ -795,8 +795,24 @@ multi method int-expr(SAST::IVal:D $_) { .val.Str }
 #!Eval
 multi method arg(SAST::Eval:D $_) { self.arg(.compiled) }
 #!Regex
-multi method arg(SAST::Regex:D $_) { self.arg(.src) }
-multi method cap-stdout(SAST::Regex:D $_) { self.cap-stdout(.pre) }
+
+method compile-pattern($pattern is copy,@placeholders) {
+    if @placeholders {
+        $pattern = escape($pattern).in-DQ;
+        my @literals = $pattern.split(/'{{' \d '}}'/);
+        for @placeholders.kv -> $i, $v {
+            @literals.splice: $i*2+1, 0, self.arg($v).in-DQ.join;
+        }
+        dq @literals.join;
+    } else {
+        escape $pattern
+    }
+
+}
+multi method arg(SAST::Regex:D $_) {
+    self.compile-pattern(.patterns<ere>,.placeholders);
+}
+
 #!Range
 multi method arg(SAST::Range:D $_) {
     cs 'seq ',

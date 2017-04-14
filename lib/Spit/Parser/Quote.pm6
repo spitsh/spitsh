@@ -121,22 +121,5 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
     }
     method backslash:literal ($/) { make $/.Str }
     method elem:escaped ($/) { make $<backslash>.ast }
-
-grammar Spit::Quote::rx is Spit::Quote::qq {
-    token backslash { . }
-
-    token elem:char-class {
-        '['[$<escaped-square>=']']?<TOP(:closer(']'))>']'
-    }
-}
-
-class Spit::Quote::rx-Actions is Spit::Quote::qq-Actions {
-    method backslash ($/){
-        make "\\{$/.Str}";
-    }
-
-    method elem:char-class ($/) {
-        make ('[', (']' with $<escaped-square>), |$<TOP>.ast, ']')
-    }
     method elem:sigily ($/)  { make $<spit-sigily>.ast }
 }

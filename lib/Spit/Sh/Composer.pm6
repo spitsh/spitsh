@@ -1,7 +1,6 @@
 unit class Spit::Sh::Composer;
 use Spit::SAST;
 need Spit::Exceptions;
-need Spit::Parser::P5Regex;
 need Spit::Constants;
 need Spit::DependencyList;
 need Spit::Metamodel;
@@ -309,22 +308,6 @@ multi method walk(SAST::IntExpr:D $THIS is rw) {
 
 multi method walk(SAST::Cmp:D $THIS is rw) {
     compile-time-infix($THIS,SAST::BVal);
-}
-
-multi method walk(SAST::Regex:D $THIS is rw) {
-    with $THIS.src.compile-time {
-        if Spit::P5Regex.parse($_,:actions(Spit::P5Regex-Actions)) -> $match {
-            $THIS.patterns = $match.made.grep(*.value.defined).map: {
-                .key => $THIS.stage3-node(SAST::SVal,val => .value)
-            };
-        } else {
-            SX.new(message => "Spit regex parser wasn't able to parse ‘$_’" ~
-                  "(Maybe you can just use '' quotes if you're sure it's right).",
-                   match => $THIS.match).throw;
-        }
-    } else {
-        $THIS.patterns<pre> = $THIS.src;
-    }
 }
 
 # The things we can inline in CondReturns is limited. We can't have
