@@ -1,7 +1,7 @@
 use MONKEY-TYPING;
 
 # using constant here goofs for some reason
-my $metachar-re = BEGIN rx/\s|<[}<?'"\\$;&()|>*#]>/;
+my $metachar-re = BEGIN rx/\s|<[}<?'"\\$;&()|>*#`]>/;
 
 role ShellElement {
     method in-or-equals {
@@ -44,9 +44,8 @@ class Escaped does DynamicShellElement {
 
     method in-DQ(:$next) {
         S:g!
-            |'"'
-            |\\ [ <?[\\$"]> || $ <?{$next andthen .match(/^<?[\\$"]>/)}> ]
-            |'$'
+            |<[$"`]>
+            |\\ [ <?[\\$"`]> || $ <?{$next andthen .match(/^<?[\\$"`]>/)}> ]
         !\\$/! given $!str;
     }
 
