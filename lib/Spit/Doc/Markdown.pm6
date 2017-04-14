@@ -109,7 +109,7 @@ multi method doc(SAST::RoutineDeclare:D $_) {
             .declarator,' ',.name,'(',self.doc(.signature),
             (' ⟶ ',self.gen-type-link(.return-type) if .return-type.name ne 'Any' ),')';
         }),
-        "\n\n",
+        "\n",
         self.body(.docs),
         self.param-list(.signature.children);
     }
