@@ -31,4 +31,21 @@ grammar Spit::Lang {
         SX::Expected.new(match => self.MATCH,:$expected,:$hint).throw
     }
     method panic(Str:D $panic) { SX.new(message => $panic, match => self.MATCH).throw }
+
+    token spit-sigily {
+        <?before '$'|'@'>
+        [
+            |$<sigily>=<.LANG('MAIN','var')>
+            |$<sigily>=<.LANG('MAIN','cmd')>
+        ]
+        <index-accessor=.LANG('MAIN','index-accessor')>?
+        {
+            make do with $<index-accessor>.ast {
+                .push($<sigily>.ast);
+                $_;
+            } else {
+                $<sigily>.ast;
+            }
+        }
+    }
 }
