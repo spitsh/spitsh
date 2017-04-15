@@ -142,7 +142,7 @@ augment Str {
                     };
                     "";
                 };
-                True;
+                $?;
             }
         }
         BusyBox {
