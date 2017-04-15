@@ -55,3 +55,7 @@ ok True,"";
 >sub say([Str](../Str.md) **$str** ⟶ [Bool](../Bool.md))
 
  Prints its argument to `$*OUT` with a newline
+# sleep
+>sub sleep([Int](../Int.md) **$seconds**)
+
+ Suspends execution for an interval of time measured in seconds. **note** `sleep(1)` can usually take floating point numbers but they are NYI in spit.

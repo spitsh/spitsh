@@ -15,4 +15,9 @@ sub print($str){ ${printf '%s' $str > $*OUT }   }
 #| Prints the message to stdout and then exits
 sub die($str)  { note($str) && $$.kill("TERM"); }
 
+#| Suspends execution for an interval of time measured in seconds.
+#| **note** `sleep(1)` can usually take floating point numbers but
+#| they are NYI in spit.
+sub sleep(Int $seconds) { ${sleep $seconds} }
+
 sub ?not(Bool $thing) { !$thing }
