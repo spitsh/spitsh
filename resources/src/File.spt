@@ -177,3 +177,5 @@ augment File {
         END { ${rm @($tmplist.read) $tmplist } }
     }
 }
+
+env File $*HOME;

@@ -85,4 +85,4 @@ augment List {
 }
 
 #| The internal field separator. For Spit it's always `\n`.
-constant $IFS = "\n";
+env $?IFS = "\n";

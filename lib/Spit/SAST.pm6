@@ -240,6 +240,7 @@ role SAST::Declarable does SAST::Dependable {
     has SpitDoc:D @.docs;
     method symbol-type {...}
     method name {...}
+    method bare-name { $.name }
 }
 
 role SAST::OSMutant {
@@ -378,7 +379,7 @@ class SAST::Var is SAST::Children does SAST::Assignable {
     method depends { $.declaration, }
 
     method is-option  { $!name.starts-with('*') }
-    method bare-name  { $!name.subst(/^'*'/,'') }
+
     method gen-reference(:$match!,|c){
         SAST::Var.new(:$.name,:$.sigil,:$match,:$.declaration,|c);
     }
@@ -416,11 +417,13 @@ class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
         }
         self;
     }
-
+    method bare-name  { $.name.subst(/^<[*?]>/,'') }
     method dont-depend is rw { $!dont-depend }
     method depends { Empty }
     method declaration { self }
 }
+
+class SAST::EnvDecl is SAST::VarDecl { }
 
 class SAST::MaybeReplace is SAST::VarDecl {
     method writable { $.assign }

@@ -15,7 +15,7 @@ my %native = (
     )),
     list  => Map.new((
         body => q|printf "%s\n" "$*"|,
-        deps => ('IFS'),
+        deps => ('?IFS'),
     )),
     starts-with => Map.new((
         body => Q<case "$1" in "$2"*) true;; *) false;; esac>,
@@ -65,7 +65,7 @@ method scaffolding {
     my @a;
     for
     (SUB,'list'),
-    (SCALAR,'IFS'),
+    (SCALAR,'?IFS'),
     (SCALAR,'*NULL'),
     (SUB,'et'),
     (SUB,'ef'),
@@ -89,7 +89,7 @@ method check-stage3($node) {
     SX::CompStageNotCompleted.new(stage => 3,:$node).throw  unless $node.stage3-done;
 }
 
-multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.name,:$fallback)  {
+multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.bare-name,:$fallback)  {
     self.check-stage3($decl);
     $name = do given $name {
         when '/' { 'M' }
@@ -115,11 +115,19 @@ multi method gen-name(SAST::Var:D $_ where { $_ !~~ SAST::VarDecl }) {
     self.gen-name(.declaration);
 }
 
+multi method gen-name(SAST::EnvDecl:D $_) {
+    my $name = callsame;
+    if $name ne .bare-name {
+        .make-new(SX,message => "Unable to reserve ‘{.bare-name}’ for enironment variable.").throw;
+    }
+    $name;
+}
+
 multi method gen-name(SAST::MethodDeclare:D $method) {
     callwith($method,fallback => $method.invocant-type.name.substr(0,1).lc ~ '_' ~ $method.name);
 }
-method !avoid-name-collision($decl,$name is copy = $decl.name,:$fallback) {
-    $name ~~ s/^['*'|'?']//;
+
+method !avoid-name-collision($decl,$name is copy,:$fallback) {
     $name ~~ s:g/\W/_/;
     my $st = $decl.symbol-type;
     $st = SCALAR if $st == ARRAY;
@@ -290,7 +298,9 @@ multi method node(SAST::Var:D $var) {
         }
         @var;
     } elsif $var ~~ SAST::VarDecl {
-        $name,'=',($var.type ~~ tInt() ?? '0' !! "''");
+        if $var !~~ SAST::EnvDecl {
+            $name,'=',($var.type ~~ tInt() ?? '0' !! "''")
+        }
     } else {
         ': $',$name;
     }
@@ -462,7 +472,7 @@ multi method cond(SAST::Given:D $_) { self.node($_) }
 multi method arg(SAST::Given:D $_) { cs self.node($_) }
 #!For
 multi method node(SAST::For:D $_) {
-    self.scaf('IFS');
+    self.scaf('?IFS');
     'for ', self.gen-name(.iter-var), ' in', |.list.children.map({ self.space-then-arg($_) }).flat
     ,"; do\n",
     |self.node(.block,:indent,:no-empty),

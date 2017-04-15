@@ -155,12 +155,6 @@ multi method walk(SAST::Junction:D $THIS is rw) {
 multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
     my $decl := $THIS.declaration;
 
-    if $THIS.is-option and not $decl.assign and not %!opts{$THIS.bare-name} {
-        SX::RequiredOption.new(
-            name => $THIS.bare-name,
-            match => $THIS.match).throw;
-    }
-
     if $decl ~~ SAST::ConstantDecl {
         self.walk($decl); # Walk the declaration early so we can inspect it for inlining
 

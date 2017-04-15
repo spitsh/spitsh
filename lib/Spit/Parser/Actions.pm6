@@ -476,6 +476,7 @@ method var-create($/,$decl-type) {
         when 'constant'  { SAST::ConstantDecl }
         when 'my'        { SAST::VarDecl }
         when 'topic'     { SAST::MaybeReplace }
+        when 'env'       { SAST::EnvDecl }
     };
     make ast-type.new(
         name => $<var><name>.Str,
