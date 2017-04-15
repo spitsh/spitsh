@@ -55,7 +55,7 @@ has $.chars-per-line-cap = 80;
 
 method BUILDALL(|) {
     @!names[SCALAR]<_> = '_';
-    for <shift chmod rm> {
+    for <shift chmod rm kill exit> {
         @!names[SUB]{$_} = $_;
     }
     callsame;
