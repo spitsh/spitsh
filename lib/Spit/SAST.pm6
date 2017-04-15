@@ -33,6 +33,7 @@ multi tList(Spit::Type \param) {
     $list.^parameterize(param);
 }
 sub tRegex is export { state $ = class-by-name('Regex') }
+sub tPattern is export { state $ = class-by-name('Pattern') }
 sub tOS is export { state $ = class-by-name('OS') }
 sub tFD is export { state $ = class-by-name('FD') }
 sub tFile is export { state $ = class-by-name('File')  }
@@ -1546,7 +1547,17 @@ class SAST::Regex is SAST::Children is rw {
     has Str:D %.patterns;
     has SAST:D @.placeholders;
 
-    method type { $.ctx ~~ tBool() ?? $.ctx !! tRegex() }
+    method type {
+        given $.ctx {
+            when tBool() { $.ctx }
+            when tPattern() {
+                %!patterns<case>:exists
+                    ?? tPattern()
+                    !! self.make-new(SX, message => "Unable to convert this regex to pattern").throw;
+            }
+            default { tRegex() }
+        }
+    }
     method stage2($ctx){
         if $ctx ~~ tBool() {
             self.make-new(

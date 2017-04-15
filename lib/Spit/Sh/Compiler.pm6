@@ -820,7 +820,11 @@ method compile-pattern($pattern is copy,@placeholders) {
 
 }
 multi method arg(SAST::Regex:D $_) {
-    self.compile-pattern(.patterns<ere>,.placeholders);
+    if .ctx ~~ tPattern() {
+        self.compile-pattern(.patterns<case>,.placeholders);
+    } else {
+        self.compile-pattern(.patterns<ere>,.placeholders);
+    }
 }
 
 #!Range
