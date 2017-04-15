@@ -13,6 +13,6 @@ sub ?note($str) { ${printf '%s\\n' $str >! }      }
 sub print($str){ ${printf '%s' $str > $*OUT }   }
 
 #| Prints the message to stdout and then exits
-sub die($str)  { say($str) && ${exit 1}; }
+sub die($str)  { note($str) && $$.kill("TERM"); }
 
 sub ?not(Bool $thing) { !$thing }

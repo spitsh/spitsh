@@ -7,4 +7,9 @@ augment PID {
         Alpine { File{"/proc/$self"}.exists }
         Any    { ${ps -p $self >X} }
     }
+    #| Sends the process a signal. Returns true if the signal was successfully
+    #| sent.
+    method ?kill($signal) {
+        ${kill "-$signal" $self};
+    }
 }
