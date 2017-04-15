@@ -176,6 +176,10 @@ augment File {
         $tmpfile;
         END { ${rm @($tmplist.read) $tmplist } }
     }
+
+    method find(Pattern :$pattern --> List[File]) {
+        ${find $self ('-name', $pattern if $pattern)}
+    }
 }
 
 env File $*HOME;
