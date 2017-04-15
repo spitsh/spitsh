@@ -355,6 +355,16 @@ multi method int-expr(SAST::Var:D $_) {
 }
 #!If
 multi method node(SAST::If:D $_,:$else) {
+
+    if not $else and not .else and .then.one-stmt {
+        my $neg = .cond ~~ SAST::Neg;
+        my $cond = $neg ?? .cond[0] !! .cond;
+        return
+        |self.cond($cond),
+        ($neg ?? ' || ' !! ' && '),
+        |self.node(.then, :one-line);
+    }
+
     self.try-case($_) andthen .return;
 
     substitute-cond-topic(.topic-var,.cond);
