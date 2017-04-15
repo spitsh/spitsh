@@ -378,20 +378,22 @@ multi method walk(SAST::Stmts:D $THIS is rw) {
 
 multi method walk(SAST::MethodCall:D $THIS is rw) {
     my \ENUMC_NAME = once tEnumClass.^find-spit-method('name');
+    my \STR_BOOL = once tStr.^find-spit-method('Bool');
+    my \ENUM_ACCEPTS = once tEnumClass.^find-spit-method('ACCEPTS');
 
-    if $THIS.declaration === (once tStr.^find-spit-method('Bool'))
-       and (my $ct = $THIS.invocant.compile-time).defined
+    if $THIS.declaration === STR_BOOL
+        and (my $ct = $THIS.invocant.compile-time).defined
     {
-       $THIS .= stage3-node(SAST::BVal, val => ?$ct);
+        $THIS .= stage3-node(SAST::BVal, val => ?$ct);
     }
 
     elsif $THIS.declaration === ENUMC_NAME
-          and $THIS.invocant.compile-time -> $ct
+        and $THIS.invocant.compile-time -> $ct
     {
         $THIS .= stage3-node(SAST::SVal,val => $ct.name);
     }
 
-    elsif $THIS.declaration === (once tEnumClass.^find-spit-method('ACCEPTS')) {
+    elsif $THIS.declaration === ENUM_ACCEPTS {
         my $enum := $THIS[0];
         my $candidate := $THIS.pos[0];
 

@@ -1,12 +1,14 @@
 use Test;
 
-plan 33;
+plan 35;
 
 {
     ok "0","'0' is true";
     is "".WHAT,Str,'empty string .WHAT is Str';
     is "foo".WHAT,Str,'non-empty strnig .WHAT is Str';
     is "1".WHAT,Str,'"1" .WHAT is Str';
+    nok ?"", '?""';
+    ok ?" ", '?" "';
 }
 
 {
