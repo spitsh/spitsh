@@ -64,9 +64,8 @@ proto method walk(SAST:D $sast is rw,|) {
         }
     }
 
-    my $save = $sast;
+    $sast.stage3-done = True;
     {*}
-    $save.stage3-done = True;
 }
 
 multi method walk(SAST:D $ is rw) {}
