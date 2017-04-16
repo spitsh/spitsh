@@ -69,7 +69,7 @@ proto MAIN(
     };
 
     my %*opts = do if $mangle-os {
-        parse-opts $opts,mangle => %(|(os => "\$: OS<$mangle-os>"));
+        parse-opts $opts,mangle => %(|(os => "-> OS<$mangle-os>"));
     } else {
         parse-opts $opts;
     };
