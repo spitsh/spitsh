@@ -7,18 +7,19 @@ sub slurp-SETTING {
     .join("\n");
 }
 
-
-
 my constant $src = slurp-SETTING();
-my constant $SETTING = compile(
+my constant $SETTING = do {
+    note "precompiling SETTING";
+    compile(
         $src,
         :target<stage2>,
         :!SETTING,
         :name<SETTING>,
         :debug(%*ENV<SPIT_DEBUG_SETTING>)
     ).block;
-my constant $src-sha1 = sha1($src);
+}
 
+my constant $src-sha1 = sha1($src);
 
 sub get-SETTING is export {
     once do if %*ENV<SPIT_SETTING_DEV> {
