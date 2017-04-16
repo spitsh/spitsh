@@ -1,0 +1,4 @@
+constant $*git = {
+    -->Pkg.prompt-install unless Cmd<git>;
+    Cmd<git>;
+};
