@@ -843,6 +843,8 @@ class SAST::Call  is SAST::Children {
 
     method gen-sig { self.declaration.signature }
 
+    method itemize { $.type !~~ tList }
+
     method gist { $.node-name ~ "($!name)" ~ $.gist-children }
 }
 
