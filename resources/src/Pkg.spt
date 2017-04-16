@@ -45,4 +45,12 @@ class Pkg {
 
     #| In Bool context Pkgs return `.installed`
     method Bool { $self.installed }
+
+    method prompt-install {
+        if prompt("This script requires the '$self' to be installed to continue.\ninstall?", :default) {
+            $self.install;
+        } else {
+            die "unable to install $self";
+        }
+    }
 }

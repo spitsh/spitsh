@@ -20,4 +20,20 @@ sub die($str)  { note($str) && $$.kill("TERM"); }
 #| they are NYI in spit.
 sub sleep(Int $seconds) { ${sleep $seconds} }
 
+sub ?prompt(Str $str,Bool :$default) {
+    if $*interactive {
+        my $yn = $default ?? '[Y/n]' !! '[y/N]';
+        say "👻 $str $yn";
+        $?IN.get;
+        given $~ {
+            when ''       { $default  }
+            when /^[yY]$/ { True      }
+            when /^[nN]$/ { False     }
+            default { prompt($str, :$default) }
+        }
+    } else {
+        $default;
+    }
+}
+
 sub ?not(Bool $thing) { !$thing }
