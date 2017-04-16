@@ -1572,6 +1572,8 @@ class SAST::Regex is SAST::Children is rw {
     }
 
     method children { @!placeholders }
+
+    method gist { $.node-name ~ "({%.patterns.gist})" ~ $.gist-children }
 }
 
 class SAST::Quietly is SAST::Children {
