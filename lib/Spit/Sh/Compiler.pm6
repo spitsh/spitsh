@@ -161,7 +161,7 @@ method scaf-ref($name,:$match) {
     }
 }
 
-method compile(SAST::CompUnit:D $CU --> ShellElement:D) {
+method compile(SAST::CompUnit:D $CU --> Str:D) {
     my $*pad = '';
     my $*depends = $CU.depends-on;
     my ShellElement:D @compiled;
