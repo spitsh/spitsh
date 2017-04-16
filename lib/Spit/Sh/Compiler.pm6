@@ -361,8 +361,6 @@ multi method node(SAST::If:D $_,:$else) {
         |self.node(.then, :one-line);
     }
 
-    self.try-case($_) andthen .return;
-
     substitute-cond-topic(.topic-var,.cond);
 
     ($else ?? 'elif' !! 'if'),' ',
@@ -397,61 +395,6 @@ sub substitute-cond-topic($topic-var,$cond is rw) {
             }
         }
     }
-}
-
-method try-case($if is copy) {
-    my $can = True;
-    my $common-topic;
-    my @res;
-    my $i = 0;
-    my \ENUM-HAS-MEMBER = (once lookup-method 'EnumClass','has-member');
-    my \STR-MATCH = (once lookup-method 'Str','match');
-    while $if and $can {
-        my ($topic,$pattern);
-        if $if !~~ SAST::If {
-            @res.append: "\n$*pad  *) ", |self.node($if,:one-line),';;';
-            $if = Nil;
-        } elsif (
-            (my \cond = $if.cond) ~~ SAST::Cmp && cond.sym eq 'eq'
-                && ($topic = cond[0]; $pattern := |self.arg(cond[1]))
-            or
-            cond ~~ SAST::MethodCall && cond.declaration.cloned === STR-MATCH
-                && (my $re := cond.pos[0]) ~~ SAST::Regex && (my $case = $re.patterns<case>)
-                && ($topic = cond[0]; $pattern := self.compile-pattern($case,$re.placeholders).in-DQ)
-            or
-            cond ~~ SAST::MethodCall && cond.declaration.cloned === ENUM-HAS-MEMBER
-                && (my $enum := cond[0].compile-time) ~~ Spit::Type
-                && ($topic = cond.pos[0]; $pattern := $enum.^types-in-enum».name.join('|'))
-            )
-          {
-              $common-topic //= $topic;
-              if (given $common-topic {
-                 when SAST::CompileTimeVal { $topic.val ===  .val }
-                 when SAST::Var { $topic.declaration === .declaration }
-                 when SAST::MethodCall {
-                     # DIRTY HACK: I want to make 'given SomeEnum { when ..}' caseable.
-                     # But each cond will be wrapped in a call to .name to remove '|' from it.
-                     # TODO: A general solution to to case method calls
-                     $topic.declaration === .declaration
-                     && .declaration === (once lookup-method('EnumClass','name')),
-                 }
-              }) {
-                  @res.append: "\n$*pad  ",$pattern,') ', |self.node($if.then,:one-line),";;";
-                  $i++;
-              } else {
-                  $can = Nil;
-              }
-              $if = $if.else;
-          } else {
-            $can = Nil;
-        }
-    }
-    $can = Nil if $i < 2;
-    if $can {
-        @res.prepend: 'case ', |self.arg($common-topic), ' in ';
-        @res.append: "\n{$*pad}esac";
-    }
-    $can && @res;
 }
 
 multi method cap-stdout(SAST::If:D $_) {
@@ -812,16 +755,46 @@ multi method arg(SAST::IVal:D $_) { .val.Str }
 multi method int-expr(SAST::IVal:D $_) { .val.Str }
 #!Eval
 multi method arg(SAST::Eval:D $_) { self.arg(.compiled) }
-#!Regex
 
+#!Case
+multi method node(SAST::Case:D $_) {
+    'case ', |self.arg(.in), ' in ',
+    |flat(do for .patterns.kv -> $i, $re {
+             "\n$*pad  ",|self.compile-case-pattern($re.patterns<case>,$re.placeholders)
+             ,') ',|self.node(.blocks[$i],:one-line), ';;';
+         }),
+    |(.default andthen "\n$*pad  *) ", |self.node($_, :one-line), ';;'),
+    "\n{$*pad}esac";
+}
+
+multi method cap-stdout(SAST::Case:D $_) { self.node($_) }
+
+method compile-case-pattern($pattern is copy, @placeholders) {
+    if @placeholders {
+        $pattern = escape($pattern).in-DQ;
+        my @literals = $pattern.split(/'{{' \d '}}'/);
+        for @placeholders.kv -> $i, $v {
+            @literals.splice: $i*2+1, 0, self.arg($v);
+        }
+        my @str;
+        for @literals.reverse.kv -> $i, $_ {
+            @str.prepend(.in-case-pattern(next => @str.head));
+        }
+        @str.join || "''";
+    } else {
+        $pattern || "''";
+    }
+}
+
+#!Regex
 method compile-pattern($pattern is copy,@placeholders) {
     if @placeholders {
         $pattern = escape($pattern).in-DQ;
         my @literals = $pattern.split(/'{{' \d '}}'/);
         for @placeholders.kv -> $i, $v {
-            @literals.splice: $i*2+1, 0, self.arg($v).in-DQ.join;
+            @literals.splice: $i*2+1, 0, self.arg($v);
         }
-        dq @literals.join;
+        self.concat-into-DQ(@literals);
     } else {
         escape $pattern
     }
@@ -851,17 +824,18 @@ multi method arg(SAST::Range:D $_) {
 #!Blessed
 multi method arg(SAST::Blessed:D $_) { self.arg($_[0]) }
 
-#!Concat
-multi method arg(SAST::Concat:D $_) {
-    return '""' unless .children;
-    my @compiled = .children.flatmap({ self.arg($_) });
+method concat-into-DQ(@elements) {
     my $str = dq();
 
-    my $last-var;
-    for @compiled.reverse.kv -> $i,$_ {
+    for @elements.reverse.kv -> $i,$_ {
         $str.bits.prepend(.in-DQ(next => $str.bits.head));
     }
     $str;
+}
+
+#!Concat
+multi method arg(SAST::Concat:D $_) {
+    self.concat-into-DQ(.children.map({ self.arg($_) }).flat)
 }
 #!Type
 multi method arg(SAST::Type $_) {

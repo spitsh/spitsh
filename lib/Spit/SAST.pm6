@@ -1577,6 +1577,16 @@ class SAST::Regex is SAST::Children is rw {
     method gist { $.node-name ~ "({%.patterns.gist})" ~ $.gist-children }
 }
 
+class SAST::Case is SAST::Children is rw {
+    has SAST:D $.in is required;
+    has SAST::Regex:D @.patterns;
+    has SAST::Block:D @.blocks;
+    has SAST $.default;
+
+    # is created in stage3
+    method children { $!in,|@!blocks,($!default // Empty) }
+}
+
 class SAST::Quietly is SAST::Children {
     has SAST::Block:D $.block is required;
     has SAST $.null is rw;

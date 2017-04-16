@@ -90,6 +90,82 @@ multi method walk(SAST::While:D $THIS is rw) {
     }
 }
 
+method try-case($if) {
+    my $can = True;
+    my $common-topic;
+    my \ENUM-HAS-MEMBER = (once tEnumClass.^find-spit-method('ACCEPTS'));
+    my \ENUM-NAME       = (once tEnumClass.^find-spit-method: 'name');
+    my \STR-MATCHES =     (once tStr.^find-spit-method: 'matches'|'match');
+    my SAST::Regex:D @patterns;
+    my SAST::Block:D @blocks;
+    my SAST::Block   $default;
+
+    my $cur = $if;
+    while $cur and $can {
+        my ($topic,$pattern);
+
+        if $cur !~~ SAST::If {
+            $default = $cur;
+            $cur = Nil;
+            last;
+        }
+
+        if (
+            (my \cond = $cur.cond) ~~ SAST::Cmp && cond.sym eq 'eq'
+                && (
+                    $topic = cond[0];
+                    $pattern = SAST::Regex.new(
+                        patterns => { case => '{{0}}' },
+                        placeholders => cond[1],
+                        match => $cur.match,
+                    );
+                )
+            or
+            cond ~~ SAST::MethodCall && cond.declaration.identity === STR-MATCHES
+                && (my $re = cond.pos[0]) ~~ SAST::Regex && $re.patterns<case>.defined
+                && ($topic = cond[0]; $pattern = $re)
+            or
+
+            cond ~~ SAST::MethodCall && cond.declaration.identity === ENUM-HAS-MEMBER
+                && (my $enum = cond[0].compile-time) ~~ Spit::Type
+                && (
+                    $topic = cond.pos[0].stage3-node(
+                        SAST::MethodCall,
+                        name => 'name',
+                        declaration => ENUM-NAME,
+                        cond.pos[0],
+                    );
+                    $pattern = SAST::Regex.new(
+                        match    => $cur.match,
+                        patterns => { case => $enum.^types-in-enum».name.join('|') }
+                    )
+                 )
+            )
+          {
+              $common-topic //= $topic;
+              if (given $common-topic {
+                 when SAST::CompileTimeVal { $topic.val ===  .val }
+                 when SAST::Var { $topic.declaration === .declaration }
+                 when SAST::MethodCall {
+                     $topic.declaration === .declaration === ENUM-NAME
+                 }
+              }) {
+                  @patterns.push($pattern);
+                  @blocks.push($cur.then);
+              } else {
+                  $can = False;
+              }
+              $cur = $cur.else;
+          } else {
+            $can = False;
+        }
+    }
+
+    if $can and @patterns > 1 {
+        $if.stage3-node: SAST::Case, in => $common-topic, :@blocks, :@patterns, :$default;
+    }
+}
+
 multi method walk(SAST::If:D $THIS is rw,:$sub-if) {
     with $THIS.cond.compile-time -> $cond {
         if ?$cond {
@@ -104,6 +180,10 @@ multi method walk(SAST::If:D $THIS is rw,:$sub-if) {
         }
     } else {
         $THIS.else andthen self.walk($_,:sub-if);
+    }
+
+    if not $sub-if and $THIS ~~ SAST::If and self.try-case($THIS) -> $case {
+        $THIS = $case;
     }
 }
 

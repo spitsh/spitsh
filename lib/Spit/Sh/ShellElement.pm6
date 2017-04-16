@@ -2,10 +2,15 @@ use MONKEY-TYPING;
 
 # using constant here goofs for some reason
 my $metachar-re = BEGIN rx/\s|<[}<?'"\\$;&()|>*#`]>/;
+my $case-meta = BEGIN rx/<[[*?|]>/;
 
 role ShellElement {
     method in-or-equals {
         S:g!'}' | \\<?before '}'>!\\$/! given self.in-DQ.join;
+    }
+
+    method in-case-pattern {
+        S:g!$case-meta | \\ <?before $case-meta>!\\$/! given self.in-DQ.join;
     }
 }
 
@@ -81,6 +86,7 @@ class DoubleQuote::Var does DynamicShellElement {
     method in-DQ(:$next) { ($next andthen m/^\w/) ?? ('${',$!name,'}') !! ('$',$!name) }
     method as-item { ('"' unless $!is-int),'$',$!name,('"' unless $!is-int) }
     method as-flat { '$',$!name }
+    method in-case-pattern(|c) { self.in-DQ(|c) }
 }
 
 # an element that will has the same meaning inside and outside ""
@@ -90,4 +96,5 @@ class NoNeedQuote does DynamicShellElement {
     method in-DQ { @!bits }
     method as-item { @!bits }
     method as-flat { @!bits }
+    method in-case-pattern { @!bits }
 }
