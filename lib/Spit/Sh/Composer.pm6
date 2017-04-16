@@ -310,13 +310,13 @@ multi method walk(SAST::Cmp:D $THIS is rw) {
 sub acceptable-in-cond-return($_,$original) {
     when SAST::Cmd {
         (not .write || .append || .pipe-in || .in) and
-        (.nodes[*-1] andthen .cloned === $original);
+        (.nodes[*-1] andthen .identity === $original);
     }
     when SAST::MethodCall {
-        (.pos[*-1] || .invocant) andthen .cloned === $original;
+        (.pos[*-1] || .invocant) andthen .identity === $original;
     }
     when SAST::Call {
-        .pos[*-1] andthen .cloned === $original;
+        .pos[*-1] andthen .identity === $original;
     }
     default { False }
 }
