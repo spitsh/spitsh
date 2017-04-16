@@ -404,6 +404,8 @@ method try-case($if is copy) {
     my $common-topic;
     my @res;
     my $i = 0;
+    my \ENUM-HAS-MEMBER = (once lookup-method 'EnumClass','has-member');
+    my \STR-MATCH = (once lookup-method 'Str','match');
     while $if and $can {
         my ($topic,$pattern);
         if $if !~~ SAST::If {
@@ -413,11 +415,11 @@ method try-case($if is copy) {
             (my \cond = $if.cond) ~~ SAST::Cmp && cond.sym eq 'eq'
                 && ($topic = cond[0]; $pattern := |self.arg(cond[1]))
             or
-            cond ~~ SAST::MethodCall && cond.declaration.cloned === (once lookup-method 'Str','match')
+            cond ~~ SAST::MethodCall && cond.declaration.cloned === STR-MATCH
                 && (my $re := cond.pos[0]) ~~ SAST::Regex && (my $case = $re.patterns<case>)
                 && ($topic = cond[0]; $pattern := self.compile-pattern($case,$re.placeholders).in-DQ)
             or
-            cond ~~ SAST::MethodCall && cond.declaration.cloned === (once lookup-method 'EnumClass','has-member')
+            cond ~~ SAST::MethodCall && cond.declaration.cloned === ENUM-HAS-MEMBER
                 && (my $enum := cond[0].compile-time) ~~ Spit::Type
                 && ($topic = cond.pos[0]; $pattern := $enum.^types-in-enum».name.join('|'))
             )
