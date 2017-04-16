@@ -1,5 +1,8 @@
 need Spit::SAST;
 need Spit::Exceptions;
+use Spit::Util :remove;
+
+# See below for explanation
 class Spit::DependencyList {
 
     has $!set = SetHash.new;
@@ -15,7 +18,6 @@ class Spit::DependencyList {
             $!set{$d} = True;
             die "Tried to depend on a synthetic node" unless $d.cloned;
             %!by-orig{$d.cloned} = $d;
-            .push($d) with $!iterator-array;
         }
     }
 
@@ -41,7 +43,17 @@ class Spit::DependencyList {
     multi method require-scaffolding(Any:D $sast is copy) {
         $sast = %!scaf-by-orig{$sast} without $sast.cloned;
         self.require-scaffolding($_) for $sast.all-deps;
-        self.add-dependency($sast);
+        if $!set{$sast} {
+            @!list.&remove($sast);
+            @!list.unshift($sast);
+            .&remove($sast) with $!iterator-array;
+        } else {
+            @!list.unshift($sast);
+            $!set{$sast} = True;
+        }
+
+        .unshift($sast) with $!iterator-array;
+
         $sast;
     }
 
@@ -63,3 +75,22 @@ class Spit::DependencyList {
         @!list».gist.join("\n");
     }
 }
+
+# I think I have figured out how this works:
+# The DependencyList before the compilation stage is ordered by the following:
+# (most dominant to least)
+# - The vertically higher the first dependent statement is in the AST the
+#   LOWER its position in @!list will be.
+# - If equal above, The further RIGHT its dependent is horizontally within the
+#   statement the LOWER its position
+# - If equal above The DEEPER it is within the dependency chain the LOWER its
+#   position
+#
+# The sumamry of the above is the most deeply depended upon thing is at @!list[0]
+#
+# Later, when compiling we have the scaffolding problem.
+#
+# 1. compile MAIN, unshifting any scaffolding onto the front of the list
+# 2. reverse iterate @!list, compiling each item, unshifting any scaffolding
+#    onto the front of the list. If any scaffolding exists in @!list already,
+#    remove it and unshift it onto the front of @!list

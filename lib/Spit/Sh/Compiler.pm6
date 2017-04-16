@@ -161,13 +161,6 @@ method scaf-ref($name,:$match) {
     }
 }
 
-method comp-depend($_){
-    my ShellElement:D @comp = self.compile-nodes([$_],:indent).grep(*.defined);
-    |do if @comp {
-        Pair.new(key => $_,value => @comp)
-    }
-}
-
 method compile(SAST::CompUnit:D $CU --> ShellElement:D) {
     my $*pad = '';
     my $*depends = $CU.depends-on;
@@ -177,8 +170,11 @@ method compile(SAST::CompUnit:D $CU --> ShellElement:D) {
 
     my @END = ($CU.phasers[END] andthen self.compile-nodes($_,:indent));
 
-    my @compiled-depends = $*depends.reverse-iterate( {  self.comp-depend($_) } );
-    my @BEGIN = @compiled-depends && @compiled-depends.map({ ("\n" if $++),|.value}).flat;
+    my @compiled-depends = $*depends.reverse-iterate: {
+        self.compile-nodes([$_],:indent).grep(*.defined);
+    };
+
+    my @BEGIN = @compiled-depends && @compiled-depends.map({ ("\n" if $++),|$_}).flat;
     my @run;
     for :@BEGIN,:@MAIN {
         if .value {
