@@ -2,7 +2,7 @@ use Spit::Compile;
 use Test;
 use Spit::Exceptions;
 
-plan 2;
+plan 3;
 
 ok compile(
     q{
@@ -27,3 +27,7 @@ ok compile(
     name => 'no-double-stars',
 ) ~~ all(*.contains('esac'), !*.contains('**')),
     ‘regex ending in .* doens't duplicate ** when it becomes a case’;
+
+
+ok compile(name => "check prompt", 'prompt("foo")').contains('esac'),
+    ‘prompt's switch gets cased’;
