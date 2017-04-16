@@ -547,7 +547,9 @@ multi method cond(SAST::LastExitStatus:D $_) {
     'expr $? = 0 >', '&',self.arg(self.scaf-ref('*NULL',match => .match));
 }
 
-multi method arg(SAST::LastExitStatus:D $_) { '$?' }
+multi method arg(SAST::LastExitStatus:D $_) {
+    .ctx ~~ tBool() ?? callsame() !! '$?';
+}
 
 #!CurrentPID
 multi method arg(SAST::CurrentPID:D $) { '$$' }
