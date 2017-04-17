@@ -42,17 +42,20 @@ class Spit::DependencyList {
 
     multi method require-scaffolding(Any:D $sast is copy) {
         $sast = %!scaf-by-orig{$sast} without $sast.cloned;
-        self.require-scaffolding($_) for $sast.all-deps;
+
         if $!set{$sast} {
+            with $!iterator-array {
+                .unshift($sast) if .&remove($sast);
+            }
             @!list.&remove($sast);
             @!list.unshift($sast);
-            .&remove($sast) with $!iterator-array;
         } else {
             @!list.unshift($sast);
             $!set{$sast} = True;
+            .unshift($sast) with $!iterator-array;
         }
 
-        .unshift($sast) with $!iterator-array;
+        self.require-scaffolding($_) for $sast.all-deps;
 
         $sast;
     }
