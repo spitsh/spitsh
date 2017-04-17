@@ -1587,6 +1587,8 @@ class SAST::Case is SAST::Children is rw {
 
     # is created in stage3
     method children { $!in,|@!blocks,($!default // Empty) }
+
+    method type { derive-common-parent (|@!blocks,$!default // Empty).map(*.type) }
 }
 
 class SAST::Quietly is SAST::Children {

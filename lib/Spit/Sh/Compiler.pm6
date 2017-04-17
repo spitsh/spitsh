@@ -41,7 +41,7 @@ my subset ShellStatus of SAST where {
     # 'or' and 'and' don't work here for some reason
     ($_ ~~ SAST::Neg|SAST::Cmp) ||
     ((.type ~~ tBool) && $_ ~~
-      SAST::Stmts|SAST::Cmd|SAST::Call|SAST::If|SAST::Quietly|SAST::LastExitStatus
+      SAST::Stmts|SAST::Cmd|SAST::Call|SAST::If|SAST::Case|SAST::Quietly|SAST::LastExitStatus
     )
 }
 
@@ -351,7 +351,6 @@ multi method int-expr(SAST::Var:D $_) {
 }
 #!If
 multi method node(SAST::If:D $_,:$else) {
-
     if not $else
        and not .else
        and .then.one-stmt

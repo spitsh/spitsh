@@ -1,6 +1,6 @@
 use Test;
 
-plan 18;
+plan 20;
 
 {
     my $a = "foo";
@@ -128,4 +128,22 @@ plan 18;
         when /food/ { flunk 'cmd as given arg' }
         when /fo/   { pass 'cmd as given arg'  }
     }
+}
+
+{
+    my $canary;
+    sub ?bewl($foo) {
+        given $foo {
+            when /food/   { $canary = True;  True }
+            when /fo/     { $canary = True;  True }
+            when /foo/    { $canary = True;  True }
+        }
+    }
+
+    if bewl("foo") {
+        pass 'caseable as a Bool return value';
+    } else {
+        flunk 'caseable as a Bool return value';
+    }
+    ok $canary, ‘doesn't get run in a subshell’;
 }
