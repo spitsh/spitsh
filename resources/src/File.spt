@@ -60,8 +60,17 @@ augment File {
     method chmod(#|[The argument passed to chmod(1)]$mode) {
         ${chmod $mode $self}
     }
-    #| Returns the name of user who owns the file.
-    method ~owner  { ${ls -ld $self | awk '{print $3}'} }
+    #| Returns the name of the user that owns the file.
+    method ~owner on {
+        GNU { ${ stat -c '%U' $self } }
+        Any { ${ ls -ld $self | awk '{print $3}' } }
+    }
+
+    #| Returns the name of the group that own the file.
+    method ~group on {
+        GNU { ${ stat -c '%G' $self } }
+        Any { ${ ls -ld $self | awk '{print $4}' } }
+    }
 
     #| Appends raw data to the file.
     method append(#|[data to append] $data) { $data.${ >> $self } }
