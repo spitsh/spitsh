@@ -41,11 +41,11 @@ augment File {
     #| Alias for .readable
     method ?r          { $self.readable }
     #| Returns the size of the file in bytes
-    method +size   { ${wc -c $self | awk '{print $1}'}  }
+    method +size   { ${wc -c < $self}  }
     #| Alias for .size
     method +s      { $self.size }
 
-    method +lines { ${wc -l $self | awk '{print $1}'} }
+    method +lines { ${wc -l < $self} }
     #| Returns the line of text at an index. `.at-pos` is the
     #| internal method called when using postcircumfix `[]`.
     #|{
