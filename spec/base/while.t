@@ -35,7 +35,7 @@ class Foo is Int {
 
 {
     my $i = 1;
-    while Foo{$i}.times2 {
+    while Foo($i).times2 {
         if $i == 4 {
             is .WHAT, 'Foo','while: $_ has correct .WHAT';
             is .squared,64, 'while: $_ has correct value'
@@ -46,7 +46,7 @@ class Foo is Int {
 
 {
     my $i = 1;
-    while Foo{$i}.times2 -> $var {
+    while Foo($i).times2 -> $var {
         if $i == 4 {
             is $var.WHAT,'Foo','while: -> $var has correct .WHAT';
             is $var.squared,64,'while: -> $var has correct value';
@@ -57,7 +57,7 @@ class Foo is Int {
 
 {
     my $i = 8;
-    until Foo{$i}.times2 {
+    until Foo($i).times2 {
         if $i == 5 {
             is .WHAT, 'Foo','until: $_ has correct .WHAT';
             is .squared,100, 'until: $_ has correct value'
@@ -83,7 +83,7 @@ class Foo is Int {
 
 {
     my $i = 1;
-    is .squared,64,'statement-mod while: $_ has correct value' if $i++ == 4 while Foo{$i}.times2;
+    is .squared,64,'statement-mod while: $_ has correct value' if $i++ == 4 while Foo($i).times2;
 }
 
 {
@@ -92,7 +92,7 @@ class Foo is Int {
 
     is @a, <foo1 foo2 foo3 foo4>, "while loop as value";
 
-    is ( @(while ++$j < 5 { Cmd{"foo$j"},Cmd{"bar$j"} })).WHAT, List[Cmd],
+    is ( @(while ++$j < 5 { Cmd("foo$j"),Cmd("bar$j") })).WHAT, List[Cmd],
        'while becomes List[of-whatever-block-returns]';
 
     $j = -1;

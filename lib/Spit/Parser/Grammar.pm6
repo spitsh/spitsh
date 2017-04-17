@@ -370,7 +370,7 @@ grammar Spit::Grammar is Spit::Lang {
             <class-params>?
             $<object>=(
                 |<angle-quote>
-                | $<EXPR>=<.r-wrap('{',/<R=.EXPR>/,'}',:desc<object definition>)>
+                | $<EXPR>=<.r-wrap('(',/<R=.EXPR>/,')',:desc<object definition>)>
             )?
             ||
             $<call-args>=(

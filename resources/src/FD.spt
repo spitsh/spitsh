@@ -86,7 +86,7 @@ augment FD {
 
     #| Closes redirection for this file descriptor.
     method close() {
-        ${exec ($self)› (FD{-1}) };
+        ${exec ($self)› (FD(-1)) };
     }
 
     #| Returns True if the file descriptor is open.

@@ -4,7 +4,7 @@ augment PID {
     method Bool { $self.exists }
     #| Returns true if the process exists on the system.
     method ?exists on {
-        Alpine { File{"/proc/$self"}.exists }
+        Alpine { File("/proc/$self").exists }
         Any    { ${ps -p $self >X} }
     }
     #| Sends the process a signal. Returns true if the signal was successfully

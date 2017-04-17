@@ -40,8 +40,8 @@ plan 15;
 {
     class Foo { }
     is Foo<bar>,'bar','Foo<bar>';
-    is Foo{'bar'},'bar','Foo{ }';
-    is Foo{ 'bar' },'bar','Foo{ "bar" }';
+    is Foo('bar'),'bar','Foo{ }';
+    is Foo( 'bar' ),'bar','Foo{ "bar" }';
     ok Foo<bar>.chars == 3,'classes inherit from Str';
 }
 
@@ -73,6 +73,6 @@ plan 15;
         }
     }
 
-    is Listy{<one two three>}.iterate-at,    3,'for @self { }';
-    is Listy{<one two three>}.iterate-dollar,1,'for $self { }'
+    is Listy(<one two three>).iterate-at,    3,'for @self { }';
+    is Listy(<one two three>).iterate-dollar,1,'for $self { }'
 }
