@@ -35,6 +35,7 @@ sub USAGE {
                              - stage3:  A .gist of the SAST tree after composition.
                              - compile: The compiled shell script (default)
 
+       --run               Runs the output on this computer's /bin/sh
     Commands:
        compile FILE        Compiles a file as Spit-sh e.g. spit compile src/cfg.spt
        eval SRC            Compiles a string as Spit-sh  e.g. spit eval 'say "hello world"'
@@ -51,6 +52,7 @@ proto MAIN(
     Bool :$no-inline,
     :$opts,
     Str :$os,
+    Bool :$run,
     :@*repos = [
            Spit::Repo::File.new,
            Spit::Repo::Core.new
@@ -85,6 +87,8 @@ proto MAIN(
 
     if $in-docker {
         write-docker $docker,$promise,$res;
+    } elsif $run {
+        run 'sh','-c', $res;
     } else {
         print $res
     }
