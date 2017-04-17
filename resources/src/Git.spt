@@ -1,4 +1,36 @@
 constant $*git = {
-    -->Pkg.prompt-install unless Cmd<git>;
+    Cmd<git>.maybe-install;
     Cmd<git>;
 };
+
+
+class GitURL {
+    method clone(:$to --> File) {
+        my $clone-into = ${ $*git clone $self @$to !>~ };
+        ok $? , "$self: $clone-into";
+        $clone-into.${sed ‘s/Cloning into '\(.*\)'.*/\1/’};
+    }
+
+    method ~name {
+        $self.${sed 's/.*\///g;s/\.git\/?$//'}
+    }
+}
+
+class GitHubRepo {
+
+    method clone(:$to --> File) {
+        $self.url.clone(:$to);
+    }
+
+    method ~owner {
+        $self.${sed 's/\/.*//'}
+    }
+
+    method ~name {
+        $self.${sed 's/.*\///'}
+    }
+
+    method GitURL { $self.url }
+
+    method url(-->GitURL) { "https://github.com/$self.git" }
+}

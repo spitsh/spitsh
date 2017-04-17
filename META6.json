@@ -45,6 +45,7 @@
         "src/os.spt",
         "src/Regex.spt",
         "src/PID.spt",
+        "src/Git.spt",
         "core-lib/Test.spt"
     ],
     "source-url" : "https://github.com/spitsh/spitsh.git",
