@@ -1,6 +1,6 @@
 use Test;
 
-plan 27;
+plan 28;
 
 {
     my File $file .= tmp;
@@ -81,6 +81,10 @@ plan 27;
         is .read[1],'bar','.read[1]';
     }
 }
+
+if File( ${ echo "/etc/hosts" } ) {
+    is .owner, 'root', '/etc/hosts has correct owner';
+} # NO else because to test (cond && action) if optimization as well
 
 # {
 #     my $file = File.tmp;
