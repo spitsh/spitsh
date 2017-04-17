@@ -45,6 +45,7 @@ augment File {
     #| Alias for .size
     method +s      { $self.size }
 
+    method +lines { ${wc -l $self | awk '{print $1}'} }
     #| Returns the line of text at an index. `.at-pos` is the
     #| internal method called when using postcircumfix `[]`.
     #|{
@@ -186,8 +187,12 @@ augment File {
         END { ${rm @($tmplist.slurp) $tmplist } }
     }
 
-    method find(Pattern :$pattern --> List[File]) {
-        ${find $self ('-name', $pattern if $pattern)}
+    method find(Pattern :$name --> List[File]) {
+        ${find $self ('-name', $name if $name)}
+    }
+
+    method @grep(Regex $re, :$v) {
+        ${ grep ('-v' if $v) -E $re $self }
     }
 }
 

@@ -30,6 +30,8 @@ augment Str {
     #| Returns the number of bytes in the string.
     method +bytes { $self.${wc -c|tr -d ' '} }
 
+    method +lines { $self.${wc -l|tr -d ' '} }
+
     #| Splits the string on a separator. Returns the string with each
     #| instance of the `$sep` replaced with `\n` as a [List].
     method @split(#|[The separator to split on]$sep) {

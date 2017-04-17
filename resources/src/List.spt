@@ -82,6 +82,10 @@ augment List {
     method ~join(#|[The separator to join on]$sep) {
         $self.${awk -v "s=$sep" '{if(NR != 1) printf s; printf $0}'}
     }
+
+    method @numeric-sort {
+        $self.${sort -n};
+    }
 }
 
 #| The internal field separator. For Spit it's always `\n`.

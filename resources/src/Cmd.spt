@@ -11,4 +11,12 @@ class Cmd {
         }
     }
     method Bool { $self.exists }
+
+    method ?install {
+        -->Pkg.install unless $self;
+    }
+
+    method maybe-install {
+        -->Pkg.prompt-install unless $self;
+    }
 }
