@@ -111,6 +111,10 @@ say $file[1] #-> bar
 >method file( ⟶ [Bool](./Bool.md))
 
  Returns True if the file is file
+## group
+>method group( ⟶ [Str](./Str.md))
+
+ Returns the name of the group that own the file.
 ## name
 >method name( ⟶ [Str](./Str.md))
 
@@ -137,12 +141,12 @@ $fd.get() && say $~; #-> quick
 my File $file = 'foo.txt';
 my $fd = $file.open-w;
 $fd.write("written to via file descriptor");
-say $file.read; #-> written to via file descriptor!
+say $file.slurp; #-> written to via file descriptor!
 ```
 ## owner
 >method owner( ⟶ [Str](./Str.md))
 
- Returns the name of user who owns the file.
+ Returns the name of the user that owns the file.
 ## parent
 >method parent( ⟶ [File](./File.md))
 
@@ -172,14 +176,6 @@ say $file.path.subst('foo','bar');
 >method r( ⟶ [Bool](./Bool.md))
 
  Alias for .readable
-## read
->method read( ⟶ [List](./List.md))
-
- Reads the file into the file's content as a List of lines
-```perl6
-my $content = File</etc/hosts>.read
-say $content[2]; # print the 3rd line
-```
 ## readable
 >method readable( ⟶ [Bool](./Bool.md))
 
@@ -196,6 +192,14 @@ say $content[2]; # print the 3rd line
 >method size( ⟶ [Int](./Int.md))
 
  Returns the size of the file in bytes
+## slurp
+>method slurp( ⟶ [List](./List.md))
+
+ Reads the file into the file's content as a List of lines
+```perl6
+my $content = File</etc/hosts>.slurp
+say $content[2]; # print the 3rd line
+```
 ## subst
 >method subst([Str](./Str.md) **$target**, [Str](./Str.md) **$replacement**, [Bool](./Bool.md) **:$g**)
 
@@ -204,9 +208,9 @@ say $content[2]; # print the 3rd line
 given File.tmp {
     .write("foood");
     .subst("o","e");
-    .read.say; #-> feood
+    .slurp.say; #-> feood
     .subst("o","e",:g);
-    .read.say; #-> feeed
+    .slurp.say; #-> feeed
 }
 ```
 

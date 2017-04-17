@@ -1,3 +1,7 @@
+## 0.0.19
+
+- TODO
+
 ## 0.0.18
 - Regex system redesigned and re-implemented
   - regex parsing is now done during the parse phase (no more 2-pass parsing)

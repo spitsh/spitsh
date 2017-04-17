@@ -20,7 +20,9 @@ say "I wonder what kind of OS I'm on...?"
 say "It's some kind of Debian:"
 say "It's some other kind of Ubuntu XD"
 ```
-# $IFS
+# $*interactive
+ Whether the script should be compiled as an interactive script. Defaults to whether `$?IN` is a tty.
+# $?IFS
  The internal field separator. For Spit it's always `\n`.
 # $?CAP
  File descriptor used to represent the STDOUT of a cmd inside the script rather than the script itself. '~' is a short alias for `$?CAP` in `${..}` commands.
@@ -41,6 +43,8 @@ if ${command -v perl >X} {
     say "perl exists";
 }
 ```
+# $?IN
+ Standard input (STDIN). The 0 file descriptor for the script.
 # $*ERR
  File descriptor connected to the STDERR of the script.  '!' is a short alias for `$*ERR` in `${..}` commands.
 ```perl6

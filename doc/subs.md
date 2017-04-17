@@ -11,7 +11,7 @@
 
  If the two strings are equal, prints the message with a friendly '✔'. Otherwise, displays the two strings and dies with an angry '✘'.
 ```perl6
-is File</etc/meaning-of-life.cfg>.read,'42',"configured with correct MOL";
+is File</etc/meaning-of-life.cfg>.slurp,'42',"configured with correct MOL";
 ```
 
 |Parameter|Description|
