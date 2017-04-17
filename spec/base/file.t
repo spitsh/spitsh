@@ -21,16 +21,16 @@ plan 29;
 
     $file.write("foo");
 
-    is $file.read,"foo",".read .write";
+    is $file.slurp,"foo",".slurp .write";
     is $file.size,3,'.size';
     is $file.s,3,'.s';
 
     $file.append("bar");
-    is $file.read,"foobar",'.append';
+    is $file.slurp,"foobar",'.append';
 
     $file.push("baz");
-    is $file.read,"foobar\nbaz",'.push';
-    is $file.read.${cat},"foobar\nbaz",'.read.${cat}';
+    is $file.slurp,"foobar\nbaz",'.push';
+    is $file.slurp.${cat},"foobar\nbaz",'.slurp.${cat}';
 
     is $file.size,10,'.size changes after appending';
 
@@ -43,15 +43,15 @@ plan 29;
     for <foo bar baz> {
         @a.push($_);
         $file.push($_);
-        is $file.read,@a,".push behaves like Array.push ($_)";
+        is $file.slurp,@a,".push behaves like Array.push ($_)";
     }
 
-    is $file.read,"foo\nbar\nbaz",'loop with .push behaves like array';
+    is $file.slurp,"foo\nbar\nbaz",'loop with .push behaves like array';
 
     $file.append("\n");
     $file.push("end");
     @a.push("end");
-    is $file.read,@a,".push when the last line already has \\n doesn't duplicate";
+    is $file.slurp,@a,".push when the last line already has \\n doesn't duplicate";
 }
 
 {
@@ -59,13 +59,13 @@ plan 29;
     given File.tmp {
         .write($str);
         .subst('o','e');
-        is .read,"feood",".subst replaces first occurrence";
+        is .slurp,"feood",".subst replaces first occurrence";
         .subst('o','e',:g);
-        is .read,"feeed",".subst(:g), replaces all ocurrences";
+        is .slurp,"feeed",".subst(:g), replaces all ocurrences";
 
         .write(<foo bar baz>);
         .subst("oo\nba","ood\n\nca");
-        is .read,"food\n\ncar\nbaz",'.subst with \\n';
+        is .slurp,"food\n\ncar\nbaz",'.subst with \\n';
     }
 }
 
@@ -78,7 +78,7 @@ plan 29;
 {
     given File.tmp {
         .write(<foo bar baz>);
-        is .read[1],'bar','.read[1]';
+        is .slurp[1],'bar','.slurp[1]';
     }
 }
 

@@ -78,7 +78,7 @@ augment File {
     #| Adds a line to a file. If the file doesn't end in a `\n`, a one
     #| will be appended before the line being added.
     method push(#|[line to add] $line) {
-        $self.write($self.read.push($line));
+        $self.write($self.slurp.push($line));
     }
     #| Creates an empty file on the filesystem if one doesn't exist at
     #| the file's path.
@@ -102,7 +102,7 @@ augment File {
     #|{ say "we're in trouble" unless File</etc/hosts>.contains("localhost") }
     method ?contains(#|[String to be searched for] $needle,
                      #|[Enable case insensitivity] Bool :$i) {
-        $self.read.contains($needle,:$i);
+        $self.slurp.contains($needle,:$i);
     }
 
     #| Replaces the target strnig with the replacement string in the file.
@@ -111,30 +111,30 @@ augment File {
         given File.tmp {
             .write("foood");
             .subst("o","e");
-            .read.say; #-> feood
+            .slurp.say; #-> feood
             .subst("o","e",:g);
-            .read.say; #-> feeed
+            .slurp.say; #-> feeed
         }
     }
     method subst(#|[The string to be replaced]$target,
                  #|[The string to replace it with]$replacement,
                  #|[Turn on global matching]Bool :$g){
-        $self.write($self.read.subst($target,$replacement,:$g));
+        $self.write($self.slurp.subst($target,$replacement,:$g));
     }
 
     #| Reads the file into the file's content as a List of lines
     #|{
-        my $content = File</etc/hosts>.read
+        my $content = File</etc/hosts>.slurp
         say $content[2]; # print the 3rd line
     }
-    method read(-->List) { ${cat $self} }
+    method slurp(-->List) { ${cat $self} }
 
     #| Opens the file and returns a FD that can be written to.
     #|{
         my File $file = 'foo.txt';
         my $fd = $file.open-w;
         $fd.write("written to via file descriptor");
-        say $file.read; #-> written to via file descriptor!
+        say $file.slurp; #-> written to via file descriptor!
     }
     method open-w(--> FD) is impure {
         my $fd = FD.next-free;
@@ -183,7 +183,7 @@ augment File {
         my File $tmpfile = ${mktemp};
         ${printf '%s\n' $tmpfile >> $tmplist};
         $tmpfile;
-        END { ${rm @($tmplist.read) $tmplist } }
+        END { ${rm @($tmplist.slurp) $tmplist } }
     }
 
     method find(Pattern :$pattern --> List[File]) {
