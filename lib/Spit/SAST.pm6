@@ -616,7 +616,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
 
-    method type { $.ctx }
+    method type { $.ctx !=== tAny() ?? $.ctx !! tStr }
 }
 
 class SAST::Coerce is SAST::MutableChildren {
