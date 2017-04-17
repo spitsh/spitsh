@@ -12,7 +12,7 @@ class GitURL {
     }
 
     method ~name {
-        $self.${sed 's/.*\///g;s/\.git\/?$//'}
+        $self.${sed 's/\/$//;s/.*\///g;s/\.git$//'}
     }
 }
 
