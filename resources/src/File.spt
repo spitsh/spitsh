@@ -194,6 +194,13 @@ augment File {
     method @grep(Regex $re, :$v) {
         ${ grep ('-v' if $v) -E $re $self }
     }
+
+    static method tmp-fifo(--> File) {
+        my File $tmpfifo .= tmp;
+        $tmpfifo.remove;
+        ${mkfifo $tmpfifo};
+        $tmpfifo;
+    }
 }
 
 env File $*HOME;
