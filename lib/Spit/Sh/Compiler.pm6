@@ -306,10 +306,11 @@ multi method arg(SAST::Var:D $var) {
     my $name = self.gen-name($var);
     my $assign = $var.assign;
     with $assign {
-        if $assign ~~ SAST::Junction:D and $assign.dis {
-            dq self.compile-assign($var,$assign);
+        my $arg-assign := self.compile-assign($var,$assign);
+        if $arg-assign.starts-with('$') {
+            dq $arg-assign;
         } else {
-            SX::NYI.new(feature => 'Non declaration assignment as an argument',node => $var).throw
+            SX::NYI.new(feature => 'assignment as an argument',node => $var).throw
         }
     } else {
         var $name, is-int => ($var.type ~~ tInt());
