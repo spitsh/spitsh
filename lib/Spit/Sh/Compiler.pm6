@@ -882,3 +882,8 @@ multi method arg(SAST::NAME:D $_) {
 
     }
 }
+
+#!Die
+multi method node(SAST::Die:D $_)       { self.node(.call) }
+multi method cap-stdout(SAST::Die:D $_) { self.node(.call) }
+multi method cond(SAST::Die:D $_)       { self.node(.call) }

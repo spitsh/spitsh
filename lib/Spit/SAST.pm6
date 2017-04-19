@@ -1666,3 +1666,19 @@ class SAST::LastExitStatus does SAST {
 class SAST::CurrentPID does SAST {
     method type { tPID }
 }
+
+class SAST::Die is SAST::Children {
+    has SAST:D @.message;
+    has SAST $.call;
+    method stage2($) {
+        $!call = SAST::SubCall.new(
+            name => 'die',
+            pos => @.message,
+            :$.match,
+        ).do-stage2(tAny);
+        self;
+    }
+
+    method children { $!call, }
+    method type { $.ctx }
+}

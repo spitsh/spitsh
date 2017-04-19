@@ -538,7 +538,11 @@ method term:name ($/) {
         }
     } else {
         my (:@pos,:%named) := $<call-args><args>.ast || Empty;
-        SAST::SubCall.new(:$name,:@pos,:%named);
+        if $name eq 'die' {
+            SAST::Die.new(message => @pos);
+        } else {
+            SAST::SubCall.new(:$name,:@pos,:%named);
+        }
     }
 }
 
