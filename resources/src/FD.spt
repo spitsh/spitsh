@@ -45,18 +45,28 @@ constant $*NULL = {
     FD<4>.open-w("/dev/null");
     FD<4>;
 }
+#| The maximum file descriptor number that can be open or can be
+#| expressed within the shell interpreter.
+constant FD $*max-fd = on {
+    Debian { 9 }
+    Alpine { 255 }
+    RHEL   { 9  }
+}
+
+#| The minimum file descriptor number that isn't reserved by Spit
+constant FD $?min-fd = 5;
 
 #|FD wraps an integer representing a file descriptor. Usually you
 #|don't create these directly but get them through calling other methods
 #|like `File.open-w()`.
 augment FD {
 
-    my $fd-count = 4;
-
-    #|Gets the next free file descriptor.
-    #|**note:** This only kinda works.
+    #| Returns the next free file descriptor if it can find one.
+    #| Dies if it can't.
     static method next-free(-->FD) {
-        ++$fd-count;
+        my $fdi = $?min-fd;
+        $fdi++ while File("/proc/$$/fd/$fdi");
+        $fdi <= $*max-fd ?? $fdi !! die "All $*max-fd file descriptors depleted";
     }
 
     #| Opens a file for writing from this file descriptor.
@@ -67,11 +77,6 @@ augment FD {
     #| Opens a file for reading from this file descriptor.
     method open-r(#|[The file to open] File $file) {
         ${exec ($self)‹ $file}
-    }
-
-    #| Opens a file for reading and writing from this file descriptor.
-    method open-rw(#|[The file to open] File $file) {
-        ${exec ($self)‹ $file ($self)> $file}
     }
 
     #| Duplicate the invocant file descriptor into the argument file
