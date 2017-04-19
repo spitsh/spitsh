@@ -124,6 +124,10 @@ augment FD {
                 ?? ($~ ||= "\n")
                 !! $~;
         }
+        Debian {
+            $~ = ${ head -c $n ‹ $self };
+            $~;
+        }
     }
 
     #| Returns whether this file descriptor is linked to a terminal.

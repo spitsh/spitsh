@@ -54,22 +54,21 @@ plan 18;
 
     $get.close;
 
-    if  $*os ~~ Debian {
-        skip "getc NYI for debian, read doesn't have -n", 3;
+    my $getc = $multi-line.open-r;
+    if $getc.getc(1) {
+        is $~, 'f',  'getc(1) reads 1 char to $~';
+    }
+    if $getc.getc(2) {
+        is $~, 'oo', 'getc(2) reads 2 chars to $~';
+    }
+    if $*os ~~ Debian {
+        skip ‘can't read newline with getc with debian yet’,1;
     } else {
-        my $getc = $multi-line.open-r;
-        if $getc.getc(1) {
-            is $~, 'f',  'getc(1) reads 1 char to $~';
-        }
-        if $getc.getc(2) {
-            is $~, 'oo', 'getc(2) reads 2 chars to $~';
-        }
         if $getc.getc(1) {
             is $~, "\n", 'getc(1) can read a newline into $~';
         }
-
-        $getc.close;
     }
+    $getc.close;
 }
 
 {
