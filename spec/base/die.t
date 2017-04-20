@@ -6,5 +6,5 @@ ok eval{ my $a = Cmd<echo> || die "echo doesn't exist" }.${sh},
 
 my $dies = eval{ my $a = Cmd<not_exist> || die "weee" };
 
-is $dies.${sh !>~ >X}, "weee", ‘die's message goes to STDERR’;
-nok $dies.${sh}, 'code that dies exits with failure';
+quietly { is  $dies.${sh !>~ >X} , "weee", ‘die's message goes to STDERR’ };
+quietly { nok  $dies.${sh} , 'code that dies exits with failure' };
