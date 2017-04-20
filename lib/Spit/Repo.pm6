@@ -40,7 +40,7 @@ class Spit::Repo::File does Spit::Repo {
 class Spit::Repo::Core does Spit::Repo {
 
     sub get-CORE-lib($name) {
-        (once light-load 'Spit::PRECOMP', export-target => '&get-CORE-lib')($name);
+        (once light-load 'Spit::PRECOMP', export-target => '%core-lib'){$name};
     }
 
     multi method resolve(:$repo-type!,:$id!) {

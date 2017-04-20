@@ -1,0 +1,26 @@
+#!/usr/bin/env perl6
+BEGIN my $lib = $?FILE.IO.parent.child('lib');
+BEGIN my $SPIT-PRECOMP = $lib.child('Spit').child('PRECOMP.pm6');
+use lib $lib.Str;
+use Spit::PRECOMP;
+use Spit::Util :touch;
+use Spit::SETTING;
+use Spit::cli '&Spit-MAIN';
+
+sub MAIN(
+    :$in-docker,
+    :$debug,
+    :$target = 'compile',
+    :$no-inline,
+    :$opts,
+    :$os,
+    :$run,
+    |c) {
+    if sha1-SETTING() ne $SETTING-sha1 {
+        note "SETTING has changed. touching Spit::PRECOMP so it recompiles";
+        touch $SPIT-PRECOMP;
+        exit (run $?FILE, |@*ARGS).status;
+    } else {
+        Spit-MAIN(|c, :$in-docker,:$debug,:$target,:$no-inline,:$opts,:$os,:$run);
+    }
+}

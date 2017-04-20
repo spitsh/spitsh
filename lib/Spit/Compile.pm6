@@ -1,5 +1,9 @@
 # A home for the main compilation pipeline entrypoint
 unit module Spit::Compile;
+need Spit::Parser::Grammar;
+need Spit::Parser::Actions;
+need Spit::Sh::Compiler;
+need Spit::Sh::Composer;
 
 use Spit::Util :get-globalish, :light-load;
 
@@ -17,18 +21,18 @@ sub compile  ($input is copy,
     # if we are compiling the SETTING itself $*SETTING will be set to False so
     # it won't trigger this.
     without $*SETTING {
-        $_ = (once light-load 'Spit::PRECOMP', export-target => '&get-SETTING')()
+        $_ = (once light-load 'Spit::PRECOMP', export-target => '$SETTING')
     }
 
     my $*CU-name = $name;
     if $input ~~ Str {
-        my $parser  = (once light-load 'Spit::Parser::Grammar', target => 'Spit::Grammar').new;
-        my $actions = (once light-load 'Spit::Parser::Actions', target => 'Spit::Actions').new(:$outer,:$debug);
+        my $parser  = Spit::Grammar.new;
+        my $actions = Spit::Actions.new(:$outer, :$debug);
         my $*ACTIONS = $actions;
         note "$name parsing.. " if $debug;
         my \before = now;
         my $match = $parser.parse($input,:$actions);
-        die "Parser completely failed to match inptu($name)" unless $match;
+        die "Parser completely failed to match input ($name)" unless $match;
         note "$name parsing ✔ {now - before}" if $debug;
         $input = $match.made;
         return $match if $target eq 'parse';
@@ -45,12 +49,12 @@ sub compile  ($input is copy,
             return $input if $target eq 'stage2';
         }
 
-        my $compiler = (once light-load 'Spit::Sh::Compiler').new(:%opts);
+        my $compiler = Spit::Sh::Compiler.new(:%opts);
 
         if not $input.stage3-done {
             note "$name composing.." if $debug;
             my \before = now;
-            (once light-load 'Spit::Sh::Composer').new(
+            Spit::Sh::Composer.new(
                 :%opts,
                 scaffolding => $compiler.scaffolding,
                 :$no-inline,
