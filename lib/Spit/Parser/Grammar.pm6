@@ -355,7 +355,6 @@ grammar Spit::Grammar is Spit::Lang {
 
     proto token special-var {*}
     token special-var:sym<?> { <sym> }
-    token special-var:sym<$> { <sym> }
 
     proto token twigil {*}
     token twigil:sym<*> { <sym> }

@@ -497,15 +497,19 @@ method var ($/)   {
     with $<special-var> {
         make .ast;
     } else {
-        make SAST::Var.new(
-            name => $<name>.Str,
-            sigil => $<sigil>.Str,
-        );
+        if $<name> eq '?PID' and $<sigil> eq '$' {
+            make SAST::CurrentPID.new
+        }
+        else {
+            make SAST::Var.new(
+                name => $<name>.Str,
+                sigil => $<sigil>.Str,
+            );
+        }
     }
 }
 
 method special-var:sym<?> ($/) { make SAST::LastExitStatus.new }
-method special-var:sym<$> ($/) { make SAST::CurrentPID.new }
 
 method term:name ($/) {
     my $name = $<name>.Str;

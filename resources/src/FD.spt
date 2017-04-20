@@ -65,7 +65,7 @@ augment FD {
     #| Dies if it can't.
     static method next-free(-->FD) {
         my $fdi = $?min-fd;
-        $fdi++ while File("/proc/$$/fd/$fdi");
+        $fdi++ while File("/proc/$?PID/fd/$fdi");
         $fdi <= $*max-fd ?? $fdi !! die "All $*max-fd file descriptors depleted";
     }
 
