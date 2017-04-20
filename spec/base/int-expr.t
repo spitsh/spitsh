@@ -1,6 +1,6 @@
 use Test;
 
-plan 30;
+plan 42;
 
 {
    my Int $a;
@@ -77,4 +77,19 @@ plan 30;
     is sum(3,5),8,'+ as return value';
     is subt(3,5),-2,'- as return value';
     is mul(3,5),15,'* as return value';
+}
+
+{
+    ok 5 > 3, '5 > 3';
+    nok 5 > 5, '! 5 > 5';
+    nok 3 > 5, '! 3 > 5';
+    ok 2 < 3, '2 < 3';
+    nok 3 < 2, '! 3 < 2';
+    nok 3 < 3, '! 3 < 3';
+    ok 3 >= 3, '3 >= 3';
+    ok 3 >= 2, '3 >= 2';
+    nok 2 >= 3, '! 2>= 3';
+    ok 3 <= 3, '3 <= 3';
+    ok 2 <= 3, '2 <= 3';
+    nok 3 <= 2, '! 3<= 2';
 }

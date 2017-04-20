@@ -370,7 +370,11 @@ multi method walk(SAST::Concat:D $THIS is rw) {
 sub compile-time-infix($THIS is rw,\res-type) {
     with $THIS[0].compile-time -> $a {
         with $THIS[1].compile-time -> $b {
-            $THIS .= stage3-node(res-type, val => ::('&infix:<' ~ $THIS.sym ~ '>')($a,$b) );
+            my &op = do given $THIS.sym {
+                when /<[<>]>/ { ::("\&infix:«$_»") }
+                default     { ::("\&infix:<$_>") }
+            }
+            $THIS .= stage3-node(res-type, val => &op($a,$b) );
         }
     }
 }
