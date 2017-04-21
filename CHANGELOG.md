@@ -1,3 +1,15 @@
+## 0.0.21
+
+- Add File.mkdir
+- Add File.cd
+- Add a :dir option to File.tmp to create a tmp directory.
+- Add spit-dev command in root of src to be used instead of ./bin/spit
+  for development.
+- Renamed $$ to $?PID
+- Renamed File.create to File.touch
+- Renamed File.child to File.add
+- Routines that just do concatenation can now be inlined
+
 ## 0.0.20
 
 - FD.next-free now uses /proc to figure out what FD is free.

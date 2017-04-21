@@ -12,6 +12,13 @@ if File</etc/foo.conf>.contains($outdated) {
 >method Bool( ⟶ [Bool](./Bool.md))
 
  In Bool context, Files return [.exists](#exists)
+## add
+>method add([Str](./Str.md) **$name** ⟶ [File](./File.md))
+
+ Adds an element to the path. This is the same as concatinating the path with a '/' and the argument.
+```perl6
+ say File</etc/foo>.add('foo.cfg') #->/etc/foo/foo.cfg
+```
 ## append
 >method append([Str](./Str.md) **$data**)
 
@@ -33,12 +40,13 @@ say $file[1] #-> bar
 |Parameter|Description|
 |---------|-----------|
 |**$i**| The index of the line to return|
-## child
->method child([Str](./Str.md) **$name** ⟶ [File](./File.md))
+## cd
+>method cd()
 
-
+ Changes directory to the file.
 ```perl6
- say File</etc/foo>.child('foo.cfg') #-> /etc/foo/foo.cfg
+File<path/to/my/dir>.mkdir.cd;
+say "$?PWD";
 ```
 ## chmod
 >method chmod([Str](./Str.md) **$mode**)
@@ -72,13 +80,6 @@ say $file[1] #-> bar
 |---------|-----------|
 |**$dst**| destination path|
 |**:$p**| preserve permissions|
-## create
->method create()
-
- Creates an empty file on the filesystem if one doesn't exist at the file's path.
-```perl6
- .create unless File<foo.txt>
-```
 ## d
 >method d( ⟶ [Bool](./Bool.md))
 
@@ -111,10 +112,30 @@ say $file[1] #-> bar
 >method file( ⟶ [Bool](./Bool.md))
 
  Returns True if the file is file
+## find
+>method find([Pattern](./Pattern.md) **:$name** ⟶ [List[File]](./List[File].md))
+
+ Returns a list of children that match the criteria.
+```perl6
+given File("$*HOME/src/spitsh/resources/src") {
+    my $loc = 0;
+    for .find(name => /\.spt$/) { # or just *.spt
+        $loc += .lines;
+    }
+    say "$loc lines of code";
+}
+```
 ## group
 >method group( ⟶ [Str](./Str.md))
 
  Returns the name of the group that own the file.
+## mkdir
+>method mkdir( ⟶ [File](./File.md))
+
+ Tries to make a directory at the file's path, recursively if need be. Returns whether it succeeds.
+```perl6
+say "creating " ~ File<path/to/my/dir>.mkdir
+```
 ## name
 >method name( ⟶ [Str](./Str.md))
 
@@ -220,11 +241,18 @@ given File.tmp {
 |**$replacement**| The string to replace it with|
 |**:$g**| Turn on global matching|
 ## tmp
->method tmp( ⟶ [File](./File.md))
+>method tmp([Bool](./Bool.md) **:$dir** ⟶ [File](./File.md))
 
  Creates a tempfile via mktemp(1) and adds it to a list of files which will be removed at the END.
 ```perl6
 my $tmpfile = File.tmp; # Will be removed at the end
+```
+## touch
+>method touch()
+
+ Calls `touch(1)` on the file.
+```perl6
+ .touch unless File<foo.txt>
 ```
 ## w
 >method w( ⟶ [Bool](./Bool.md))

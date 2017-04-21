@@ -31,19 +31,11 @@
 ## next-free
 >method next-free( ⟶ [FD](./FD.md))
 
- Gets the next free file descriptor. **note:** This only kinda works.
+ Returns the next free file descriptor if it can find one. Dies if it can't.
 ## open-r
 >method open-r([File](./File.md) **$file**)
 
  Opens a file for reading from this file descriptor.
-
-|Parameter|Description|
-|---------|-----------|
-|**$file**| The file to open|
-## open-rw
->method open-rw([File](./File.md) **$file**)
-
- Opens a file for reading and writing from this file descriptor.
 
 |Parameter|Description|
 |---------|-----------|

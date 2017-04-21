@@ -22,6 +22,8 @@ say "It's some other kind of Ubuntu XD"
 ```
 # $*interactive
  Whether the script should be compiled as an interactive script. Defaults to whether `$?IN` is a tty.
+# $?min-fd
+ The minimum file descriptor number that isn't reserved by Spit
 # $?IFS
  The internal field separator. For Spit it's always `\n`.
 # $?CAP
@@ -30,6 +32,13 @@ say "It's some other kind of Ubuntu XD"
 # captures both the STDOUT and STDERR of ls into $res
 my $res = ${ls /etc '/I/dont/exist' *>~};
 say "ls returned $res";
+```
+# $*max-fd
+ The maximum file descriptor number that can be open or can be expressed within the shell interpreter.
+# $*git
+ The git command. Referencing this ensures that the git command is installed.
+```perl6
+say ${ $*git status }
 ```
 # $*OUT
  File descriptor connected to the STDOUT of the script by default.
@@ -54,6 +63,10 @@ ${printf "allo earth" >!}; #shorthand
 ${ls '/I/dont/exist' !> $*OUT}; #redirect STDERR to script's STDOUT
 my $error = ${ls '/I/dont/exist' !>~}; # capture STDERR into return value of cmd
 ```
+# $*HOME
+ The current user's home directory.
+# $?PWD
+ The present working directory of the shell.
 # @/
  The match list variable. Like `$/` in Perl 6 it stores the what was match after a something is matched against a regex.
 ```perl6

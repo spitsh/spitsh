@@ -51,6 +51,22 @@ ok True,"";
 >sub print([Str](../Str.md) **$str**)
 
  Prints its argument to `$*OUT` with no newline.
+# prompt
+>sub prompt([Str](../Str.md) **$question**, [Bool](../Bool.md) **:$default** ⟶ [Bool](../Bool.md))
+
+ Prompts the user with a yes/no question and returns a Bool with the answer. If `$*interactive` is false then it will just return the default.
+```perl6
+if prompt("Did the chicken come before the egg?", :default(True)) {
+    say "wrong, the egg came before the chicken.";
+} else {
+    say "wrong, the chicken DID come before the egg.";
+}
+```
+
+|Parameter|Description|
+|---------|-----------|
+|**$question**| The question to pose to the user|
+|**:$default**| The default answer|
 # say
 >sub say([Str](../Str.md) **$str** ⟶ [Bool](../Bool.md))
 
