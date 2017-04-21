@@ -1244,7 +1244,6 @@ class SAST::BVal does SAST::CompileTimeVal {
 
 class SAST::Concat is SAST::MutableChildren {
     method type { tStr }
-    method gist { @.children».gist.join(' ~ ') }
     method compile-time {
         @.children.all.compile-time.defined ?? @.children».compile-time.join !! Nil;
     }
