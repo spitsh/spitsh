@@ -1,3 +1,8 @@
+#| The current user's home directory.
+env File $*HOME;
+#| The present working directory of the shell.
+env File $?PWD;
+
 #| File is string representing a filesystem path (relative or absolute).
 #|{
     my $outdated = 'foo1.myorg.com';
