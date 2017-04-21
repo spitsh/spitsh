@@ -876,8 +876,11 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     }
 
     method stage2($ctx) {
-        $.invocant .= do-stage2(tAny) unless $.invocant.stage2-done;
-        if not $.declaration.static and $.invocant.WHAT === SAST::Type and !$.invocant.ostensible-type.enum-type {
+        my $is-type = $.invocant.WHAT === SAST::Type;
+        if not $.invocant.stage2-done {
+            $.invocant .= do-stage2: $is-type ?? tAny() !! tStr();
+        }
+        if not $.declaration.static and $is-type and not $.invocant.ostensible-type.enum-type {
             SX.new(message => q|Instance method called on a type.|,:$.match).throw;
         }
         callsame;
