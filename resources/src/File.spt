@@ -175,8 +175,10 @@ augment File {
     #| Returns the parent directory of the file.
     #|{ say File</etc/foo/foo.cfg>.name #->/etc/foo }
     method ~parent(--> File){ ${dirname $self} }
-    #|{ say File</etc/foo>.child('foo.cfg') #-> /etc/foo/foo.cfg }
-    method ~child($name --> File) { $self.path ~ '/' ~ $name }
+    #| Adds an element to the path. This is the same as concatinating
+    #| the path with a '/' and the argument.
+    #|{ say File</etc/foo>.add('foo.cfg') #->/etc/foo/foo.cfg }
+    method ~add($name --> File) { $self.path ~ '/' ~ $name }
 
     my File $tmplist = ${mktemp};
     #| Creates a tempfile via mktemp(1) and adds it to a list of

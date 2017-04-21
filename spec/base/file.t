@@ -93,11 +93,11 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
     my File $tmpdir .= tmp(:dir);
     ok $tmpdir.dir, 'tmp(:dir) returns a directory';
 
-    my $child1 = $tmpdir.child('foo');
+    my $child1 = $tmpdir.add('foo');
     is $child1, "$tmpdir/foo", '$child1.child';
     nok $child1, ‘.child doesn't cause directory to exist’;
 
-    my $child2 = $child1.child('bar');
+    my $child2 = $child1.add('bar');
     is $child2, "$tmpdir/foo/bar", '$child2.child';
 
     $child2.mkdir.cd;
@@ -107,11 +107,11 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
     is $child2, $?PWD, '.cd turns it into $?PWD';
 
     for <a b c> {
-        my $top = $child2.child($_).mkdir;
+        my $top = $child2.add($_).mkdir;
         for <d e f> {
-            my $under = $top.child($_).mkdir;
+            my $under = $top.add($_).mkdir;
             for <g h i> {
-                $under.child($_).touch; #ew
+                $under.add($_).touch; #ew
             }
         }
     }
