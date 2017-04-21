@@ -608,9 +608,22 @@ method call($name,@named-param-pairs,@pos) {
     $name,
     |@pos.map({ ' ',|self.arg($_) }).flat;
 }
+
+method maybe-quietly(@cmd,\ret-type,\ctx,:$match) {
+    if ctx === tAny() and ret-type !=== tAny() {
+         |@cmd,' >&',|self.arg(self.scaf-ref('*NULL',:$match));
+    } else {
+        @cmd;
+    }
+}
+
 #!Call
-multi method node(SAST::SubCall:D $_)  {
-    self.call(self.gen-name(.declaration),.param-arg-pairs,.pos);
+multi method node(SAST::Call:D $_)  {
+    self.maybe-quietly:
+        self.call(self.gen-name(.declaration), .param-arg-pairs, .pos),
+        .type,
+        .ctx,
+        match => .match;
 }
 
 multi method node(SAST::MethodCall:D $_) {
@@ -620,7 +633,7 @@ multi method node(SAST::MethodCall:D $_) {
     if .declaration.rw and .invocant.assignable {
         |self.gen-name(.invocant),'=$(',$call,')';
     } else {
-        $call;
+        self.maybe-quietly: $call, .type, .ctx, match => .match;
     }
 }
 
