@@ -215,6 +215,24 @@ augment File {
         ${mkfifo $tmpfifo};
         $tmpfifo;
     }
-}
 
-env File $*HOME;
+    #| Tries to make a directory at the file's path, recursively if need
+    #| be. Returns whether it succeeds.
+    #|{
+       say "creating " ~ File<path/to/my/dir>.mkdir
+    }
+    method mkdir(--> File) {
+        ${ mkdir -p $self};
+        $self;
+    }
+    #| Changes directory to the file.
+    #|{
+        File<path/to/my/dir>.mkdir.cd;
+        say "$?PWD";
+    }
+    method cd {
+        ${ cd $self }
+    }
+
+
+}
