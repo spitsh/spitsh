@@ -571,7 +571,7 @@ subset ChildSwapInline of SAST:D
 #   }
 # 'foo("baz")' is the $outer call, 'say($a)' is the $inner call.
 # We inline by switching the outer SAST::Call out for a modified clone of the inner SAST::Call.
-# We can do this with a bun ch of other nodes as well.
+# We can do this with a bunch of other nodes as well.
 multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     # Can't inline is rw methods yet. Probs need to redesign it before we can.
     return if ($outer ~~ SAST::MethodCall) && $outer.declaration.rw;
