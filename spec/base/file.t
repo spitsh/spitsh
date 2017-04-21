@@ -9,8 +9,8 @@ plan 29;
     $file.remove;
     nok $file.exists,'.remove';
     nok $file,'File.Bool = File.exists (false)';
-    $file.create;
-    ok $file.exists,'.create';
+    $file.touch;
+    ok $file.exists,'.touch creates the file';
     END { nok $file.exists,"tempfiles should be rm by END" }
 }
 

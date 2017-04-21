@@ -81,10 +81,9 @@ augment File {
     method push(#|[line to add] $line) {
         $self.write($self.slurp.push($line));
     }
-    #| Creates an empty file on the filesystem if one doesn't exist at
-    #| the file's path.
-    #|{ .create unless File<foo.txt> }
-    method create {
+    #| Calls `touch(1)` on the file.
+    #|{ .touch unless File<foo.txt> }
+    method touch {
         # Ohhh when I think about you I
         ${touch $self}
     }
