@@ -1,6 +1,6 @@
 use Test;
 
-plan 29;
+plan 39;
 
 {
     my File $file .= tmp;
@@ -87,6 +87,43 @@ if File( ${ echo "/etc/hosts" } ) {
 } # NO else because to test (cond && action) if optimization as well
 
 is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
+
+
+{
+    my File $tmpdir .= tmp(:dir);
+    ok $tmpdir.dir, 'tmp(:dir) returns a directory';
+
+    my $child1 = $tmpdir.child('foo');
+    is $child1, "$tmpdir/foo", '$child1.child';
+    nok $child1, ‘.child doesn't cause directory to exist’;
+
+    my $child2 = $child1.child('bar');
+    is $child2, "$tmpdir/foo/bar", '$child2.child';
+
+    $child2.mkdir.cd;
+
+    ok $child2, 'child2 exists after .mkdir';
+    ok $child1, 'child1 exists after .mkdir';
+    is $child2, $?PWD, '.cd turns it into $?PWD';
+
+    for <a b c> {
+        my $top = $child2.child($_).mkdir;
+        for <d e f> {
+            my $under = $top.child($_).mkdir;
+            for <g h i> {
+                $under.child($_).touch; #ew
+            }
+        }
+    }
+
+    is $child2.find().elems, 3*3*3 + 3*3 + 3 + 1,
+        '.find() found all files and directories';
+    is $child2.find(name => /[ghi]$/).elems, 3*3*3,
+        '.find(/../) found only those matching';
+
+    END { nok $child2.exists, 'tmp(:dir) was cleaned up' }
+}
+
 
 # {
 #     my $file = File.tmp;
