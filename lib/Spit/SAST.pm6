@@ -1245,7 +1245,15 @@ class SAST::BVal does SAST::CompileTimeVal {
 class SAST::Concat is SAST::MutableChildren {
     method type { tStr }
     method compile-time {
-        @.children.all.compile-time.defined ?? @.children».compile-time.join !! Nil;
+        my @ct = @.children.map(*.compile-time);
+        if @ct.all.defined {
+            @ct.map({
+                when Bool { .so ?? '1' !! '' }
+                default   { .Str }
+            }).join;
+        } else {
+            Nil;
+        }
     }
     method stage2($) {
         $_ .= do-stage2(tStr) for @.children;
