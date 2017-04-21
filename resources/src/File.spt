@@ -187,6 +187,16 @@ augment File {
         END { ${rm @($tmplist.slurp) $tmplist } }
     }
 
+    #| Returns a list of children that match the criteria.
+    #|{
+        given File("$*HOME/src/spitsh/resources/src") {
+            my $loc = 0;
+            for .find(name => /\.spt$/) { # or just *.spt
+                $loc += .lines;
+            }
+            say "$loc lines of code";
+        }
+    }
     method find(Pattern :$name --> List[File]) {
         ${find $self ('-name', $name if $name)}
     }

@@ -55,7 +55,7 @@ has $.chars-per-line-cap = 80;
 
 method BUILDALL(|) {
     @!names[SCALAR]<_> = '_';
-    for <shift chmod rm kill exit sleep find> {
+    for <shift chmod rm kill exit sleep find cd mkdir> {
         @!names[SUB]{$_} = $_;
     }
     callsame;
