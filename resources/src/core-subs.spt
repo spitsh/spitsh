@@ -20,16 +20,27 @@ sub die($str)  { note($str) && $?PID.kill("TERM"); }
 #| they are NYI in spit.
 sub sleep(Int $seconds) { ${sleep $seconds} }
 
-sub ?prompt(Str $str,Bool :$default) {
+#| Prompts the user with a yes/no question and returns a Bool with the
+#| answer. If `$*interactive` is false then it will just return the default.
+#|{
+    if prompt("Did the chicken come before the egg?", :default(True)) {
+        say "wrong, the egg came before the chicken.";
+    } else {
+        say "wrong, the chicken DID come before the egg.";
+    }
+}
+sub ?prompt(
+    #|[The question to pose to the user]Str $question,
+    #|[The default answer] Bool :$default) {
     if $*interactive {
         my $yn = $default ?? '[Y/n]' !! '[y/N]';
-        say "👻 $str $yn";
+        say "👻 $question $yn";
         $?IN.get;
         given $~ {
             when ''       { $default  }
             when /^[yY]$/ { True      }
             when /^[nN]$/ { False     }
-            default { prompt($str, :$default) }
+            default { prompt($question, :$default) }
         }
     } else {
         $default;
