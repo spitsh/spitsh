@@ -179,11 +179,11 @@ augment File {
     #|{
       my $tmpfile = File.tmp; # Will be removed at the end
     }
-    static method tmp(--> File) {
-        my File $tmpfile = ${mktemp};
+    static method tmp(Bool :$dir --> File) {
+        my File $tmpfile = ${mktemp ('-d' if $dir)};
         ${printf '%s\n' $tmpfile >> $tmplist};
         $tmpfile;
-        END { ${rm @($tmplist.slurp) $tmplist } }
+        END { ${rm -rf @($tmplist.slurp) $tmplist } }
     }
 
     #| Returns a list of children that match the criteria.
