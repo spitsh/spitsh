@@ -15,12 +15,13 @@ sub MAIN(
     :$opts,
     :$os,
     :$run,
+    :$jobs,
     |c) {
     if sha1-SETTING() ne $SETTING-sha1 {
         note "SETTING has changed. touching Spit::PRECOMP so it recompiles";
         touch $SPIT-PRECOMP;
         exit (run $?FILE, |@*ARGS).status;
     } else {
-        Spit-MAIN(|c, :$in-docker,:$debug,:$target,:$no-inline,:$opts,:$os,:$run);
+        Spit-MAIN(|c, :$in-docker,:$debug,:$target,:$no-inline,:$opts,:$os,:$run,:$jobs);
     }
 }

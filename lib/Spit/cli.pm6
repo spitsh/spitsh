@@ -117,7 +117,7 @@ multi MAIN("compile",Str $file,*%_) {
 multi MAIN("prove",Str $path,:$jobs, :$in-docker is copy, :$run, *%_) {
     $in-docker = 'debian' unless $in-docker || $run;
     my $opt = $in-docker ?? "--in-docker=$in-docker" !! "--run";
-    my @run  = "prove", '-r', ("-j $_" with $jobs), '-e', "$*PROGRAM $opt compile", $path;
+    my @run  = "prove",("-j$_" with $jobs), '-r', '-e', "$*PROGRAM $opt compile", $path;
     note @run.perl;
     exit run(@run).status
 }
