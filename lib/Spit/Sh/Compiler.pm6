@@ -610,7 +610,7 @@ method call($name,@named-param-pairs,@pos) {
 }
 
 method maybe-quietly(@cmd,\ret-type,\ctx,:$match) {
-    if ctx === tAny() and ret-type !=== tAny() {
+    if ctx === tAny() and ret-type !=== tAny() and ret-type !=== tBool() {
          |@cmd,' >&',|self.arg(self.scaf-ref('*NULL',:$match));
     } else {
         @cmd;
