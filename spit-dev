@@ -5,23 +5,12 @@ use lib $lib.Str;
 use Spit::PRECOMP;
 use Spit::Util :touch;
 use Spit::SETTING;
-use Spit::cli '&Spit-MAIN';
+use Spit::cli;
 
-sub MAIN(
-    :$in-docker,
-    :$debug,
-    :$target = 'compile',
-    :$no-inline,
-    :$opts,
-    :$os,
-    :$run,
-    :$jobs,
-    |c) {
-    if sha1-SETTING() ne $SETTING-sha1 {
-        note "SETTING has changed. touching Spit::PRECOMP so it recompiles";
-        touch $SPIT-PRECOMP;
-        exit (run $?FILE, |@*ARGS).status;
-    } else {
-        Spit-MAIN(|c, :$in-docker,:$debug,:$target,:$no-inline,:$opts,:$os,:$run,:$jobs);
-    }
+if sha1-SETTING() ne $SETTING-sha1 {
+    note "SETTING has changed. Touching Spit::PRECOMP so it recompiles.";
+    touch $SPIT-PRECOMP;
+    exit (run $?FILE, |@*ARGS).status;
+} else {
+    do-main();
 }

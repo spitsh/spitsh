@@ -6,120 +6,249 @@ sub get-ver {
     try $*REPO.resolve(CompUnit::DependencySpecification.new(:short-name<Spit::Compile>)).distribution.meta<ver>
 }
 
-sub USAGE is export(:MANDATORY) {
-    print
-    "Spook in the Shell Script compiler v{get-ver() || 'DEV'}\n" ~
-    q:to/END/;
-    Usage: spit [OPTIONS] COMMAND [arg...]
-
-    Options:
-       --debug             Output debugging information + timings for each compilation stage.
-
-       --in-docker=IMAGE   Pipes script it into a docker container made from IMAGE. Docker is
-                           run like: "docker run -i --rm $IMAGE sh". This automatically sets
-                           the OS for you unless you specify another with --os.
-
-       --no-inline         Turns inlining of routine calls.
-
-       --os=debian         Which operating system to compile for.
-
-       --opts=json         A json object where the keys are the option names and the values
-                           the option values. If a value starts with '$:' the rest is evaluated
-                           as a Spit expression in the context of the option's declaration.
-
-       --target=STAGE      Sets the compilation stage to finish at:  Can be any of:
-                             - parse:   A .gist of the match object from parsing the program.
-                             - stage1:  A .gist of the SAST tree after parsing.
-                             - stage2:  A .gist of the SAST tree after contextualisation.
-                             - stage3:  A .gist of the SAST tree after composition.
-                             - compile: The compiled shell script (default)
-
-       --run               Runs the output on this computer's /bin/sh
-    Commands:
-       compile FILE        Compiles a file as Spit-sh e.g. spit compile src/cfg.spt
-       eval SRC            Compiles a string as Spit-sh  e.g. spit eval 'say "hello world"'
-    END
-}
-
-proto MAIN(
-    Str $cmd,*@,
-    :$in-docker is copy,
-    Bool :$*debug,
-    Str  :$*target = 'compile',
-    Bool :$no-inline,
-    :$opts,
-    Int :$jobs,
-    Str :$os,
-    Bool :$run,
-    :@*repos = [
-           Spit::Repo::File.new,
-           Spit::Repo::Core.new
-       ]
-) {
-    note "run starting" if $*debug;
-
-    my $mangle-os = do if $os {
-        $os;
-    } elsif $in-docker {
-        if $in-docker ~~ Bool {
-            $in-docker = 'debian' if $in-docker;
-        } else {
-            $in-docker;
+sub parse-args(@args) {
+    my (@pos,%named);
+    for @args {
+        when s/^'--'// {
+            if m/([\w|'-']+)['='(.*)]?/ {
+                %named{$/[0].Str} = ( ($/[1] andthen .Str) || True);
+            } else {
+                die "badly formatted option";
+            }
         }
-    };
-
-    my %*opts = do if $mangle-os {
-        parse-opts $opts,mangle => %(|(os => "-> OS<$mangle-os>"));
-    } else {
-        parse-opts $opts;
-    };
-
-    my ($docker,$promise) =  do if $cmd ne 'prove' and $in-docker {
-        start-docker($in-docker);
-    };
-
-    my $res = try { {*} };
-
-    if $! {
-        # should kill docker here.
-        note $!.gist;
-        exit 1;
+        when s/^'-'// {
+            when /(<[a..zA..Z]>)'='(.*)/ {
+                %named{$/[0].Str} = $/[1].Str;
+            }
+            when /(<[a..zA..Z]>)+/ {
+                %named{$_} = True for $/[0];
+            }
+            default {
+                die "invalidly formatted option $_";
+            }
+        }
+        default { @pos.push($_) }
     }
 
-    if $in-docker {
-        write-docker $docker,$promise,$res;
-    } elsif $run {
-        run 'sh','-c', $res;
-    } else {
-        print $res;
-    }
-    note "run finished { now - INIT now }" if $*debug;
-};
-
-multi MAIN("eval",Str $program? is copy,*%_) {
-    $program //= $*IN.slurp-rest;
-    compile(
-        $program,
-        name => 'eval',
-        |%_,
-        :%*opts,
-    ).gist;
+    @pos,%named;
 }
 
-multi MAIN("compile",Str $file,*%_) {
-    do if $file.IO.e {
-        compile($file.IO.slurp,name => $file,|%_,:%*opts).gist;
-    } else {
-        die "couldn't find '$file'";
+constant $compile-options = q:to/END/;
+Options:
+  --debug
+    Output debugging information + timings for each compilation stage.
+
+  -d --in-docker[=<image>]
+    Pipes script it into a docker container made from <image>.
+    If <image> isn't specified 'debian' is used. The container is
+    automatically removed. This automatically sets the 'os' option
+    based on the image name (if it can) unless you specify another
+    in --opts or --os.
+
+  --no-inline
+    Turns inlining off for routine calls.
+
+  -o --opts=<json>
+    A json object where the keys are the option names and the values
+    the option values. If a value starts with ': ' the rest is evaluated
+    as a Spit expression in the context of the option's declaration.
+
+  --os=<os name> (default: debian)
+    Shortcut for --opts='{ "os" : ": OS<debian>" }'
+
+  --target=<stage name>
+    Sets the compilation stage to finish at:  Can be any of:
+      - parse:   A .gist of the match object from parsing the program.
+      - stage1:  A .gist of the SAST tree after parsing.
+      - stage2:  A .gist of the SAST tree after contextualisation.
+      - stage3:  A .gist of the SAST tree after composition.
+      - compile: The compiled shell script (default)
+
+  --RUN
+    Runs the output on this computer's /bin/sh. # Be careful :^)
+END
+
+constant $eval-usage = q:to/END/;
+Usage: spit eval PROGRAM [OPTIONS]
+
+Evaluate PROGRAM as spit code
+
+\qq[$compile-options]
+
+Examples:
+  spit eval 'say "hello world"'
+  # compile and run in docker
+  spit eval -d 'say "hello world"'
+  spit eval -d=centos 'say $*os.name'
+  # compile for alpine
+  spit eval --os=alpine 'say $*os.name'
+END
+
+constant $compile-usage = q:to/END/;
+Usage: spit compile FILE [OPTIOS]
+
+Compiles FILE as spit code
+
+\qq[$compile-options]
+
+Examples:
+  spit compile my_program.spt
+  # compile and run in docker
+  spit compile -d my_program.spt
+  spit compile -d=centos my_program.spt
+  # compile for alpine
+  spit compile --os=alpine my_program.spt
+END
+
+constant $prove-usage = q:to/END/;
+Usage: spit prove PATH [OPTIONS]
+
+Compiles and executes spit test files in docker containers under prove.
+This command is just quick way of writing something like:
+
+   for os in debian centos; do
+       prove -r -e "spit -d=$os compile" spec/base/sanity.t || exit 1;
+   done
+
+   Which is similar to running:
+
+   spit prove spec/base/sanity.t -d=debian,centos
+
+Options:
+  -d --in-docker=<image list>
+      Docker images to execute the scriptsunder prove. Multiple image names
+      must be comma separated.
+  -j --jobs=<number>
+      The number of jobs that prove should run.
+
+Examples:
+  spit prove mytest.t
+  spit prove t/
+  spit prove -d=centos,alpine t/
+END
+
+constant $general-usage = q:to/END/;
+\qq[Spook in the Shell Script compiler v{get-ver() || 'DEV'}\n]
+Usage: spit COMMAND
+
+Commands:
+  eval     Compile a string as spit code
+  compile  Compile a file as spit code
+  prove    Run prove(1) with test files written in spit
+
+run 'spit COMMAND --help' for more information about a command
+END
+
+
+my constant %usage = %(
+    eval => $eval-usage,
+    compile => $compile-usage,
+    general => $general-usage,
+    prove   => $prove-usage,
+);
+
+my class commands {
+    method compile(Str:D $file,
+                   :$debug,
+                   :$target,
+                   :$opts,
+                   :$no-inline,
+                  ) {
+        if $file.IO.e {
+            compile($file.IO.slurp, :$debug, :$target, :$opts, :$no-inline, name => $file).gist;
+        } else {
+            die "no such file ‘$file’";
+        }
+    }
+
+    method eval(Str:D $src, :$debug, :$target, :$opts, :$no-inline) {
+        compile($src, :$debug, :$target, :$opts, :$no-inline, name => "eval").gist;
+    }
+
+    method prove(Str:D $path, Str:D $in-docker, :$jobs) {
+        my @runs = $in-docker.split(',').map: { "-d=$_" };
+        for @runs {
+            my @run = "prove", ("-j$_" with $jobs), '-r', '-e', "$*PROGRAM $_ compile", $path;
+            note "running: ", @run.perl;
+            my $run = run @run;
+            exit $run.status unless $run.status == 0;
+        }
     }
 }
 
-multi MAIN("prove",Str $path,:$jobs, :$in-docker is copy, :$run, *%_) {
-    $in-docker = 'debian' unless $in-docker || $run;
-    my $opt = $in-docker ?? "--in-docker=$in-docker" !! "--run";
-    my @run  = "prove",("-j$_" with $jobs), '-r', '-e', "$*PROGRAM $opt compile", $path;
-    note @run.perl;
-    exit run(@run).status
+sub do-main() is export {
+    my (@pos,%named) := parse-args(@*ARGS);
+
+    if not @pos {
+        print %usage<general>
+    } else {
+        given @pos[0] {
+            when %named<help>:exists { print %usage{$_} // %usage<general> }
+            when 'compile'|'eval' {
+                my @*repos = [
+                    Spit::Repo::File.new,
+                    Spit::Repo::Core.new
+                ];
+                %named<opts> //= %named<o>;
+                %named<in-docker> //= %named<d>;
+                %named<in-docker> = 'debian' if %named<in-docker> === True;
+                %named<target> //= 'compile';
+                my $*debug = %named<debug>;
+
+                with %named<opts> {
+                    $_ .= &parse-opts;
+                } else {
+                    $_ = {};
+                };
+                with %named<os> {
+                    %named<opts><os> //= Spit::LateParse.new(
+                        val => "OS<$_>",
+                        match => (m/.*/),
+                    ),
+                }
+
+                my ($docker,$promise) = do with %named<in-docker> {
+                    if m/<!after ':'> (\w|'-')+ <!before '/'>/ {
+                        %named<opts><os> //= Spit::LateParse.new(
+                            val => "OS<$_>",
+                            match => $/,
+                        );
+                    }
+                    start-docker $_ if %named<target> eq 'compile';
+                }
+
+                my $res = do try {
+                    when 'compile' {
+                        commands.compile(@pos[1], |%named);
+                    }
+                    when 'eval' {
+                        commands.eval(@pos[1],|%named);
+                    }
+                };
+
+                if $! {
+                    # should kill docker here.
+                    note $!.gist;
+                    exit 1;
+                }
+
+                if $docker {
+                    write-docker $docker,$promise,$res;
+                } elsif %named<RUN> {
+                    exit (run 'sh','-c', $res).status;
+                } else {
+                    print $res;
+                }
+            }
+            when 'prove' {
+                %named<jobs> //= %named<j>;
+                my $in-docker = %named<in-docker> // %named<d>;
+                $in-docker =  'debian' unless $in-docker ~~ Str:D;
+                commands.prove(@pos[1], $in-docker, |%named);
+            }
+            default { note %usage<general> }
+        }
+    }
 }
 
 sub start-docker($image is copy) {
@@ -129,7 +258,6 @@ sub start-docker($image is copy) {
     ($docker,$docker.start);
 }
 
-
 sub write-docker($docker,$p,$shell) {
     my \before = now;
     note "writing output to docker.." if $*debug;
@@ -138,9 +266,4 @@ sub write-docker($docker,$p,$shell) {
     $docker.close-stdin;
     await $p;
     note("writing output to docker ✔ {now - before}") if $*debug;
-}
-
-
-sub EXPORT($main = '&MAIN') {
-    Map.new: $main, &MAIN;
 }

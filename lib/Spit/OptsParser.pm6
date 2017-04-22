@@ -39,14 +39,7 @@ my $actions = my class Spit::OptsParser::Actions is JSON5::Tiny::Actions {
     }
 }
 
-sub parse-opts($json is copy,:%mangle) is export  {
-    if %mangle {
-        my $d = from-json($json || '{}');
-        $d.append(%mangle);
-        $json = to-json($d);
-    }
-
-    return {} unless $json;
+sub parse-opts(Str:D $json) is export  {
     my $res = JSON5::Tiny::Grammar.parse($json,:$actions) || die "opts not valid json";
     return $res.made;
 }
