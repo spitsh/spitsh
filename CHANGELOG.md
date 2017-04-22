@@ -1,3 +1,9 @@
+## 0.0.22
+
+- CLI overhauled. See spit --help.
+- option expression prefix changed from '->' to just ':'. You can now
+  escape it with a \: if you want to start with a literal ':'
+
 ## 0.0.21
 
 - Add File.mkdir
