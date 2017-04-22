@@ -21,9 +21,10 @@ my $actions = my class Spit::OptsParser::Actions is JSON5::Tiny::Actions {
     method value:hex ($/) { die "$/ NYI" }
     method value:string ($match) {
         my $str =  ~$match<string>.made;
-        if $str ~~  s/^'->'// {
+        if $str ~~  s/^':'// {
             $match.make: Spit::LateParse.new(val => $str,:$match);
         } else {
+            $str ~~ s/^'\:'/':'/;
             $match.make: SAST::SVal.new(val => $str,:$match);
         }
     }

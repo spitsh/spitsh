@@ -50,7 +50,7 @@ Options:
 
   -o --opts=<json>
     A json object where the keys are the option names and the values
-    the option values. If a value starts with ': ' the rest is evaluated
+    the option values. If a value starts with ':' the rest is evaluated
     as a Spit expression in the context of the option's declaration.
 
   --os=<os name> (default: debian)
