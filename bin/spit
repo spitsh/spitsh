@@ -1,4 +1,4 @@
 #!/usr/bin/env perl6
-use Spit::cli2;
+use Spit::cli;
 
 do-main();
