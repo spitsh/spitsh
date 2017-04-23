@@ -45,6 +45,14 @@ Options:
     based on the image name (if it can) unless you specify another
     in --opts or --os.
 
+  -i --interactive
+    Compile a script where $*interactive will be set to whether STDIN is
+    a tty. Short for --opts='{ "interactive" : ": $?IN.tty" }'.
+
+  -I --force-interactive
+    Compile a script where $*ineractive will be set to True. Short for
+    --opts='{ "interactive" : true }'
+
   --no-inline
     Turns inlining off for routine calls.
 
@@ -191,6 +199,8 @@ sub do-main() is export {
                 ];
                 %named<opts> //= %named<o>;
                 %named<in-docker> //= %named<d>;
+                %named<interactive> //= %named<i>;
+                %named<force-interactive> //= %named<I>;
                 %named<in-docker> = 'debian' if %named<in-docker> === True;
                 %named<target> //= 'compile';
                 my $*debug = %named<debug>;
@@ -205,6 +215,14 @@ sub do-main() is export {
                         val => "OS<$_>",
                         match => (m/.*/),
                     ),
+                }
+
+                with %named<interactive> {
+                    %named<opts><interactive> = Spit::LateParse.new(val => '$?IN.tty');
+                } else {
+                    if %named<force-interactive> {
+                        %named<opts><interactive> = Spit::LateParse.new( val => 'True')
+                    }
                 }
 
                 my ($docker,$promise) = do with %named<in-docker> {

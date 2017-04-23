@@ -1,9 +1,9 @@
 #|Standard input (STDIN). The 0 file descriptor for the script.
 constant FD $?IN = 0;
 
-#|Whether the script should be compiled as an interactive script.
-#|Defaults to whether `$?IN` is a tty.
-constant Bool $*interactive = $?IN.tty;
+#| Whether the script should be compiled as an interactive script.
+#| Defaults to False.
+constant $*interactive = False;
 
 my $~;
 
