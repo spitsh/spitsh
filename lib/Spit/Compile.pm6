@@ -2,8 +2,6 @@
 unit module Spit::Compile;
 need Spit::Parser::Grammar;
 need Spit::Parser::Actions;
-need Spit::Sh::Compiler;
-need Spit::Sh::Composer;
 
 use Spit::Util :get-globalish, :light-load;
 
@@ -49,12 +47,14 @@ sub compile  ($input is copy,
             return $input if $target eq 'stage2';
         }
 
-        my $compiler = Spit::Sh::Compiler.new(:%opts);
+        my \SPIT_COMPILER = (once light-load 'Spit::Sh::Compiler');
+        my $compiler = SPIT_COMPILER.new(:%opts);
 
         if not $input.stage3-done {
             note "$name composing.." if $debug;
+            my \SPIT_COMPOSER = (once light-load 'Spit::Sh::Composer');
             my \before = now;
-            Spit::Sh::Composer.new(
+            SPIT_COMPOSER.new(
                 :%opts,
                 scaffolding => $compiler.scaffolding,
                 :$no-inline,
