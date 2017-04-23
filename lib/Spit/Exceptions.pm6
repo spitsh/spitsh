@@ -374,7 +374,7 @@ class SX::CompStageNotCompleted is SX::Bug {
     has $.node is required;
 
     method desc {
-        "Compilation stage $!stage for {$.node.WHICH}({$.node.gist}) hasn't been completed"
+        "Compilation stage $!stage for {$.node.WHICH} hasn't been completed:\n {$.node.gist}"
     }
 
 }
