@@ -186,7 +186,7 @@ my class commands {
             my @run = "prove", ("-j$_" with $jobs), '-r', '-e', "$*EXECUTABLE $*PROGRAM $_ compile", $path;
             note "running: ", @run.perl;
             my $run = run @run;
-            exit $run.status unless $run.status == 0;
+            exit $run.exitcode unless $run.exitcode == 0;
         }
     }
 }
@@ -280,7 +280,7 @@ sub compile-or-eval($command, @pos, %named) {
     if $docker {
         write-docker $docker,$promise,$res;
     } elsif %named<RUN> {
-        exit (run 'sh','-c', $res).status;
+        exit (run 'sh','-c', $res).exitcode;
     } else {
         print $res;
     }
