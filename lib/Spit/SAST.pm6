@@ -116,7 +116,7 @@ role SAST is rw {
     method ostensible-type { self.type } # The the type that the thing looks like
     method deep-clone { self.clone }
     method deep-first(\needle) { self if self ~~ needle }
-    method identity { $!cloned // self }
+    method identity { $!cloned || self }
 
     # Convenience methods
     method stage2-node(\type,|args) {
