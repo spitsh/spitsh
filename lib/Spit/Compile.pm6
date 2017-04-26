@@ -1,9 +1,7 @@
 # A home for the main compilation pipeline entrypoint
 unit module Spit::Compile;
-need Spit::Parser::Grammar;
-need Spit::Parser::Actions;
 
-use Spit::Util :get-globalish, :light-load;
+use Spit::Util :light-load;
 
 sub compile  ($input is copy,
               :$*SETTING is copy,
@@ -24,8 +22,10 @@ sub compile  ($input is copy,
 
     my $*CU-name = $name;
     if $input ~~ Str {
-        my $parser  = Spit::Grammar.new;
-        my $actions = Spit::Actions.new(:$outer, :$debug);
+        my \SPIT_ACTIONS = (once light-load 'Spit::Parser::Actions', target => 'Spit::Actions');
+        my \SPIT_GRAMMAR = (once light-load 'Spit::Parser::Grammar', target => 'Spit::Grammar');
+        my $parser  = SPIT_GRAMMAR.new;
+        my $actions = SPIT_ACTIONS.new(:$outer, :$debug);
         my $*ACTIONS = $actions;
         note "$name parsing.. " if $debug;
         my \before = now;
