@@ -627,29 +627,27 @@ method add-scaffolding(SAST::Dependable:D $dep is rw)  {
     my $before = $dep;
     self.walk($dep);
     $!deps.add-scaffolding($dep, name => $before.?name);
-    for $dep.all-deps {
+    for $dep.child-deps {
         self.add-scaffolding($_);
     }
 }
 
 multi method include(SAST:D $sast) {
-    return if $sast.included;
+    $sast.included && return False;
     $sast.included = True;
 
     if $sast ~~ SAST::Children and not $sast ~~ SAST::ClassDeclaration {
-        for $sast.children {
-            self.include($_);
-        }
+        self.include($_) for $sast.children;
     }
 
-    for |$sast.depends,|$sast.extra-depends <-> SAST::Dependable:D $dep {
-        self.walk($dep);
-        $dep.depended = True;
-        if not $dep.included and not $dep.dont-depend {
-            self.include($dep);
-            $!deps.add-dependency($dep);
+    for $sast.all-depends {
+        self.walk($_);
+        .depended = True;
+        if ! .dont-depend {
+            self.include($_) && $!deps.add-dependency($_);
         }
     }
+    return True;
 }
 
 multi method include(SAST::PhaserBlock:D $phaser-block is rw) {

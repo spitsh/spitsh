@@ -111,7 +111,8 @@ role SAST is rw {
     method node-name { self.^name.subst(/^'SAST::'/,'') }
     method itemize { True }
     method depends { Empty }
-    method all-deps { self.depends }
+    method child-deps { self.depends }
+    method all-depends { |self.depends, |@.extra-depends }
     method type {...} # The type for type checking
     method ostensible-type { self.type } # The the type that the thing looks like
     method deep-clone { self.clone }
@@ -269,9 +270,9 @@ class SAST::Children does SAST {
 
     method type { tAny }
 
-    method all-deps {
+    method child-deps {
         # XXX: THIS IS HORRIBLE AND HAS TO DIE ASAP. NEED TO USE LEXICAL ANALYSIS INSTEAD.
-        (|@.children.map(*.all-deps).flat,|self.depends).grep({ $_ !~~ SAST::Param|SAST::Invocant });
+        (|@.children.map(*.child-deps).flat,|self.depends).grep({ $_ !~~ SAST::Param|SAST::Invocant });
     }
 
     method descend($self is rw: &block) {
