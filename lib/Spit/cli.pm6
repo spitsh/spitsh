@@ -127,7 +127,7 @@ This command is just quick way of writing something like:
 
 Options:
   -d --in-docker=<image list>
-      Docker images to execute the scriptsunder prove. Multiple image names
+      Docker images to execute the scripts under prove. Multiple image names
       must be comma separated.
   -j --jobs=<number>
       The number of jobs that prove should run.
