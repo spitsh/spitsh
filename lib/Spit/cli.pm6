@@ -45,6 +45,9 @@ Options:
     based on the image name (if it can) unless you specify another
     in --opts or --os.
 
+  -s --mount-docker-socket
+    Mounts /var/run/docker.sock into the container.
+
   -i --interactive
     Compile a script where $*interactive will be set to whether STDIN is
     a tty. Short for --opts='{ "interactive" : ": $?IN.tty" }'.
@@ -136,12 +139,16 @@ Examples:
 END
 
 constant $general-usage = q:to/END/;
-\qq[Spook in the Shell Script compiler v{get-ver() || 'DEV'}\n]
-Usage: spit COMMAND
+Spook in the Shell Script compiler v\qq[{get-ver() || 'DEV'}]
+
+Usage: spit [COMMAND|PATH]
+
+If the first argument contains '/' or '.' it's assumed to be a PATH and is
+run with the compile command.
 
 Commands:
-  eval     Compile a string as spit code
   compile  Compile a file as spit code
+  eval     Compile a string as spit code
   prove    Run prove(1) with test files written in spit
 
 run 'spit COMMAND --help' for more information about a command
@@ -193,70 +200,7 @@ sub do-main() is export {
         given @pos[0] {
             when %named<help>:exists { print %usage{$_} // %usage<general> }
             when 'compile'|'eval' {
-                my @*repos = [
-                    Spit::Repo::File.new,
-                    Spit::Repo::Core.new
-                ];
-                %named<opts> //= %named<o>;
-                %named<in-docker> //= %named<d>;
-                %named<interactive> //= %named<i>;
-                %named<force-interactive> //= %named<I>;
-                %named<in-docker> = 'debian' if %named<in-docker> === True;
-                %named<target> //= 'compile';
-                my $*debug = %named<debug>;
-
-                with %named<opts> {
-                    $_ .= &parse-opts;
-                } else {
-                    $_ = {};
-                };
-                with %named<os> {
-                    %named<opts><os> //= Spit::LateParse.new(
-                        val => "OS<$_>",
-                        match => (m/.*/),
-                    ),
-                }
-
-                with %named<interactive> {
-                    %named<opts><interactive> = Spit::LateParse.new(val => '$?IN.tty');
-                } else {
-                    if %named<force-interactive> {
-                        %named<opts><interactive> = Spit::LateParse.new( val => 'True')
-                    }
-                }
-
-                my ($docker,$promise) = do with %named<in-docker> {
-                    if m/<!after ':'> (\w|'-')+ <!before '/'>/ {
-                        %named<opts><os> //= Spit::LateParse.new(
-                            val => "OS<$_>",
-                            match => $/,
-                        );
-                    }
-                    start-docker $_ if %named<target> eq 'compile';
-                }
-
-                my $res = do try {
-                    when 'compile' {
-                        commands.compile(@pos[1], |%named);
-                    }
-                    when 'eval' {
-                        commands.eval(@pos[1],|%named);
-                    }
-                };
-
-                if $! {
-                    # should kill docker here.
-                    note $!.gist;
-                    exit 1;
-                }
-
-                if $docker {
-                    write-docker $docker,$promise,$res;
-                } elsif %named<RUN> {
-                    exit (run 'sh','-c', $res).status;
-                } else {
-                    print $res;
-                }
+                compile-or-eval(@pos.shift, @pos, %named)
             }
             when 'prove' {
                 %named<jobs> //= %named<j>;
@@ -264,13 +208,95 @@ sub do-main() is export {
                 $in-docker =  'debian' unless $in-docker ~~ Str:D;
                 commands.prove(@pos[1], $in-docker, |%named);
             }
+            when *.contains(<. />.any) {
+                compile-or-eval('compile', @pos, %named);
+            }
             default { note %usage<general> }
         }
     }
 }
 
-sub start-docker($image is copy) {
-    my @args = 'docker','run','-i','--rm',$image,'sh';
+sub compile-or-eval($command, @pos, %named) {
+    my @*repos = [
+        Spit::Repo::File.new,
+        Spit::Repo::Core.new
+    ];
+    %named<opts> //= %named<o>;
+    %named<in-docker> //= %named<d>;
+    %named<interactive> //= %named<i>;
+    %named<force-interactive> //= %named<I>;
+    %named<in-docker> = 'debian' if %named<in-docker> === True;
+    %named<target> //= 'compile';
+    %named<mount-docker-socket> //= %named<s>;
+    my $*debug = %named<debug>;
+
+    with %named<opts> {
+        $_ .= &parse-opts;
+    } else {
+        $_ = {};
+    };
+    with %named<os> {
+        %named<opts><os> //= Spit::LateParse.new(
+            val => "OS<$_>",
+            match => (m/.*/),
+        ),
+    }
+
+    with %named<interactive> {
+        %named<opts><interactive> = Spit::LateParse.new(val => '$?IN.tty');
+    } else {
+        if %named<force-interactive> {
+            %named<opts><interactive> = Spit::LateParse.new( val => 'True')
+        }
+    }
+
+    my ($docker,$promise) = do with %named<in-docker> {
+        if m/<!after ':'> (\w|'-')+ <!before '/'>/ {
+            %named<opts><os> //= Spit::LateParse.new(
+                val => "OS<$_>",
+                match => $/,
+            );
+        }
+        if %named<target> eq 'compile' {
+            start-docker $_, |%named;
+        }
+    };
+
+    my $res = try given $command {
+        when 'compile' {
+            commands.compile(@pos[0], |%named);
+        }
+        when 'eval' {
+            commands.eval(@pos[0],|%named);
+        }
+    };
+
+    if $! {
+        # should kill docker here.
+        note $!.gist;
+        exit 1;
+    }
+
+    if $docker {
+        write-docker $docker,$promise,$res;
+    } elsif %named<RUN> {
+        exit (run 'sh','-c', $res).status;
+    } else {
+        print $res;
+    }
+}
+
+constant $docker-socket = '/var/run/docker.sock';
+
+sub start-docker($image is copy, :$mount-docker-socket, *%) {
+    my $mount := do if $mount-docker-socket {
+        $docker-socket.IO.e or
+            die "can't find $docker-socket to mount inside container";
+
+        ('-v', "$docker-socket:$docker-socket");
+    };
+
+    my @args = 'docker','run',|$mount,'-i','--rm',$image,'sh';
     note "starting docker with {@args[1..*].gist}" if $*debug;
     my $docker = Proc::Async.new(|@args,:w);
     ($docker,$docker.start);
