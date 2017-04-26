@@ -21,12 +21,17 @@ class Pkg {
                 ${apt-get install -y -q $self *>X};
             }
         }
+        Alpine {
+            $self.update-pkgs;
+            ${ apk add $self -q --no-progress !>X };
+        }
     }
 
     #| Returns True if a version of the package is installed.
     method ?installed on {
         Debian { ${dpkg -s $self *>X} }
         RHEL   { ${yum list installed $self *>X} }
+        Alpine { ${apk info $self >X} }
     }
 
     #| Tells the system specific package manager to update its list of pacakges.
@@ -36,11 +41,13 @@ class Pkg {
             $updated = True;
         }
         RHEL { ${yum check-update} }
+        Alpine { ${apk update -q}  }
     }
     #| Gets the version of the currently installed package
     method ~version on {
         Debian { ${dpkg -s $self |sed -n 's/^Version: //p' } }
         RHEL   { ${yum info installed $self |sed -n 's/Version *: //p'} }
+        Alpine { ${apk version $self | sed -rn '2s/\w+-(\S*).*/\1/p' } }
     }
 
     #| In Bool context Pkgs return `.installed`
