@@ -355,14 +355,18 @@ multi method walk(SAST::Eval:D $THIS is rw) {
         SAST::SVal,
         val => compile(
             name => "eval_{$++}",
-            $THIS.src.val,:%opts,outer => $THIS.outer
+            $THIS.src.val,:%opts,
+            outer => $THIS.outer,
+            :one-block,
         ),
     );
 }
 
 multi method walk(SAST::Concat:D $THIS is rw) {
     with $THIS.compile-time {
+        my $extra-depends := $THIS.children.map(*.extra-depends).flat;
         $THIS .= stage3-node: SAST::SVal,val => $_;
+        $THIS.extra-depends.append($extra-depends);
     }
 }
 

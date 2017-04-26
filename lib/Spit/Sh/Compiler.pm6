@@ -161,7 +161,7 @@ method scaf-ref($name,:$match) {
     }
 }
 
-method compile(SAST::CompUnit:D $CU --> Str:D) {
+method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
     my $*pad = '';
     my $*depends = $CU.depends-on;
     my ShellElement:D @compiled;
@@ -176,20 +176,28 @@ method compile(SAST::CompUnit:D $CU --> Str:D) {
 
     my @BEGIN = @compiled-depends && @compiled-depends.map({ ("\n" if $++),|$_}).flat;
     my @run;
-    for :@BEGIN,:@MAIN {
-        if .value {
-            @compiled.append(.key,'()',|self.maybe-oneline-block(.value),"\n");
-            @run.append(.key,' && ');
-        }
-    }
 
-    @run.pop if @run; # remove last &&
+    if $one-block {
+        @compiled.append: self.maybe-oneline-block:
+            [
+                |(|@BEGIN,"\n" if @BEGIN)
+                ,|@MAIN
+            ];
+    } else {
+        for :@BEGIN,:@MAIN {
+            if .value {
+                @compiled.append(.key,'()',|self.maybe-oneline-block(.value),"\n");
+                @run.append(.key,' && ');
+            }
+        }
+        @run.pop if @run; # remove last &&
+    }
 
     if @END {
         @compiled.append('END()',|self.maybe-oneline-block(@END),"\n","trap END EXIT\n",);
     }
 
-    @compiled.append(|@run,"\n");
+    @compiled.append(|@run,"\n") if @run;
     @compiled.join("");
 }
 
