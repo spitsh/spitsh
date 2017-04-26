@@ -294,7 +294,7 @@ multi method cap-stdout(ShellStatus $_) {
 #!Var
 multi method node(SAST::Var:D $var) {
     my $name = self.gen-name($var);
-    return Empty if $var ~~ SAST::ConstantDecl and not $var.depended;
+    return Empty if $var ~~ SAST::ConstantDecl and $var.inline-value;
     with $var.assign {
         my @var = |self.compile-assign($var,$_);
         if @var[0].starts-with('$') {
@@ -686,7 +686,7 @@ multi method node(SAST::Cmd:D $cmd,:$silence) {
         my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,@in);
         my $pipe     := |(|self.cap-stdout($_),'|' with $cmd.pipe-in);
         |$pipe,
-        ("\n{$*pad}" if $pipe and $pipe.chars + $full-cmd.chars > $.chars-per-line-cap),
+        ("\n{$*pad}  " if $pipe and $pipe.chars + $full-cmd.chars > $.chars-per-line-cap),
         |$cmd.set-env.map({"{.key.subst('-','_',:g)}=",|self.arg(.value)," "}).flat,
         |$full-cmd;
     }
