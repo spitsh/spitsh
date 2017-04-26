@@ -1,7 +1,8 @@
 use Spit::Util :sha1;
 
 sub slurp-SETTING is export {
-    <base EnumClass os List FD core-subs Any File Str Int Bool Regex Pkg Cmd Locale PID Git checks>
+    <base EnumClass os List FD core-subs Any File Str Int Bool Regex Pkg Cmd
+    Locale PID Git checks commands Docker>
     .map({ %?RESOURCES{"src/$_.spt"}.slurp })
     .join("\n");
 }

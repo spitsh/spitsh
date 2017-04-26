@@ -48,6 +48,8 @@
         "src/Regex.spt",
         "src/PID.spt",
         "src/Git.spt",
+        "src/commands.spt",
+        "src/Docker.spt",
         "core-lib/Test.spt"
     ],
     "source-url" : "https://github.com/spitsh/spitsh.git",

@@ -1,0 +1,89 @@
+class Docker { }
+
+constant $*docker-cli = {
+    Docker.install-cli;
+    Cmd<docker>;
+}
+
+constant $*docker = {
+    unless Cmd<docker> {
+        if File</var/run/docker.sock> {
+            Docker.install-cli;
+        } else {
+            ${ sh -c ${ $*curl -sSL 'https://get.docker.com'} };
+        }
+    }
+    Cmd<docker>;
+};
+
+
+augment Docker {
+    static method install-cli {
+        unless Cmd<docker> {
+            note 'installing docker-cli from build';
+            constant $latest-v = ${
+                $*curl -Isw '%{redirect_url}' -o '/dev/null'
+                'https://github.com/moby/moby/releases/latest'
+                | sed 's/.*\/v//'
+            };
+            note "latest docker build is $latest-v";
+            constant $url = "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
+            note "getting build from $url";
+            ${
+                $*curl -sSL
+                "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz"
+                | tar xz
+            };
+            note "installing to /usr/local/bin/docker";
+            File<docker/docker>.move-to('/usr/local/bin/docker');
+            File<docker>.remove;
+        }
+    }
+
+    static method socket(-->File) { '/var/run/docker.sock' }
+
+    static method ?hello-world {
+        ${ $*docker run -i --rm hello-world >X };
+    }
+
+    method ?exists { ${ $*docker inspect $self *>X } }
+    method Bool   { $self.exists }
+
+    method ?create($from) {
+        ${ $*docker create -i --name $self $from sh >X};
+    }
+    method ?remove { ${ $*docker rm -f $self >X} }
+
+    method ?running {
+        ${ $*docker inspect -f '{{.State.Status}}' $self } eq 'running';
+    }
+
+    method ?run(Str $eval) {
+        if $self.running {
+            ${ $*docker exec -i $self sh -c $eval }
+        } else {
+            $eval.${ $*docker start -i $self };
+        }
+    }
+
+    method ?commit(:$cmd,
+                   :$env,
+                   :$entrypoint,
+                   :$expose,
+                   :$label,
+                   :$onbuild,
+                   :$user,
+                   :$volume,
+                   :$workdir
+                  ) {
+        ${$*docker commit
+          ("-c=CMD $_" if $cmd )
+          ("-c=ENV $_" if $env )
+          ("-c=ENTRYPOINT $_" if $entrypoint)
+          ("-c=EXPOSE $_" if $expose)
+          ("-c=USER $_" if $user)
+          ("-c=VOLUME $_" if $volume)
+          ("-c=WORKDIR $_" if $workdir)
+         }
+    }
+}
