@@ -183,7 +183,7 @@ my class commands {
     method prove(Str:D $path, Str:D $in-docker, :$jobs) {
         my @runs = $in-docker.split(',').map: { "-d=$_" };
         for @runs {
-            my @run = "prove", ("-j$_" with $jobs), '-r', '-e', "$*PROGRAM $_ compile", $path;
+            my @run = "prove", ("-j$_" with $jobs), '-r', '-e', "$*EXECUTABLE $*PROGRAM $_ compile", $path;
             note "running: ", @run.perl;
             my $run = run @run;
             exit $run.status unless $run.status == 0;
