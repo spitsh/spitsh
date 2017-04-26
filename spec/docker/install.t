@@ -2,4 +2,8 @@ use Test;
 
 plan 1;
 
-ok Docker.hello-world, 'hello world';
+if $*os ~~ Alpine {
+    skip-rest ‘alpine can't Pkg.install’;
+} else {
+    ok Docker.hello-world, 'hello world';
+}
