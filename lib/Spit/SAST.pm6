@@ -712,7 +712,6 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
     has SAST::ClassDeclaration $.invocant-type is rw;
     has @.invocants;
 
-    method gist { "method {$.name}\({$.signature.gist})\{ ... \}" }
     method spit-gist { "method {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
