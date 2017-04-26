@@ -171,11 +171,7 @@ my class commands {
                    :$opts,
                    :$no-inline,
                   ) {
-        if $file.IO.e {
-            compile($file.IO.slurp, :$debug, :$target, :$opts, :$no-inline, name => $file).gist;
-        } else {
-            die "no such file ‘$file’";
-        }
+        compile(($file.IO.slurp orelse .throw), :$debug, :$target, :$opts, :$no-inline, name => $file).gist;
     }
 
     method eval(Str:D $src, :$debug, :$target, :$opts, :$no-inline) {
