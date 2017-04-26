@@ -380,7 +380,7 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 
     method children { list $.assign // Empty  }
 
-    method depends { @.extra-depends ?? Empty !! ($.declaration,) }
+    method depends { $.declaration, }
 
     method is-option  { $!name.starts-with('*') }
 
