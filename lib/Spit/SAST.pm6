@@ -150,6 +150,7 @@ role SAST is rw {
             $b = $self.stage3-node(SAST::Blessed,class-type => $self.type,$b);
         }
         $b.extra-depends.append($self.extra-depends);
+        $b.ctx = $self.ctx;
         $self = $b;
     }
 }
