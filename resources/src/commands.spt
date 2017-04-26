@@ -1,0 +1,4 @@
+constant $*curl = {
+    Cmd<curl>.maybe-install;
+    Cmd<curl>;
+}
