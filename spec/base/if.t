@@ -1,5 +1,5 @@
 use Test;
-plan 46;
+plan 47;
 
 if True {
    pass "basic if works";
@@ -219,6 +219,11 @@ if $true and $false {
 
     is ${printf "%s-%s-%s" ("one" if True) $("two" if False) ("three" if True) },
        "one--three", '$(X if false) itemizes (compile time)';
+
+    {
+        my $foo = "bar";
+        is ($_ if $foo), "bar", '$_ as value from if';
+    }
 }
 
 {

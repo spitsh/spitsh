@@ -247,7 +247,7 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
         }
 
     } elsif $decl ~~ SAST::MaybeReplace and $decl.replace-with -> $val {
-        $THIS = do given $val {
+        $THIS.switch: do given $val {
             when SAST::Var {$val.gen-reference(match => $THIS.match,:stage2-done) }
             default { $val.deep-clone() }
         }
