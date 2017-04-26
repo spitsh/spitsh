@@ -131,6 +131,8 @@ Options:
       must be comma separated.
   -j --jobs=<number>
       The number of jobs that prove should run.
+  -s --mount-docker-socket
+      Mounts /var/run/docker.sock inside the containers.
 
 Examples:
   spit prove mytest.t
@@ -180,10 +182,11 @@ my class commands {
         compile($src, :$debug, :$target, :$opts, :$no-inline, name => "eval").gist;
     }
 
-    method prove(Str:D $path, Str:D $in-docker, :$jobs) {
+    method prove(Str:D $path, Str:D $in-docker, :$mount-docker-socket, :$jobs) {
         my @runs = $in-docker.split(',').map: { "-d=$_" };
         for @runs {
-            my @run = "prove", ("-j$_" with $jobs), '-r', '-e', "$*EXECUTABLE $*PROGRAM $_ compile", $path;
+            my @run = "prove", ("-j$_" with $jobs), '-r', '-e',
+                      "$*EXECUTABLE $*PROGRAM $_ compile{' -s' if $mount-docker-socket}", $path;
             note "running: ", @run.perl;
             my $run = run @run;
             exit $run.exitcode unless $run.exitcode == 0;
@@ -204,6 +207,7 @@ sub do-main() is export {
             }
             when 'prove' {
                 %named<jobs> //= %named<j>;
+                %named<mount-docker-socket> //= %named<s>;
                 my $in-docker = %named<in-docker> // %named<d>;
                 $in-docker =  'debian' unless $in-docker ~~ Str:D;
                 commands.prove(@pos[1], $in-docker, |%named);
