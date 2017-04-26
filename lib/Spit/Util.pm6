@@ -42,12 +42,18 @@ sub sha1(Str:D $str --> Str:D) is export(:sha1) {
     return nqp::sha1($str);
 }
 
-sub touch(IO::Path:D $path) is export(:touch) {
-    my $fh = $path.open(:w,:r);
-    $fh.seek(-1,SeekFromEnd);
-    my $byte = $fh.read(1);
-    $fh.seek(-1,SeekFromEnd);
-    $fh.write($byte);
-    $fh.close;
-    Nil;
+sub force-recompile($module) is export(:force-recompile) {
+    if $*REPO.repo-chain».loaded.flat.first($module) -> $cu {
+        my $repo = $cu.repo;
+        if $repo ~~ CompUnit::Repository::FileSystem
+           and $cu.precompiled
+        {
+               $repo.precomp-repository.store.path(
+                   CompUnit::PrecompilationId.new($*PERL.compiler.id),
+                   CompUnit::PrecompilationId.new($cu.repo-id),
+               ).unlink
+        } else {
+            note $repo.^name;
+        }
+    }
 }

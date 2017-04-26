@@ -1,5 +1,5 @@
 use Spit::Compile;
-use Spit::Util :sha1, :touch;
+use Spit::Util :sha1;
 use Spit::SETTING;
 
 my constant $src = slurp-SETTING();

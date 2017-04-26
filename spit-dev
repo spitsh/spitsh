@@ -3,14 +3,14 @@ BEGIN my $lib = $?FILE.IO.parent.child('lib');
 BEGIN my $SPIT-PRECOMP = $lib.child('Spit').child('PRECOMP.pm6');
 use lib $lib.Str;
 use Spit::PRECOMP;
-use Spit::Util :touch;
+use Spit::Util :force-recompile;
 use Spit::SETTING;
 use Spit::cli;
 
 if sha1-SETTING() ne $SETTING-sha1 {
     note "SETTING has changed. Touching Spit::PRECOMP so it recompiles.";
-    touch $SPIT-PRECOMP;
-    exit (run $?FILE, |@*ARGS).status;
+    force-recompile('Spit::PRECOMP');
+    exit (run $?FILE, |@*ARGS).exitcode;
 } else {
     do-main();
 }
