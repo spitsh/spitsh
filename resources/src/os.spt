@@ -1,3 +1,5 @@
+#| The base of the Operating Sytem enum class
+augment OS {}
 #| Anything UNIXish. Right now everything is a child of this.
 enum-class UNIXish is OS { }
 #| For OS's that use a Linux kernel.

@@ -21,7 +21,7 @@ say "It's some kind of Debian:"
 say "It's some other kind of Ubuntu XD"
 ```
 # $*interactive
- Whether the script should be compiled as an interactive script. Defaults to whether `$?IN` is a tty.
+ Whether the script should be compiled as an interactive script. Defaults to False.
 # $?min-fd
  The minimum file descriptor number that isn't reserved by Spit
 # $?IFS
@@ -51,6 +51,11 @@ say ${ $*git status }
 if ${command -v perl >X} {
     say "perl exists";
 }
+```
+# $*curl
+ The curl command. Referencing this ensures that curl is installed.
+```perl6
+ say ${ $*curl -V }
 ```
 # $?IN
  Standard input (STDIN). The 0 file descriptor for the script.

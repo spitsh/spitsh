@@ -30,14 +30,14 @@ sub MAIN(|) {
 
     {
         my $path = "doc/operating-systems.md".IO;
-        my \UNIXish = $SETTING.lookup(CLASS,'UNIXish').class;
-        my $intro = join '', "doc-staging/os-intro.md".IO.slurp,SDM.make-os-tree(UNIXish,:lvl(2));
+        my \TREE-TOP = $SETTING.lookup(CLASS,'OS').class;
+        my $intro = join '', "doc-staging/os-intro.md".IO.slurp,SDM.make-os-tree(TREE-TOP,:lvl(2));
         $path.spurt:
             SDM.generate-dot-md(
                 :$intro,
                 :$path,
                 :lvl(2),
-                $SETTING.symbols[CLASS].values.grep({ .class ~~ UNIXish }).sort(*.name),
+                $SETTING.symbols[CLASS].values.grep({ .class ~~ TREE-TOP }).sort(*.name),
             );
     }
 }

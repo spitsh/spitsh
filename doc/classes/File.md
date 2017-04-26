@@ -136,6 +136,14 @@ given File("$*HOME/src/spitsh/resources/src") {
 ```perl6
 say "creating " ~ File<path/to/my/dir>.mkdir
 ```
+## move-to
+>method move-to([Str](./Str.md) **$destination** ⟶ [Bool](./Bool.md))
+
+ Moves the file to another location. Overwrites pre-existing files at the destination location. Returns whether the move was completed successfully.
+
+|Parameter|Description|
+|---------|-----------|
+|**$destination**| The path to move the file to|
 ## name
 >method name( ⟶ [Str](./Str.md))
 

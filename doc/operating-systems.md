@@ -24,8 +24,10 @@ on RHEL and `apt-get` on Debian.
 
 Right now the only two OS variants that pass the spec are Debian and RHEL.
 ### Operating System Taxonomy
-* [UNIXish](#unixish)
-  * [POSIX](#posix)
+* [OS](#os)
+  * [UNIXish](#unixish)
+    * [BusyBox](#busybox)
+      * [Alpine](#alpine)
     * [GNU](#gnu)
       * [Debian](#debian)
         * [Ubuntu](#ubuntu)
@@ -33,8 +35,14 @@ Right now the only two OS variants that pass the spec are Debian and RHEL.
         * [RHEL](#rhel)
           * [CentOS](#centos)
     * [BSD](#bsd)
-  * [BusyBox](#busybox)
-    * [Alpine](#alpine)
+  * [Linux](#linux)
+    * [BusyBox](#busybox)
+      * [Alpine](#alpine)
+    * [Debian](#debian)
+      * [Ubuntu](#ubuntu)
+    * [Fedora](#fedora)
+      * [RHEL](#rhel)
+        * [CentOS](#centos)
 
 ### Alpine
  Alpine linux distribution: https://alpinelinux.org/
@@ -50,8 +58,10 @@ Right now the only two OS variants that pass the spec are Debian and RHEL.
  For OS's based on the [Fedora linux distribution](https://getfedora.org/)
 ### GNU
  For OS's that have [GNU core utilities](https://www.gnu.org/software/coreutils/coreutils.html) installed by default.
-### POSIX
- For OS's that that conform to The Open Group's latest "Base Specifications" for the shell enironment. See: http://pubs.opengroup.org/onlinepubs/9699919799/
+### Linux
+ For OS's that use a Linux kernel.
+### OS
+ The base of the Operating Sytem enum class
 ### RHEL
  For OS's based on the [Redhat Enterprise Linux distribution](https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux)
 ### UNIXish
