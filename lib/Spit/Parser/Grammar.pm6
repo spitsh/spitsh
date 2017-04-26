@@ -89,11 +89,15 @@ grammar Spit::Grammar is Spit::Lang {
     rule pragma:sym<use> {
         <sym>
         [
-            || 'lib' <.ws> { SX::NYI.new(feautre => '"use lib"').throw }
+            || 'lib' <.ws> <.NYI("use lib")>
             || $<repo-type>=<.identifier><angle-quote>
             || <identifier>
         ]
 
+    }
+
+    rule pragma:sym<require> {
+        <sym> <.NYI("require statement")>
     }
 
     proto token statement-prefix {*}

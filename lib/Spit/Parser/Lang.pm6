@@ -31,6 +31,7 @@ grammar Spit::Lang {
         SX::Expected.new(match => self.MATCH,:$expected,:$hint).throw
     }
     method panic(Str:D $panic) { SX.new(message => $panic, match => self.MATCH).throw }
+    method NYI(Str:D $feature) { SX::NYI.new(:$feature, match => self.MATCH).throw }
 
     token spit-sigily {
         <?before '$'|'@'>
