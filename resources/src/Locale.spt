@@ -6,7 +6,7 @@ class Locale {
         say "\c[GHOST] \c[RIGHT-TO-LEFT OVERRIDE] \c[GHOST] llehs ni eht koops a";
     }}
     static method ~encoding on {
-        POSIX { ${locale 'charmap'} }
+        UNIXish { ${locale 'charmap'} }
         # No way of checking. The docker alpine image has utf8 by default so
         # we're just gonna roll with it for now
         Alpine { 'UTF-8' }
