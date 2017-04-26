@@ -10,11 +10,10 @@ install:
 
 env:
   - PATH="/home/travis/.rakudobrew/moar-nom/install/share/perl6/site/bin:$PATH"
-  - TEST_OS="alpine,debian,centos"
 
 script:
   - zef install . && spit eval 'say "hello world"'
   - spit -d compile spec/base/sanity.t
-  - spit prove spec/base -d=$TEST_OS
-  - spit prove spec/packages -d=$TEST_OS
-  - spit prove spec/docker -s -d=$TEST_OS
+  - spit prove spec/base -d=alpine,centos,debian
+  - spit prove spec/packages -d=alpine,centos,debian
+  - spit prove spec/docker -s -d=alpine,centos,debian
