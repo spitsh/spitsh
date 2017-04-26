@@ -97,6 +97,14 @@ augment File {
                    #|[preserve permissions] Bool :$p){
         ${cp "-r{$p && 'p'}" $self $dst}
     }
+
+    #| Moves the file to another location. Overwrites pre-existing
+    #| files at the destination location. Returns whether the move
+    #| was completed successfully.
+    method ?move-to(#|[The path to move the file to] $destination) {
+        ${mv $self $destination}
+    }
+
     #| Sets the file's contents to `$data`. If the file doesn't exist
     #| it will be created.
     method write(#|[The string to write to the file] $data)  {
