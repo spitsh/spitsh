@@ -1,6 +1,6 @@
 use Test;
 
-plan 35;
+plan 37;
 
 {
     ok "0","'0' is true";
@@ -87,6 +87,11 @@ plan 35;
         'multi-line contains';
     nok qq{if True {\n    foo\n}}.contains(qq{if True {\n    foo\n after}}),
         'multi-line contains (false)';
+}
+
+{
+    nok "".contains("a"), '"".contains("a")';
+    ok "".contains(""), '"".contains("")';
 }
 
 {

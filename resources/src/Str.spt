@@ -69,9 +69,17 @@ augment Str {
        say "Hello, World".contains('wo',:i); #-> True
     }
     method ?contains(#|[The string being searched for]$needle,
-                     #|[Turns on case insensitive matching]Bool :$i) {
+                     #|[Turns on case insensitive matching]Bool :$i) on {
+        Any {
             $self.${awk -v 'RS=^$' -v "t=$needle" -v "i=$i"
-                  '{exit(!index(i ? tolower($0) :$0, i ? tolower(t) : t))}'}
+                    'END{exit(!index(i ? tolower($0) :$0, i ? tolower(t) : t))}'}
+        }
+        BusyBox {
+            $self.${awk -v 'RS=^$' -v "t=$needle" -v "i=$i"
+                    'END{exit(!index(i ? tolower($0) :$0, i ? tolower(t) : t))}'}
+            # BusyBox returns false if needle is empty
+            || !$needle
+        }
     }
 
     #| Returns true if the string starts with the argument.
