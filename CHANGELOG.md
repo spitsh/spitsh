@@ -1,14 +1,14 @@
 ## 0.0.23
 
-- Add Docker, $*docker, $*docker-cli (WIP)
+- Add Docker, `$*docker`, `$*docker-cli` (WIP)
 - Add -s/--mount-docker-socket switches to mount /var/run/docker.sock
   if running script inside a container.
-- Add $*curl
+- Add `$*curl`
 - Add File.move-to
 - POSIX OS has been removed
 - Linux OS has been added
 - `("foo:$_" if $foo)` now reduces down to `${foo:+"foo:$foo"}`
-- $*interactive now defaults to False
+- `$*interactive` now defaults to False
   - -i cli switch to set `$*interactive` to `$?IN.tty`
   - -I cli switch to force `$*interactive` to `True`
 
