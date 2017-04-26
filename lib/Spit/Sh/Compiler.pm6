@@ -360,19 +360,6 @@ multi method int-expr(SAST::Var:D $_) {
 }
 #!If
 multi method node(SAST::If:D $_,:$else) {
-    if not $else
-       and not .else
-       and .then.one-stmt
-       and not (.topic-var andthen .depended) {
-        # in some limited circumstances we can simplify
-        # if cond { action } to cond && action
-        my $neg = .cond ~~ SAST::Neg;
-        my $cond = $neg ?? .cond[0] !! .cond;
-        return
-            |self.cond($cond),
-            ($neg ?? ' || ' !! ' && '),
-            |self.node(.then, :one-line);
-    }
 
     substitute-cond-topic(.topic-var,.cond);
 
@@ -407,6 +394,35 @@ sub substitute-cond-topic($topic-var,$cond is rw) {
                 );
             }
         }
+    }
+}
+
+multi method arg(SAST::If:D $_) {
+    nextsame when ShellStatus;
+    if not .else
+       and .then.one-stmt
+       and not (.topic-var andthen .depended) {
+        # in some limited circumstances we can simplify
+        # if cond { action } to cond && action
+        my $neg = .cond ~~ SAST::Neg;
+        my $cond = $neg ?? .cond[0] !! .cond;
+
+        if $cond ~~ SAST::Var && (my $var = $cond)
+           or
+           $cond ~~ SAST::Cmd && $cond.nodes == 2
+           && $cond[0].compile-time ~~ 'test'
+           && $cond[1] ~~ SAST::Var
+           && ($var = $cond[1])
+        {
+            dq '${',self.gen-name($var), ($neg ?? ':-' !! ':+'),
+                    |self.arg(.then.one-stmt),'}';
+        } else {
+            cs |self.cond($cond),
+               ($neg ?? ' || ' !! ' && '),
+               |self.node(.then, :one-line);
+        }
+    } else {
+        callsame;
     }
 }
 
