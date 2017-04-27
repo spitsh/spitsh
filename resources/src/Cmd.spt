@@ -16,7 +16,8 @@ class Cmd {
         -->Pkg.install unless $self;
     }
 
-    method maybe-install {
-        -->Pkg.prompt-install unless $self;
+    method ensure-install(-->Cmd) {
+        -->Pkg.install unless $self;
+        $self;
     }
 }

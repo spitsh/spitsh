@@ -3,10 +3,8 @@
 #|{
     say ${ $*git status }
 }
-constant $*git = {
-    Cmd<git>.maybe-install;
-    Cmd<git>;
-};
+constant $*git = Cmd<git>.ensure-install;
+
 
 #| GitURL represents something that can be passed to `git clone`.
 class GitURL {
