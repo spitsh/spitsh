@@ -1,6 +1,6 @@
 use Test;
 
-plan 25;
+plan 27;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -46,6 +46,13 @@ my $a = <one two three>;
     is ${printf '%s-%s-%s' $(<one two three>) }, "$a--", '$() itemizes in cmd';
     is ${printf '%s-%s-%s' @($a) },              'one-two-three', '@($) flattens in cmd';
     is ${printf '%s-%s-%s' @$(<one two three>)}, 'one-two-three', '@$() flattens in cmd';
+}
+
+{
+    constant $b = <one two three>;
+    constant @c = <one two three>;
+    is ${printf '%s' $b}, $b, ‘$ list constants don't flatten’;
+    is ${printf '%s-%s-%s' @c}, 'one-two-three', ‘@ list constants do flatten’;
 }
 
 {

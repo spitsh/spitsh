@@ -81,6 +81,15 @@ multi method walk(SAST::ClassDeclaration:D $THIS is rw) {
     $THIS .= stage3-node(SAST::Empty);
 }
 
+multi method walk(SAST::Cmd $THIS is rw) {
+    my @nodes := $THIS.nodes;
+    for @nodes.kv -> $i, $_ {
+        when SAST::List {
+            @nodes.splice($i,1,.children);
+        }
+    }
+}
+
 multi method walk(SAST::While:D $THIS is rw) {
     with $THIS.cond.compile-time -> $cond {
         if not $cond {

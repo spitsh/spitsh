@@ -62,6 +62,7 @@ class SAST::Type {...}
 class SAST::RoutineDeclare { ... }
 class SAST::Cmd {...}
 class SAST::ACCEPTS {...}
+class SAST::Itemize {...}
 
 role SAST is rw {
     has Match:D $.match is required is rw;
@@ -149,6 +150,9 @@ role SAST is rw {
     method switch(SAST:D $self is rw: $b is copy) {
         if $b.type !=== $self.type {
             $b = $self.stage3-node(SAST::Blessed,class-type => $self.type,$b);
+        }
+        if $b.itemize !=== $self.itemize {
+            $b = $self.stage3-node(SAST::Itemize, itemize => $self.itemize, $b);
         }
         $b.extra-depends.append($self.extra-depends);
         $b.ctx = $self.ctx;
@@ -1626,9 +1630,10 @@ class SAST::Doom does SAST {
 }
 
 class SAST::Itemize is SAST::MutableChildren {
-    has Sigil:D $.sigil is required;
+    has Sigil $.sigil;
+    has Bool $.itemize;
 
-    method itemize { itemize-from-sigil($!sigil) }
+    method itemize { $!itemize //= itemize-from-sigil($!sigil) }
 
     method stage2($ctx) {
         self[0] .= do-stage2(type-from-sigil($!sigil));
