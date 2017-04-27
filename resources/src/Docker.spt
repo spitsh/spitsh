@@ -10,7 +10,7 @@ constant $*docker = {
         if File</var/run/docker.sock> {
             Docker.install-cli;
         } else {
-            ${ sh -c ${ $*curl -sSL 'https://get.docker.com'} };
+            ${ sh -c (HTTP<https://get.docker.com>.get) };
         }
     }
     Cmd<docker>;
@@ -21,19 +21,12 @@ augment Docker {
     static method install-cli {
         unless Cmd<docker> {
             note 'installing docker-cli from build';
-            constant $latest-v = ${
-                $*curl -Isw '%{redirect_url}' -o '/dev/null'
-                'https://github.com/moby/moby/releases/latest'
-                | sed 's/.*\/v//'
-            };
+            constant $latest-v = HTTP<https://github.com/moby/moby/releases/latest>
+                                 .redirect-url.${sed 's/.*\/v//'};
             note "latest docker build is $latest-v";
-            constant $url = "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
+            constant HTTP $url = "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
             note "getting build from $url";
-            ${
-                $*curl -sSL
-                "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz"
-                | tar xz
-            };
+            $url.get.${tar xz};
             note "installing to /usr/local/bin/docker";
             File<docker/docker>.move-to('/usr/local/bin/docker');
             File<docker>.remove;
