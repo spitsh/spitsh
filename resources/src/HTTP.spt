@@ -1,0 +1,15 @@
+class HTTP {
+    method ~get {
+        # it would be nice to use BusyBox's wget on Alpine
+        # But it's too broken.
+        ${$*curl -sL $self}
+    }
+
+    method redirect-url(-->HTTP) {
+        ${ $*curl -Isw '%{redirect_url}' -o '/dev/null' $self }
+    }
+
+    method ?is-https {
+        $self.starts-with('https');
+    }
+}

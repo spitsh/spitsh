@@ -1,0 +1,7 @@
+use Test;
+
+plan 1;
+constant $httpbin = "https://httpbin.org";
+my $redirect-url = "http://docs.perl6.org";
+is HTTP("$httpbin/redirect-to?url=$redirect-url").redirect-url,
+     $redirect-url, 'http://docs.perl.org';
