@@ -1,7 +1,9 @@
 #| The curl command. Referencing this ensures that curl is
 #| installed.
 #|{ say ${ $*curl -V } }
-constant $*curl = {
-    Cmd<curl>.maybe-install;
-    Cmd<curl>;
+constant Cmd $*curl = on {
+    RHEL { 'curl' }
+    Debian { Cmd<wget>.ensure-install }
+    Alpine { Cmd<wget>.ensure-install }
+}
 }
