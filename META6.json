@@ -1,5 +1,6 @@
 {
     "name" : "Spit",
+    "license" : "Artistic-2.0",
     "perl" : "6.c",
     "version" : "0.0.23",
     "description" : "The Spook in the Shell Script (Spit-sh) compiler",
