@@ -567,8 +567,10 @@ multi method node(SAST::Stmts:D $block,:$indent is copy,:$curlies,:$one-line,:$n
     }
 }
 
-multi method arg(SAST::Stmts:D $_) {
-    cs self.node($_,:one-line);
+multi method cap-stdout(SAST::Stmts $_, :$tight) {
+    ('{ ' if $tight),
+    |self.node($_,:one-line),
+    ('; }' if $tight)
 }
 
 #!LastExitStatus
