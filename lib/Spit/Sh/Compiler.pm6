@@ -47,6 +47,7 @@ my subset ShellStatus of SAST where {
 
 unit class Spit::Sh::Compiler;
 
+constant @reserved-cmds = %?RESOURCES<reserved.txt>.slurp.split("\n");
 
 has Hash @!names;
 has %.opts;
@@ -55,7 +56,7 @@ has $.chars-per-line-cap = 80;
 
 method BUILDALL(|) {
     @!names[SCALAR]<_> = '_';
-    for <shift chmod rm kill exit sleep find cd mkdir> {
+    for @reserved-cmds {
         @!names[SUB]{$_} = $_;
     }
     callsame;
