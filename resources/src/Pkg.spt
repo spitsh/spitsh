@@ -6,25 +6,16 @@ if not Pkg<curl> {
    say "installed $_ {.version}";
 }
 }
+
+
+my $?updated = False;
 class Pkg {
-    my $updated = False;
+
 
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
-    method ?install on {
-        RHEL { ${yum install -y $self *>X} }
-        Debian {
-            unless ${apt-get install -y -q $self *>X} or $updated {
-                # for now see if we can install and if not try an update and try again.
-                # TODO: figure out a better way?
-                $self.update-pkgs;
-                ${apt-get install -y -q $self *>X};
-            }
-        }
-        Alpine {
-            $self.update-pkgs;
-            ${ apk add $self -q --no-progress !>X };
-        }
+    method ?install {
+        $self-->List[Pkg].install;
     }
 
     #| Returns True if a version of the package is installed.
@@ -35,10 +26,10 @@ class Pkg {
     }
 
     #| Tells the system specific package manager to update its list of pacakges.
-    method update-pkgs on {
+    static method update-pkgs on {
         Debian {
             ${apt-get update *>X};
-            $updated = True;
+            $?updated = True;
         }
         RHEL { ${yum check-update} }
         Alpine { ${apk update -q}  }
@@ -58,6 +49,27 @@ class Pkg {
             $self.install;
         } else {
             die "unable to install $self";
+        }
+    }
+}
+
+augment List[Pkg] {
+
+    #| Installs the package via the builtin package manager.
+    #| Returns true if the package was successfully installed.
+    method ?install on {
+        RHEL { ${yum install -y @$self *>X} }
+        Debian {
+            unless ${apt-get install -y -q @$self *>X} or $?updated {
+                # for now see if we can install and if not try an update and try again.
+                # TODO: pfigure out a better way?
+                Pkg.update-pkgs;
+                ${apt-get install -y -q @$self *>X};
+            }
+        }
+        Alpine {
+            Pkg.update-pkgs;
+            ${ apk add @$self -q --no-progress !>X };
         }
     }
 }
