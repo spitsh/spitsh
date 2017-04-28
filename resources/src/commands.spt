@@ -10,9 +10,7 @@ constant Cmd $*curl = on {
 constant Cmd $*wget = on {
     Any { Cmd<wget>.ensure-install }
     Alpine {
-        Pkg<wget>.install;
-        Pkg<openssl>.install;
-        Pkg<ca-certificates>.install;
+        Pkg<wget openssl ca-certificates>.install;
         'wget'
     }
 }
