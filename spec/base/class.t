@@ -1,6 +1,6 @@
 use Test;
 
-plan 15;
+plan 16;
 
 {
     class Foo {
@@ -52,6 +52,7 @@ plan 15;
     }
 
     is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";
+    is (Foo<foo>.first: "bar"), "foobarbaz", '.method: syntax';
 }
 
 {

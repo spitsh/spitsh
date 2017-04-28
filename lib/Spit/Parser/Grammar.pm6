@@ -465,7 +465,10 @@ grammar Spit::Grammar is Spit::Lang {
 
     token postfix:method-call {
         '.'<.ws>$<name>=<.identifier>
-        [ $<args>=<.r-wrap: '(',/<R=.args>/,')', :desc<method call arguments>> ]?
+        [
+            |':' <.ws> <args>
+            |$<args>=<.r-wrap: '(',/<R=.args>/,')', :desc<method call arguments>>
+        ]?
     }
     token postfix:cmd-call {
         '.'<.ws><cmd>
