@@ -244,5 +244,13 @@ augment File {
         ${ cd $self }
     }
 
+    method archive(:$to --> File) {
+        my $out = ($to || "$self.tgz");
+        ?${ tar -C $self.parent -czf $out  $self.name } && $out;
+    }
+
+    method extract(-->File) {
+        ${ tar xvf $self | sed -n '1s/\/.*//p' };
+    }
 
 }
