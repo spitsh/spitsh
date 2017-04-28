@@ -197,7 +197,7 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
                 $node.stage2-node(
                     SAST::Blessed,
                     class-type => $list-type,
-                    coerce($node,$elem-type,:desc<coercing to a list>),
+                    coerce($node,$elem-type,:desc<list coercion>),
                 );
             }
             # we lose
