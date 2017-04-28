@@ -3,6 +3,13 @@ env File $*HOME;
 #| The present working directory of the shell.
 env File $?PWD;
 
+
+augment List[File] {
+    method ?remove { ${rm -rf @$self !>X} }
+
+    method @cat { ${cat @$self} }
+}
+
 #| File is string representing a filesystem path (relative or absolute).
 #|{
     my $outdated = 'foo1.myorg.com';
@@ -12,12 +19,6 @@ env File $?PWD;
         .subst($outdated,'foo2.myorg.com');
     }
 }
-
-augment List[File] {
-    method ?remove { ${rm -rf @$self !>X} }
-}
-
-
 augment File {
     #| Returns True if the file exists.
     method ?exists { ${test -e $self}  }

@@ -1,6 +1,6 @@
 use Test;
 
-plan 51;
+plan 52;
 
 {
     my File $file .= tmp;
@@ -43,6 +43,14 @@ plan 51;
     is $file.size,10,'.size changes after appending';
 
     END { nok $file.exists,"tempfiles should be rm by END" }
+}
+
+{
+    my @files = (File.tmp, File.tmp, File.tmp);
+    @files[0].write("foo");
+    @files[1].write("bar");
+    @files[2].write("baz");
+    is @files.cat, "foobarbaz", 'List[File].cat';
 }
 
 {
