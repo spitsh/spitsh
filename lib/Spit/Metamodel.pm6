@@ -17,7 +17,10 @@ role Spit::Type {
     method is-primitive { self === self.primitive }
     method parameterized { so self ~~ Spit::Parameterized && self.params }
     method enum-type {  so self.HOW ~~ Spit::Metamodel::EnumClass }
+    method WHICH { self.^name ~ '|' ~ self.^spit-type-id }
 }
+
+BEGIN my $id-counter = 0;
 
 class Spit::Metamodel::Type is Metamodel::ClassHOW {
     has Mu $!primitive;
@@ -26,6 +29,7 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
     has @!placeholder-params;
     has $!declaration;
     has %!param-type-cache;
+    has $!spit-type-id = $id-counter++;
 
     method new_type(|) {
         my \type = callsame;
@@ -110,6 +114,8 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
         die "Primitive not set on {$type.^name} at composition time" if $!primitive.WHAT =:= Mu;
         callsame;
     }
+
+    method spit-type-id(Mu $) { $!spit-type-id }
 
 }
 
