@@ -266,15 +266,15 @@ method class-params ($/) {
 }
 
 method declaration:sym<augment> ($/) {
-    my $class := $<old-class>.ast.class;
-    $class.^compose;
-    make SAST::ClassDeclaration.new(block => $<blockoid>.ast,:$class);
+    my $augmented-class := $<old-class>.ast;
+    $augmented-class.block = $<blockoid>.ast;
+    $augmented-class.class.^compose;
+    make $augmented-class;
 }
 
 method old-class ($/) {
-    my $name = $<type-name>.Str;
-    my $decl = $*CURPAD.lookup(CLASS,$name,match => $/);
-    $*CLASS = $decl;
+    my $class = $<type>.ast;
+    my $decl = $*CLASS = SAST::ClassDeclaration.new(:$class);
     make $decl;
 }
 

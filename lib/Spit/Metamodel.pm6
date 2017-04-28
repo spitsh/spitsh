@@ -59,9 +59,9 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
 
     method parameterize(Mu \type, *@params) {
         if @params {
-                                              # .&WHAT is just here to decont
-            my $cached := %!param-type-cache{\(|@params.map(*.&WHAT)).WHICH} and return $cached;
-            my $name := "{type.^name}[{@params.map(*.name).join(", ")}]";
+            my $cached := %!param-type-cache{@params.map(*.^spit-type-id).join('|')}
+                and return $cached;
+            my $name := "{type.^name}[{@params.map(*.^name).join(", ")}]";
             my $what;
             my $role := Spit::Parameterized[|@params];
 

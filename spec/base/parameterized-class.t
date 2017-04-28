@@ -1,6 +1,6 @@
 use Test;
 
-plan 19;
+plan 20;
 
 {
     class Foo[Type] {
@@ -10,6 +10,10 @@ plan 19;
 
     augment Foo {
         static method aug-echo(Type $a --> Type) { $a }
+    }
+
+    augment Foo[Int] {
+        static method +double(Int $a) { $a + $a }
     }
 
     ok Foo[Int].doit ~~ Int,"Foo[Int].method returns Int";
@@ -27,6 +31,8 @@ plan 19;
     nok Foo ~~ Foo[Int], "Foo !~~ Foo[Int]";
     ok Foo[Int] ~~ Foo[Str],'Foo[Int] ~~ Foo[Str]';
     nok Foo[Str] ~~ Foo[Int],'Foo[Str] !~~ Foo[Str]';
+
+    is Foo[Int].double(3), 6, 'augment Foo[int] with a method';
 }
 
 {

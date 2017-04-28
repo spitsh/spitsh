@@ -188,7 +188,7 @@ grammar Spit::Grammar is Spit::Lang {
         <.ENDSTMT>
     }
 
-    rule old-class { <type-name> }
+    token old-class { <type> }
     rule declaration:sym<augment> {
         :my $*CLASS;
         <sym> <old-class>
