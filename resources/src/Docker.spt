@@ -1,4 +1,5 @@
 class Docker { }
+class DockerImg { }
 
 constant $*docker-cli = {
     Docker.install-cli;
@@ -39,19 +40,28 @@ augment Docker {
         ${ $*docker run -i --rm hello-world >X };
     }
 
-    method ?exists { ${ $*docker inspect $self *>X } }
+    static method anon-create($from --> Docker) {
+        ${ $*docker create -i $from sh } || die "couldn't create container from $from";
+    }
+
+    method ?exists { ${ $*docker container inspect $self *>X } }
     method Bool   { $self.exists }
 
     method ?create($from) {
         ${ $*docker create -i --name $self $from sh >X};
     }
+
+    method copy($from,$to) {
+        ${ $*docker cp $from "$self:$to" }
+    }
+
     method ?remove { ${ $*docker rm -f $self >X} }
 
     method ?running {
         ${ $*docker inspect -f '{{.State.Status}}' $self } eq 'running';
     }
 
-    method ?run(Str $eval) {
+    method ?exec(Str $eval) {
         if $self.running {
             ${ $*docker exec -i $self sh -c $eval }
         } else {
@@ -59,16 +69,20 @@ augment Docker {
         }
     }
 
-    method ?commit(:$cmd,
-                   :$env,
-                   :$entrypoint,
-                   :$expose,
-                   :$label,
-                   :$onbuild,
-                   :$user,
-                   :$volume,
-                   :$workdir
-                  ) {
+    method commit(
+        $name,
+        :$tag,
+        :$cmd,
+        :$env,
+        :$entrypoint,
+        :$expose,
+        :$label,
+        :$onbuild,
+        :$user,
+        :$volume,
+        :$workdir
+        -->DockerImg) {
+        my DockerImg $img-name = $name ~ (":$_" if $tag);
         ${$*docker commit
           ("-c=CMD $_" if $cmd )
           ("-c=ENV $_" if $env )
@@ -77,6 +91,17 @@ augment Docker {
           ("-c=USER $_" if $user)
           ("-c=VOLUME $_" if $volume)
           ("-c=WORKDIR $_" if $workdir)
-         }
+          $self
+          $img-name
+         } && $img-name;
+    }
+}
+
+augment DockerImg {
+    method ?exists { ${ $*docker image inspect $self *>X } }
+    method ?remove { ${ $*docker rmi $self >X} }
+
+    method once-off($code) {
+        $code.${ $*docker run -i --rm --entrypoint sh };
     }
 }

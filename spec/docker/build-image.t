@@ -1,6 +1,6 @@
 use Test;
 
-plan 9;
+plan 14;
 
 
 {
@@ -15,14 +15,27 @@ plan 9;
 }
 
 {
-    my $b = Docker<run_test>;
+    my $b = Docker<img_build>;
     $b.create('alpine');
 
     constant File $foo = 'foo.txt';
 
-    nok $b.run( eval{$foo.exists} ), '.run check for non-existent file';
-    ok  $b.run( eval{$foo.touch} ),  '.run file touched';
-    ok  $b.run( eval{$foo.exists} ), '.run check file exists';
+    nok $b.exec( eval{$foo.exists} ), '.run check for non-existent file';
+    ok  $b.exec( eval{$foo.touch} ),  '.run file touched';
+    ok  $b.exec( eval{$foo.exists} ), '.run check file exists';
 
-    $b.remove;
+    my $img = $b.commit('run_test');
+
+    ok $img.exists, '.commit means the image exists';
+
+    ok $img.remove, '.remove a image that exists';
+    nok $img.exists, '.exists after remove';
+}
+
+{
+    my $anon = Docker.anon-create: "alpine";
+
+    ok $anon, 'anon container created';
+    $anon.remove;
+    nok $anon, ‘anon doesn't exist after removed’;
 }
