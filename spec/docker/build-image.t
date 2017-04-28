@@ -26,6 +26,8 @@ plan 14;
 
     my $img = $b.commit('run_test');
 
+    $b.remove;
+
     ok $img.exists, '.commit means the image exists';
 
     ok $img.remove, '.remove a image that exists';
