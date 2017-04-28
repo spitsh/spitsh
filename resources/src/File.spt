@@ -13,6 +13,11 @@ env File $?PWD;
     }
 }
 
+augment List[File] {
+    method ?remove { ${rm -rf @$self !>X} }
+}
+
+
 augment File {
     #| Returns True if the file exists.
     method ?exists { ${test -e $self}  }
@@ -30,7 +35,7 @@ augment File {
     method ?f      { $self.file }
     #| Removes (unlinks) the file and returns True if it was successful.
     #| If the file is a directory it will recursively it's children.
-    method ?remove { ${rm -rf $self !>X} }
+    method ?remove { $self-->List[File].remove }
     #| Returns True if the file is empty
     method ?empty  { ! ${test -s $self} }
     #| Returns True if the file is writable by the current user.

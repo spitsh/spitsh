@@ -1,6 +1,6 @@
 use Test;
 
-plan 47;
+plan 51;
 
 {
     my File $file .= tmp;
@@ -12,6 +12,14 @@ plan 47;
     $file.touch;
     ok $file.exists,'.touch creates the file';
     END { nok $file.exists,"tempfiles should be rm by END" }
+}
+
+{
+    my @files = (File.tmp, File.tmp, File.tmp);
+    is @files.WHAT, 'List[File]', '(File.tmp,File.tmp) --> List[File]';
+    ok @files[2], 'file in list exists';
+    ok @files.remove, 'List[File].remove';
+    nok @files[2], ‘file in list doesn't exist after .remove’;
 }
 
 {
