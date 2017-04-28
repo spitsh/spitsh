@@ -40,6 +40,12 @@ sub tFile is export { state $ = class-by-name('File')  }
 sub tEnumClass is export { state $ = class-by-name('EnumClass')  }
 sub tPID is export { state $ = class-by-name('PID')  }
 
+sub lookup-type($name,:@params, Match :$match) is export {
+    my $type := $*CURPAD.lookup(CLASS,$name, :$match).class;
+    $type := $type.^parameterize(|@params.map(*.class)) if @params;
+    $type;
+}
+
 class SAST::IntExpr   {...}
 class SAST::Var       {...}
 class SAST::Block     {...}
@@ -1407,14 +1413,9 @@ class SAST::Type does SAST {
     has Str $.class-name;
     has Spit::Type $.class-type;
     has @.params;
-    has $!class-decl;
 
     method class-type {
-        if not $!class-type {
-            $!class-type = ($!class-decl = $*CURPAD.lookup(CLASS,$!class-name,:$.match)).class;
-            $!class-type = $!class-type.^parameterize(|@!params.map(*.class)) if @!params;
-        }
-        $!class-type;
+        $!class-type ||= lookup-type($!class-name, :@!params, :$.match);
     }
 
     method ostensible-type { self.class-type }
@@ -1432,7 +1433,7 @@ class SAST::Type does SAST {
     method type { self.class-type.enum-type ?? self.class-type !! tAny }
     method gist { $.node-name ~ "({$.class-name || $.class-type.name})" }
     method compile-time { self.class-type }
-    method declaration { $!class-decl } # only here for Foo.WHY
+    method declaration { $.class-type.^declaration }
 }
 
 class SAST::Blessed is SAST::MutableChildren is SAST::Type {

@@ -1,6 +1,6 @@
 use Test;
 
-plan 41;
+plan 45;
 
 {
     my @a;
@@ -125,4 +125,19 @@ plan 41;
     is Cmd<one two three>.WHAT, 'List[Cmd]', 'Cmd<one two three>.WHAT is List[Cmd]';
     my @h = Cmd<one two three>;
     is @h.WHAT, 'List[Cmd]', 'thing assigning to List[Cmd] gets its type';
+}
+
+{
+    {
+        class IntList is List[Int] {
+            method plus(Int $a -->IntList) {
+                $_ + $a for @$self;
+            }
+        }
+
+        ok IntList ~~ List[Int], 'IntList ~~ List[Int]';
+        is IntList.PRIMITIVE, 'List[Int]', 'IntList primitive is List[Int]';
+        is IntList<1 2 3 4>.WHAT, 'IntList', 'IntList<1 2 3 4>.WAHT is IntList';
+        is IntList<1 2 3>.plus(2), <3 4 5>, 'IntList method';
+    }
 }

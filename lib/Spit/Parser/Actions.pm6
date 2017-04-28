@@ -515,28 +515,32 @@ method term:name ($/) {
     my $name = $<name>.Str;
     make do if $<is-type> {
         my @params = $<class-params>.ast || Empty;
+        my $class-type := lookup-type($name, :@params, match => $<name>);
         do with $<object> {
-            if $_<angle-quote> andthen (my $list = .ast) ~~ SAST::List {
+            do if $_<angle-quote>
+               andthen (my $list = .ast) ~~ SAST::List
+               and $class-type !~~ tList()
+            {
                 for $list.children {
                     $_ = SAST::Blessed.new(
-                        class-name => $name,
+                        :$class-type,
                         :@params,
-                        $_,
                         match => .match,
+                        $_,
                     );
                 }
                 $list;
             } else {
                 my $definite = $list || $_<EXPR>.ast;
                 SAST::Blessed.new(
-                    class-name => $name,
+                    :$class-type,
                     :@params,
                     $definite,
                 )
             }
         } else {
             SAST::Type.new(
-                class-name => $name,
+                :$class-type,
                 :@params,
             )
         }
@@ -763,11 +767,11 @@ method block($/)    {
 }
 
 method type ($/) {
-    with $<class-params>.ast {
-        make SAST::Type.new( params => $_,class-name => $<type-name>.Str ).class-type;
-    } else {
-        make $*CURPAD.lookup(CLASS,$/<type-name>.Str,match => $<type-name>).class;
-    }
+    make lookup-type(
+        $/<type-name>.Str,
+        params => $<class-params>.ast // Empty,
+        match => $/,
+    );
 }
 method os   ($/) { make $*CURPAD.lookup(CLASS,$/.Str,match => $/).class }
 
