@@ -1,3 +1,14 @@
+## 0.0.24
+
+- Added Perl 6 colon method call argument form `class.method: args`
+- Added File.archive, which creates a tgz from a directory
+- Added File.extract which extracts a tgz to a directory and returns it
+- Added Docker.commit which returns a DockerImg
+- Added Docker.copy to copy files into a container with `docker cp`.
+- Added HTTP.get-file which gets a remote file and saves it to file system.
+
+No docs for the above because it's all WIP
+
 ## 0.0.23
 
 - Add Docker, `$*docker`, `$*docker-cli` (WIP)
