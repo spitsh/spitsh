@@ -1558,7 +1558,7 @@ class SAST::Eval is SAST::Children   {
 
     method type { tStr() }
 
-    method children { $!src, }
+    method children { $!src, |%!opts.values }
 }
 
 class SAST::Regex is SAST::Children is rw {
