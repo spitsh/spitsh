@@ -107,7 +107,7 @@ multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.bare-name,
 }
 
 multi method gen-name(SAST::PosParam:D $_) {
-    return  ~(.ord + (.signature.has-invocant ?? 1 !! 0 ) + 1);
+    return  ~(.ord + (.signature.invocant ?? 1 !! 0 ) + 1);
 }
 
 multi method gen-name(SAST::Invocant:D $) { '1' }

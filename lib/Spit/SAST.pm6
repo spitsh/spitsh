@@ -718,16 +718,17 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
 
 class SAST::MethodDeclare is SAST::RoutineDeclare {
     has $.rw is rw;
-    has $.static is rw;
     has SAST::ClassDeclaration $.invocant-type is rw;
-    has @.invocants;
+    has $.invocant is rw;
+
+    method static { !$!invocant }
 
     method spit-gist { "method {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
-        $.signature.has-invocant = True unless $!static;
         $.return-type = $.invocant-type.class if $!rw;
-        $_ .= do-stage2(tAny) for @!invocants;
+        $!invocant andthen $_ .= do-stage2(tAny);
+        $.signature.invocant = $!invocant;
         nextsame;
     }
 
@@ -746,7 +747,7 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
 
     method declarator { 'method' }
 
-    method children { |callsame,|@!invocants }
+    method children { |callsame, ($!invocant // Empty) }
 }
 
 
@@ -926,16 +927,15 @@ class SAST::SubCall is SAST::Call {
 }
 
 class SAST::Invocant does SAST does SAST::Declarable {
-    has $.sigil is required;
     has $.class-type is required;
     method name { 'self' }
-    method symbol-type { symbol-type-from-sigil($!sigil) }
+    method symbol-type { SCALAR }
     method gist { $.node-name ~ "($.spit-gist)" }
-    method spit-gist { "{$!sigil}self" }
+    method spit-gist { '$self' }
     method type { $!class-type }
     method dont-depend { True }
     method stage2 ($) { self }
-    method itemize { itemize-from-sigil($!sigil) }
+    method itemize { True }
 }
 
 class SAST::Param does SAST does SAST::Declarable {
@@ -966,7 +966,7 @@ class SAST::NamedParam is SAST::Param {
 class SAST::Signature is SAST::Children {
     has SAST::PosParam @.pos;
     has SAST::NamedParam %.named;
-    has $.has-invocant is rw;
+    has $.invocant is rw;
 
     method stage2 ($) {
         for @!pos.kv -> $i,$p is rw {

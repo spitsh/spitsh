@@ -344,14 +344,14 @@ method make-routine ($/,$type,:$static) {
         when 'sub' { SAST::SubDeclare.new(:$name) }
         when 'method'  {
             SX.new(message => 'methdod declared outside of a class').throw unless $*CLASS;
-            my $r = SAST::MethodDeclare.new(:$name,:$static);
+            my $r = SAST::MethodDeclare.new(:$name);
             if $*CURPAD.lookup(CLASS,$name) -> $matching-class {
                 $r.return-type = $matching-class.class;
             }
             unless $static {
-                for <$ @> {
-                    $r.invocants.push: $*CURPAD.declare: SAST::Invocant.new(sigil => $_,class-type => $*CLASS.class);
-                }
+                $r.invocant = $*CURPAD.declare: SAST::Invocant.new(
+                    class-type => $*CLASS.class
+                );
             }
             $r;
         }

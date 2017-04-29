@@ -1,6 +1,6 @@
 use Test;
 
-plan 16;
+plan 14;
 
 {
     class Foo {
@@ -53,27 +53,4 @@ plan 16;
 
     is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";
     is (Foo<foo>.first: "bar"), "foobarbaz", '.method: syntax';
-}
-
-{
-    class Listy  {
-        method +iterate-at {
-            my $i = 0;
-            for @self {
-                $i++
-            }
-            $i;
-        }
-
-        method +iterate-dollar {
-            my $j = 0;
-            for $self {
-                $j++;
-            }
-            $j;
-        }
-    }
-
-    is Listy(<one two three>).iterate-at,    3,'for @self { }';
-    is Listy(<one two three>).iterate-dollar,1,'for $self { }'
 }
