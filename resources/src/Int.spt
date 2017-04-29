@@ -6,3 +6,7 @@ augment Int {
     #| Returns true if the argument is an Int and equal to the invocant.
     method ?ACCEPTS(Int $b) { $b == $self }
 }
+
+augment List[Int] {
+    method +sum { $self.${ awk '{ i += $0 } END { printf i }' } }
+}
