@@ -59,7 +59,7 @@ proto method walk(SAST:D $sast is rw,|) {
     }
 
     if not $sast ~~ SAST::ClassDeclaration and $sast ~~ SAST::Children {
-        for $sast.children {
+        for $sast.auto-compose-children {
             self.walk($_)
         }
     }

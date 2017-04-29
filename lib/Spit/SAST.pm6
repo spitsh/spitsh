@@ -265,6 +265,7 @@ role SAST::OSMutant {
 class SAST::Children does SAST {
 
     method children { Empty }
+    method auto-compose-children { @.children }
     method gist(Mu:D:){
         my $name = self.^name.subst(/^'SAST::'/,'');
         $name ~ "$.gist-children";
@@ -1073,7 +1074,8 @@ class SAST::CondReturn is SAST::Children  {
         self;
     }
 
-    method children { $!val,(self.stage3-done && $!Bool-call || Empty) }
+    method children { $!val,($!Bool-call // Empty) }
+    method auto-compose-children { $!val, }
     method type { $!val.type }
     method gist { $.node-name ~ "($!when)" ~ $.gist-children }
 }
@@ -1331,9 +1333,11 @@ class SAST::If is SAST::Children is rw {
     }
 
     method children {
-        $!cond,$!then,($!topic-var // Empty),
-        # Hide else from composer initially. Ifs need to be walked from top to bottom.
-        ($!else // Empty if $.stage3-done)
+        $!cond,$!then,($!topic-var // Empty),($!else // Empty)
+    }
+    method auto-compose-children {
+        # Don't auto-compose else. If chains need to be walked from top to bottom.
+        $!cond,$!then,($!topic-var // Empty)
     }
     method type { derive-common-parent($!then.type, ($!else.type if $!else)) }
 
