@@ -572,7 +572,7 @@ class SAST::PhaserBlock is SAST::Children {
 
 class SAST::Return is SAST::Children {
     has $.val is rw;
-    has $.impure is rw;
+    has $.return-by-var is rw;
     has $.loop is rw;
     method stage2($ctx) is default {
         self.val .= do-stage2($ctx,:desc("return value didn't match block's return type"));
@@ -694,6 +694,7 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
     has @.os-candidates is rw;
     has $.is-native is rw;
     has $.chosen-block is rw;
+    has $.return-by-var is rw;
     has $.impure is rw;
 
     method symbol-type { SUB }
@@ -712,7 +713,7 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
                 $!is-native ?? tAny() !! $.return-type,
                 :!auto-inline,
                 :desc("return value of $.spit-gist didn't match return type of $!name"));
-            .impure = $!impure with .value.returns;
+            .return-by-var = $!return-by-var with .value.returns;
         }
         self;
     }
@@ -741,6 +742,7 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         $.return-type = $.invocant-type.class if $!rw;
         $!invocant andthen $_ .= do-stage2(tAny);
         $.signature.invocant = $!invocant;
+        $!invocant.piped = False if $.impure;
         nextsame;
     }
 

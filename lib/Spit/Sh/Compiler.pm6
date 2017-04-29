@@ -341,7 +341,7 @@ multi method compile-assign($var,SAST::Junction:D $j) {
 }
 
 multi method compile-assign($var,SAST::Call:D $call) {
-    if $call.declaration.impure {
+    if $call.declaration.return-by-var {
         |self.node($call),'; ',self.gen-name($var),'=$R';
     } else {
         nextsame;
@@ -673,7 +673,8 @@ multi method node(SAST::MethodCall:D $_) {
 }
 
 multi method arg(SAST::Call:D $_) is default {
-    SX::Sh::ImpureCallAsArg.new(call-name => .name,node => $_).throw if .declaration.impure;
+    SX::Sh::ReturnByVarCallAsArg.new(call-name => .name,node => $_).throw
+        if .declaration.return-by-var;
     nextsame;
 }
 
@@ -740,7 +741,7 @@ multi method cap-stdout(SAST::Cmd:D $_) {
 
 #!Return
 multi method node(SAST::Return:D $ret) {
-    if $ret.impure {
+    if $ret.return-by-var {
         'R=',self.arg($ret.val);
     } elsif $ret.loop {
         self.loop-return($ret.val);

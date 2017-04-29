@@ -127,7 +127,7 @@ augment Str {
             say @/[3]; #-> spitsh/spitsh
         }
     }
-    method ?match(#|[The regular expression to match against]Regex $r) on {
+    method ?match(#|[The regular expression to match against]Regex $r) is impure on {
         RHEL {
             @/ = $self.${
                 awk :$r (

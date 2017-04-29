@@ -293,11 +293,11 @@ class SX::BadCall::WrongNumber is SX::BadCall {
 }
 
 
-class SX::Sh::ImpureCallAsArg is SX {
+class SX::Sh::ReturnByVarCallAsArg is SX {
     has $.call-name is required;
 
     method message {
-        "A call to an impure routine ($!call-name) cannot be used as an argument. " ~
+        "A call to an return-by-var routine ($!call-name) cannot be used as an argument. " ~
         "Assign the result to a variable first and then pass the variable in its place.";
     }
 }

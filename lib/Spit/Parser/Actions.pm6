@@ -303,6 +303,8 @@ method trait:sym<is> ($/){
         $*CU.export($*DECL);
     } elsif $<rw> {
         $*ROUTINE.rw  = True;
+    } elsif $<return-by-var> {
+        $*ROUTINE.return-by-var = True;
     } elsif $<impure> {
         $*ROUTINE.impure = True;
     } else {

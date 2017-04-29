@@ -220,8 +220,9 @@ grammar Spit::Grammar is Spit::Lang {
             |$<native>='native'
             |$<export>='export'
             |$<rw>='rw'
+            |$<return-by-var>='return-by-var'
             |$<impure>='impure'
-            |<type>
+            |{} <type>
         ]
     }
 

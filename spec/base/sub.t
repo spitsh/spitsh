@@ -110,7 +110,7 @@ plan 31;
 
 {
     my $canary = 0;
-    sub +check-re-enter is impure {
+    sub +check-re-enter is return-by-var {
         my $foo = ++$canary;
         $*NULL.write($foo);
         $foo;

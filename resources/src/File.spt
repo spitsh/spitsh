@@ -155,7 +155,7 @@ augment File {
         $fd.write("written to via file descriptor");
         say $file.slurp; #-> written to via file descriptor!
     }
-    method open-w(--> FD) is impure {
+    method open-w(--> FD) is return-by-var {
         my $fd = FD.next-free;
         $fd.open-w($self);
         $fd;
@@ -169,7 +169,7 @@ augment File {
         $fd.get() && say $~; #-> The
         $fd.get() && say $~; #-> quick
     }
-    method open-r(--> FD) is impure {
+    method open-r(--> FD) is return-by-var {
         my $fd = FD.next-free;
         $fd.open-r($self);
         $fd;
