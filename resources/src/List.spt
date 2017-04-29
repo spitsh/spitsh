@@ -35,8 +35,9 @@ augment List {
         }
     }
     #| Returns the number notional elements in the list. This is equal
-    #| to 0 if the list is the empty string otherwise the number of `\n` + 1.
-    method +elems { $self ?? $self.${wc -l} + 1 !! 0 }
+    #| to the number of lines of text regardless of whether the last
+    #| line is terminated by a newline.
+    method +elems { $self.${awk 'END{print NR}'} }
     #| The list in Int context returns `.elems`
     #|{
         my @a = <one two three>;
