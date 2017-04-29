@@ -17,14 +17,6 @@ my %native = (
         body => q|printf "%s\n" "$*"|,
         deps => ('?IFS'),
     )),
-    starts-with => Map.new((
-        body => Q<case "$1" in "$2"*) true;; *) false;; esac>,
-        deps => ()
-    )),
-    ends-with => Map.new((
-        body => Q<case "$1" in *"$2") true;; *) false;; esac>,
-        deps => ()
-    )),
 );
 
 sub nnq { NoNeedQuote.new: bits => @_ }

@@ -92,7 +92,12 @@ augment Str {
             default { "well I'm not sure.." }
         }
     }
-    method ?starts-with(#|[True if the string starts-with this]$starts-with) is native {  }
+    method ?starts-with(#|[True if the string starts-with this]$starts-with) {
+        $self.${
+            awk :T($starts-with) -v 'RS=^$'
+            '{exit(index($0,ENVIRON["T"])!=1)}'
+        }
+    }
 
     #| Returns true if the string ends with the argument.
     #|{
@@ -104,7 +109,12 @@ augment Str {
             when .ends-with('.io')  { say 'a moon of Jupiter' }
         }
     }
-    method ?ends-with(#|[True if the string ends-with this]$ends-with) is native {  }
+    method ?ends-with(#|[True if the string ends-with this]$ends-with) {
+        $self.${
+            awk :T($ends-with) -v 'RS=^$'
+           '{T=ENVIRON["T"];exit(index($0,T)!=length($0)-length(T)+1)}'
+        }
+    }
 
     #| Returns true if the the string matches the regex and sets the
     #| `@/` match variable to the match and its capture groups (one per line).
