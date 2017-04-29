@@ -1,6 +1,6 @@
 use Test;
 
-plan 36;
+plan 37;
 
 for <one two three> {
 
@@ -143,6 +143,20 @@ for 4,5 {
     is (for <one two three> { .uc }).${ sed 's/E/z/g' }, <ONz TWO THRzz>,
        "piping into command";
 }
+
+{
+    # Testing that this method don't turn into a piped command
+    class BadPipe {
+        method ~bad-pipe-for {
+            for <1 2 3> {
+                $self.${grep $_};
+            }
+        }
+        "";
+    }
+    is BadPipe<123>.bad-pipe-for, <123 123 123>, 'invocant pipe in for block';
+}
+
 
 
 pass "statement-mod for $_" for ^3;

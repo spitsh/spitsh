@@ -1,6 +1,6 @@
 use Test;
 
-plan 24;
+plan 26;
 
 {
     my $i = 0;
@@ -98,4 +98,28 @@ class Foo is Int {
     $j = -1;
     is (while ++$j < 3 {  <one two three>[$j].uc }).${ sed 's/E/z/g' }, <ONz TWO THRzz>,
        "piping into command";
+}
+
+{
+    # Testing that these methods don't turn into piped commands
+    class BadPipe {
+        method +bad-pipe-cond {
+            my $k = 1;
+            while $self.${ grep >X $k } {
+                $k++;
+            }
+            $k;
+        }
+        method ~bad-pipe-loop {
+            my $k = 0;
+            while $k < 4 {
+                $self.${ grep $k };
+                $k++;
+            }
+            "";
+        }
+    }
+
+    is BadPipe<123>.bad-pipe-cond, 4, ‘invocant pipe in while condition’;
+    is BadPipe<123>.bad-pipe-loop, <123 123 123>, 'invocant pipe in while block';
 }

@@ -88,9 +88,13 @@ multi method walk(SAST::Cmd $THIS is rw) {
             @nodes.splice($i,1,.children);
         }
     }
+
+    self.walk($_, :should-pipe) with $THIS.pipe-in;
 }
 
 multi method walk(SAST::While:D $THIS is rw) {
+    my $*no-pipe = True;
+    self.walk($THIS);
     with $THIS.cond.compile-time -> $cond {
         if not $cond {
             $THIS .= stage3-node(SAST::Empty);
@@ -121,51 +125,51 @@ method try-case($if) {
 
         if (
             (my \cond = $cur.cond) ~~ SAST::Cmp && cond.sym eq 'eq'
-                && (
-                    $topic = cond[0];
-                    $pattern = SAST::Regex.new(
-                        patterns => { case => '{{0}}' },
-                        placeholders => cond[1],
-                        match => $cur.match,
-                    );
-                )
+            && (
+                $topic = cond[0];
+                $pattern = SAST::Regex.new(
+                    patterns => { case => '{{0}}' },
+                    placeholders => cond[1],
+                    match => $cur.match,
+                );
+            )
             or
             cond ~~ SAST::MethodCall && cond.declaration.identity === STR-MATCHES
-                && (my $re = cond.pos[0]) ~~ SAST::Regex && $re.patterns<case>.defined
-                && ($topic = cond[0]; $pattern = $re)
+            && (my $re = cond.pos[0]) ~~ SAST::Regex && $re.patterns<case>.defined
+            && ($topic = cond[0]; $pattern = $re)
             or
 
             cond ~~ SAST::MethodCall && cond.declaration.identity === ENUM-HAS-MEMBER
-                && (my $enum = cond[0].compile-time) ~~ Spit::Type
-                && (
-                    $topic = cond.pos[0].stage3-node(
-                        SAST::MethodCall,
-                        name => 'name',
-                        declaration => ENUM-NAME,
-                        cond.pos[0],
-                    );
-                    $pattern = SAST::Regex.new(
-                        match    => $cur.match,
-                        patterns => { case => $enum.^types-in-enum».name.join('|') }
-                    )
-                 )
+            && (my $enum = cond[0].compile-time) ~~ Spit::Type
+            && (
+                $topic = cond.pos[0].stage3-node(
+                    SAST::MethodCall,
+                    name => 'name',
+                    declaration => ENUM-NAME,
+                    cond.pos[0],
+                );
+                $pattern = SAST::Regex.new(
+                    match    => $cur.match,
+                    patterns => { case => $enum.^types-in-enum».name.join('|') }
+                )
             )
-          {
-              $common-topic //= $topic;
-              if (given $common-topic {
-                 when SAST::CompileTimeVal { $topic.val ===  .val }
-                 when SAST::Var { $topic.declaration === .declaration }
-                 when SAST::MethodCall {
-                     $topic.declaration === .declaration === ENUM-NAME
-                 }
-              }) {
-                  @patterns.push($pattern);
-                  @blocks.push($cur.then);
-              } else {
-                  $can = False;
-              }
-              $cur = $cur.else;
-          } else {
+        )
+        {
+            $common-topic //= $topic;
+            if (given $common-topic {
+                   when SAST::CompileTimeVal { $topic.val ===  .val }
+                   when SAST::Var { $topic.declaration === .declaration }
+                   when SAST::MethodCall {
+                       $topic.declaration === .declaration === ENUM-NAME
+                   }
+               }) {
+                @patterns.push($pattern);
+                @blocks.push($cur.then);
+            } else {
+                $can = False;
+            }
+            $cur = $cur.else;
+        } else {
             $can = False;
         }
     }
@@ -240,7 +244,10 @@ multi method walk(SAST::Junction:D $THIS is rw) {
     }
 }
 
-multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
+multi method walk(
+    SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl },
+    :$should-pipe = False,
+) {
     my $decl := $THIS.declaration;
 
     if $decl ~~ SAST::ConstantDecl {
@@ -255,13 +262,19 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
             $THIS.switch: $inline;
         }
 
-    } elsif $decl ~~ SAST::MaybeReplace and $decl.replace-with -> $val {
+    }
+
+    elsif $decl ~~ SAST::MaybeReplace and $decl.replace-with -> $val {
         $THIS.switch: do given $val {
             when SAST::Var {$val.gen-reference(match => $THIS.match,:stage2-done) }
             default { $val.deep-clone() }
         }
         $THIS.stage3-done = False;
         self.walk($THIS);
+    }
+
+    elsif $decl ~~ SAST::Invocant and not $should-pipe {
+        $decl.piped = False;
     }
 
 }

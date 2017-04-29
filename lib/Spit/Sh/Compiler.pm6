@@ -99,10 +99,13 @@ multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.bare-name,
 }
 
 multi method gen-name(SAST::PosParam:D $_) {
-    return  ~(.ord + (.signature.invocant ?? 1 !! 0 ) + 1);
+    return  ~(.ord + ((.signature.invocant andthen !.piped) ?? 1 !! 0 ) + 1);
 }
 
-multi method gen-name(SAST::Invocant:D $) { '1' }
+multi method gen-name(SAST::Invocant:D $_) {
+    SX::Bug.new(desc => 'Tried to compile a piped parameter', match => .match).throw if .piped;
+    '1'
+}
 
 multi method gen-name(SAST::Var:D $_ where { $_ !~~ SAST::VarDecl }) {
     self.gen-name(.declaration);
@@ -648,11 +651,22 @@ multi method node(SAST::Call:D $_)  {
 }
 
 multi method node(SAST::MethodCall:D $_) {
-    my $call := |self.call: self.gen-name(.declaration),
-                .param-arg-pairs,
-                (( .declaration.static ?? Empty !! .invocant),|.pos);
+    my $call;
+    if .declaration.invocant.?piped {
+        $call := |self.cap-stdout(.invocant), '|',
+                 |self.call:
+                   self.gen-name(.declaration),
+                   .param-arg-pairs,
+                   .pos;
+    } else {
+        $call := |self.call:
+                  self.gen-name(.declaration),
+                  .param-arg-pairs,
+                  ((.declaration.static ?? Empty !! .invocant ), |.pos);
+    }
+
     if .declaration.rw and .invocant.assignable {
-        |self.gen-name(.invocant),'=$(',$call,')';
+        |self.gen-name(.invocant),'=$(',|$call,')';
     } else {
         self.maybe-quietly: $call, .type, .ctx, match => .match;
     }
@@ -681,7 +695,10 @@ multi method node(SAST::Cmd:D $cmd,:$silence) {
                                        ).flat;
 
         my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,@in);
-        my $pipe     := |(|self.cap-stdout($_),'|' with $cmd.pipe-in);
+
+        my $pipe := do if $cmd.pipe-in andthen not .?is-piped {
+            |(|self.cap-stdout($cmd.pipe-in),'|');
+        };
         |$pipe,
         ("\n{$*pad}  " if $pipe and $pipe.chars + $full-cmd.chars > $.chars-per-line-cap),
         |$cmd.set-env.map({"{.key.subst('-','_',:g)}=",|self.arg(.value)," "}).flat,

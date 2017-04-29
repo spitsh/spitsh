@@ -401,6 +401,8 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 
     method desc { "Assignment to $.spit-gist" }
 
+    method is-piped { self.declaration.?piped }
+
     method itemize { itemize-from-sigil($!sigil) }
 }
 
@@ -620,11 +622,20 @@ class SAST::Cmd is SAST::MutableChildren is rw {
         if not ($!pipe-in and (@!write || @!append) or @.nodes) {
             self.make-new(SX,message => ‘command can't be empty’).throw;
         }
+
+        if ($!pipe-in andthen .?is-piped) and $*no-pipe {
+            $!pipe-in.declaration.piped = False;
+        }
         self;
     }
 
     method children {
-        ($!pipe-in,|@.nodes,|@!in,|@!write,|@!append,|%!set-env.values).grep(*.defined)
+        grep *.defined, $!pipe-in, |@.nodes, |@!in, |@!write, |@!append, |%!set-env.values;
+    }
+
+    method auto-compose-children {
+        # pipe-in gets special treatment in composition stage
+        grep *.defined, |@.nodes, |@!in, |@!write, |@!append, |%!set-env.values;
     }
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
@@ -929,6 +940,7 @@ class SAST::SubCall is SAST::Call {
 
 class SAST::Invocant does SAST does SAST::Declarable {
     has $.class-type is required;
+    has $.piped is rw = True; # Whether the invocant should be piped in
     method name { 'self' }
     method symbol-type { SCALAR }
     method gist { $.node-name ~ "($.spit-gist)" }
@@ -1352,6 +1364,7 @@ class SAST::While is SAST::Children {
     has $!type;
 
     method stage2($ctx) {
+        my $*no-pipe = True;
         $!cond .= do-stage2(tBool,:desc<while conditional>);
         generate-topic-var(var => $!topic-var,:$!cond,blocks => ($!block,));
         $!block .= do-stage2($ctx,:desc<while block return value>,:loop,:!auto-inline);
@@ -1399,6 +1412,7 @@ class SAST::For is SAST::Children {
         }
         $!iter-var.do-stage2(tAny);
         $!block.declare: $!iter-var;
+        my $*no-pipe = True;
         $!block .= do-stage2($ctx.&derive-type,:loop,:!auto-inline);
         self;
     }
