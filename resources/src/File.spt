@@ -138,7 +138,7 @@ augment File {
     method subst(#|[The string to be replaced]$target,
                  #|[The string to replace it with]$replacement,
                  #|[Turn on global matching]Bool :$g){
-        $self.write($self.slurp.subst($target,$replacement,:$g));
+        ${printf ($self.slurp.subst: $target,$replacement,:$g) > $self}
     }
 
     #| Reads the file into the file's content as a List of lines
