@@ -87,6 +87,14 @@ augment List {
     method @numeric-sort {
         $self.${sort -n};
     }
+
+    method *grep(Regex $regex) {
+        $self.${ egrep $regex }
+    }
+
+    method first(Regex $regex --> Elem-Type) {
+        $self.${ egrep -m1 $regex }
+    }
 }
 
 #| The internal field separator. For Spit it's always `\n`.

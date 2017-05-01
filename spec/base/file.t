@@ -1,6 +1,6 @@
 use Test;
 
-plan 52;
+plan 54;
 
 {
     my File $file .= tmp;
@@ -170,6 +170,14 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
         my $extracted = $named-archive.extract;
         ok $extracted.d, 'to => extracted archive is a directory';
         ok $extracted.add('foo.txt'), 'to => foo.txt exists';
+    }
+}
+
+{
+    given File.tmp {
+        .write(<one two three four five six seven eight nine>);
+        is .grep(/i.{1,2}$/), <five six nine>, '.grep';
+        is .first(/i.{1,2}$/), <five>, '.first';
     }
 }
 

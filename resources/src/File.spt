@@ -114,7 +114,7 @@ augment File {
     #| Sets the file's contents to `$data`. If the file doesn't exist
     #| it will be created.
     method write(#|[The string to write to the file] $data)  {
-        $data.write-to($self);
+        $data.${ > $self  }
     }
 
     #| Returns true if the file contains the string
@@ -221,10 +221,6 @@ augment File {
         ${find $self ('-name', $name if $name)}
     }
 
-    method @grep(Regex $re, :$v) {
-        ${ grep ('-v' if $v) -E $re $self }
-    }
-
     static method tmp-fifo(--> File) {
         my File $tmpfifo .= tmp;
         $tmpfifo.remove;
@@ -257,6 +253,14 @@ augment File {
 
     method extract(-->File) {
         ${ tar xvf $self | sed -n '1s/\/.*//p' };
+    }
+
+    method @grep(Regex $regex) {
+        ${egrep $regex $self}
+    }
+
+    method ~first(Regex $regex){
+        ${egrep -m1 $regex $self}
     }
 
 }

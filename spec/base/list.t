@@ -1,6 +1,6 @@
 use Test;
 
-plan 45;
+plan 49;
 
 {
     my @a;
@@ -140,4 +140,16 @@ plan 45;
         is IntList<1 2 3 4>.WHAT, 'IntList', 'IntList<1 2 3 4>.WAHT is IntList';
         is IntList<1 2 3>.plus(2), <3 4 5>, 'IntList method';
     }
+}
+
+{
+    my @l = <one two three four five six seven eight nine>;
+
+    is @l.grep(/i.{1,2}$/), <five six nine>, '.grep';
+    is @l.first(/i.{1,2}$/), <five>, '.first';
+
+    my @m = <42 58 1337 8888>;
+
+    ok @m.first(/3/) < @m.first(/88/), '.first on List[Int] return Int';
+    is @m.grep(/^[45]/).sum, 100, '.grep on List[Int] returns a List[Int]';
 }
