@@ -1005,12 +1005,15 @@ class SAST::Signature is SAST::Children {
     }
 
     method reify(Spit::Type $call-invocant-type) {
-        if $call-invocant-type.^needs-reification {
+        if $call-invocant-type.HOW ~~ Spit::Metamodel::Parameterized
+           and @.children.first(*.type.^needs-reification)
+        {
             my $copy = self.clone;
             for $copy.children {
                 $_ .= clone;
-                .type = .type.^refiy($call-invocant-type);
+                .type = .type.^reify($call-invocant-type);
             }
+            $copy;
         } else {
             self;
         }
