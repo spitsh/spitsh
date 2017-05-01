@@ -1,3 +1,27 @@
+## 0.0.25
+- Add .grep and .first for List and File
+- Much more piping between commands instead of command substitution.
+  Now, something like:
+  ```perl6
+  say <one two three four five>.grep(/e/).elems;
+  ```
+  compiles into:
+  ```shell
+  say "$(list one two three four five|egrep e|elems)";
+  ```
+  Much much nicer :)
+- @self is gone
+- You can now augment parameterized classes. E.g List[Int].sum is
+  implemented like:
+
+``` perl6
+augment List[Int] {
+    method +sum { $self.${ awk '{ i += $0 } END { printf i }' } }
+}
+...
+say <1 2 3 4>.sum #->10, only works on List[Int].
+```
+
 ## 0.0.24
 
 - Added Perl 6 colon method call argument form `class.method: args`
