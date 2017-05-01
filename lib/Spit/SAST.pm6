@@ -413,32 +413,37 @@ class SAST::Var is SAST::Children does SAST::Assignable {
     method itemize { itemize-from-sigil($!sigil) }
 }
 
+sub figure-out-var-type($sigil, $type is rw, \decl-type, :$assign is raw, :$desc) {
+    my $sigil-type := type-from-sigil($sigil);
+    if decl-type {
+        $type = do if $sigil-type === tList() {
+            tList(decl-type);
+        } else {
+            decl-type;
+        };
+
+        $assign .= do-stage2($type,:$desc) if $assign;
+    } else {
+        $type = do if $assign {
+            $assign .= do-stage2($sigil-type, :$desc);
+            $assign.type;
+        } else {
+            if $sigil-type === tList() {
+                tList(tStr);
+            } else {
+                $sigil-type;
+            }
+        }
+    }
+}
+
 class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
     has Spit::Type $.type;
     has Spit::Type $.decl-type;
     has $.dont-depend is rw;
 
     method stage2(SAST::VarDecl:D: $ctx) is default {
-        my $sigil-type := type-from-sigil(self.sigil);
-        if $!decl-type {
-            $!type = do if $sigil-type === tList() {
-                tList($!decl-type);
-            } else {
-                $!decl-type;
-            }
-            $.assign .= do-stage2($!type,:$.desc) if $.assign;
-        } else {
-            $!type = do if $.assign {
-                $.assign .= do-stage2($sigil-type,:$.desc);
-                $.assign.type;
-            } else {
-                if $sigil-type === tList() {
-                    tList(tStr);
-                } else {
-                    $sigil-type;
-                }
-            }
-        }
+        figure-out-var-type($.sigil, $!type, $!decl-type, :$.assign, :$.desc);
         self;
     }
     method bare-name  { $.name.subst(/^<[*?]>/,'') }
@@ -950,7 +955,9 @@ class SAST::Param does SAST does SAST::Declarable {
     has Str:D $.name is required;
     has Sigil:D $.sigil is required;
     has $.signature is rw;
-    has $.type is rw = type-from-sigil(self.sigil);
+    has $.decl-type;
+    has $.type is rw;
+    method TWEAK(|) { figure-out-var-type($!sigil, $!type, $!decl-type) }
     method stage2 ($) { self }
     method symbol-type { symbol-type-from-sigil($!sigil) }
     method dont-depend { True }

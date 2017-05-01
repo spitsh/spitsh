@@ -405,14 +405,14 @@ method param ($/) {
         SAST::PosParam.new(
             name => $<var><name>.Str,
             sigil => $<var><sigil>.Str,
-            |(type => .ast with $<type>),
+            |(decl-type => .ast with $<type>),
             slurpy => ?$<slurpy>.Str
         )
     } else {
         SAST::NamedParam.new(
             name => $<var><name>.Str,
             sigil => $<var><sigil>.Str,
-            |(type => .ast with $<type>),
+            |(decl-type => .ast with $<type>),
         )
     }
 }
