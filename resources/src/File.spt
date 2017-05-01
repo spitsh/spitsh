@@ -90,7 +90,7 @@ augment File {
     #| Adds a line to a file. If the file doesn't end in a `\n`, a one
     #| will be appended before the line being added.
     method push(#|[line to add] $line) {
-        $self.write($self.slurp.push($line));
+        $self.slurp.push($line).write-to($self)
     }
     #| Calls `touch(1)` on the file.
     #|{ .touch unless File<foo.txt> }
@@ -114,7 +114,7 @@ augment File {
     #| Sets the file's contents to `$data`. If the file doesn't exist
     #| it will be created.
     method write(#|[The string to write to the file] $data)  {
-        $data.${ > $self  }
+        $data.write-to($self);
     }
 
     #| Returns true if the file contains the string
@@ -138,7 +138,7 @@ augment File {
     method subst(#|[The string to be replaced]$target,
                  #|[The string to replace it with]$replacement,
                  #|[Turn on global matching]Bool :$g){
-        ${printf ($self.slurp.subst: $target,$replacement,:$g) > $self}
+        $self.slurp.subst($target,$replacement,:$g).write-to($self);
     }
 
     #| Reads the file into the file's content as a List of lines

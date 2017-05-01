@@ -219,6 +219,10 @@ augment Str {
         }
     }
 
+    method write-to(File $to) {
+        $self.${awk -v "f=$to" -v 'RS=^$' 'END{printf $0>f}'}
+    }
+
     method ~gist { $self }
 
     #| Returns True if the invocant and argument string are equal.
