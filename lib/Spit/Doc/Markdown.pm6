@@ -4,7 +4,7 @@ need Spit::SpitDoc;
 need Spit::Metamodel;
 
 method gen-type-link($type) {
-    return $type.name if $type.HOW ~~ Spit::Metamodel::Placeholder;
+    return $type.name if $type.^needs-reification;
     my $path = $*PATH.parent.basename eq 'classes'
         ?? './' ~ $type.name
         !! '../' ~ $type.name;

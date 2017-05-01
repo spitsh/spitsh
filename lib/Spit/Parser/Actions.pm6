@@ -240,28 +240,34 @@ method declaration:sym<class> ($/){
 }
 
 method declare-class-params ($/) {
-    for $*CLASS.class.^placeholder-params -> $type {
-        $*CURPAD.declare: SAST::ClassDeclaration.new(class => $type);
+    my $type := $*CLASS.class;
+    if $type.HOW ~~ Spit::Metamodel::Parameterizable {
+        for $type.^placeholder-params -> $placeholder {
+            $*CURPAD.declare: SAST::ClassDeclaration.new(class => $placeholder);
+        }
     }
 }
 
 method new-class ($/) {
-    my $class = declare-new-type($/,$<type-name>.Str,Spit::Metamodel::Type);
+    my $class;
     with $<class-params><params><thing> {
+        $class = declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Parameterizable);
         for $_<type-name>.map(*.Str).kv -> $i,$name {
-            my $placeholder-type := Spit::Metamodel::Placeholder.new_type(:$name);
+            my $placeholder-type := Spit::Metamodel::Parameter.new_type(:$name);
             set-primitive($placeholder-type);
             $placeholder-type.^set-param-of($class.class,$i);
             $placeholder-type.^compose;
             $class.class.^placeholder-params.push($placeholder-type);
         }
+    } else {
+        $class = declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Type);
     }
     make $class;
 }
 
 method class-params ($/) {
     make cache  $<params><thing><type-name>.map: {
-        $*CURPAD.lookup(CLASS,.Str,match => $_);
+        $*CURPAD.lookup(CLASS, .Str, match => $_).class;
     };
 }
 
@@ -376,6 +382,12 @@ method return-type-sigil:sym<~>($/) { make tStr() }
 method return-type-sigil:sym<+>($/) { make tInt() }
 method return-type-sigil:sym<?>($/) { make tBool() }
 method return-type-sigil:sym<@>($/) { make tList() }
+method return-type-sigil:sym<*>($/) {
+    $*CLASS or
+      SX.new(message => 'Whatever-Invocant return type used outside of a class').throw;
+
+    make $*CLASS.class.^whatever-invocant;
+}
 
 method paramlist ($/) {
     my @params = $<params>.map(*<param>.ast);

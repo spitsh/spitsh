@@ -287,6 +287,7 @@ grammar Spit::Grammar is Spit::Lang {
     token return-type-sigil:sym<+> { <sym> }
     token return-type-sigil:sym<?> { <sym> }
     token return-type-sigil:sym<@> { <sym> }
+    token return-type-sigil:sym<*> { <sym> }
 
     rule signature {
         <paramlist>

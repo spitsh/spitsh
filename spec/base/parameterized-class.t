@@ -1,11 +1,14 @@
 use Test;
 
-plan 20;
+plan 27;
 
 {
     class Foo[Type] {
         static method doit(--> Type) { 3 }
         static method echo(Type $a --> Type)  { $a }
+        static method echo-list(Type $a --> List[Type]) { $a, $a }
+        static method *return-type { "something" }
+        static method first-in-list(Type @list --> Type) { @list[0] }
     }
 
     augment Foo {
@@ -20,6 +23,13 @@ plan 20;
     is Foo[Int].doit.WHAT, 'Int', '.method.WHAT is "Int"';
     is Foo[Int].echo(5),5,"Foo[Int].echo --> Int";
     is Foo[Str].echo("str"),"str","Foo[Str].echo --> Str";
+
+    is Foo[Int].echo-list(5).WHAT, 'List[Int]',
+      '--> List[Type] becomes List[Int]';
+
+    ok Foo[Int].return-type ~~ Foo[Int], '*return  on Foo[Int]';
+    is Foo[Int].first-in-list(<4 3 2 1>), 4, 'List[Type] param accepts List[Int] in Foo[Int]';
+
     is Foo[Int].aug-echo(5),5,"Foo[Int].aug-echo --> Int";
     is Foo[Str].aug-echo("str"),"str","Foo[Str].aug-echo --> Str";
 
@@ -49,4 +59,17 @@ plan 20;
     nok Bar[Int,Bool]  ~~ Bar[Aint,Abool], 'Bar[Int,Bool] ~~ Bar[A,B]';
     is Bar[Aint,Abool].one-two(1,False),'1', 'call method on multi param class 1';
     is Bar[Aint,Abool].one-two(1,True),'11', 'call method on multi param class 2';
+}
+
+{
+    class Parent[Param] {
+        method *return-self { $self.chars }
+    }
+
+    class Child is Parent[Int] { }
+
+    is Parent[Int]<one>.return-self.WHAT, 'Parent[Int]', '* return .WHAT is parent';
+    ok Parent[Int]<one>.return-self ~~ Parent[Int], '* return ~~ parent type';
+    is Child<two>.return-self.WHAT, 'Child', '* return .WHAT on child is child';
+    ok Child<two>.return-self ~~ Child, '* return ~~ child type';
 }

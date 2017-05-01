@@ -42,7 +42,7 @@ sub tPID is export { state $ = class-by-name('PID')  }
 
 sub lookup-type($name,:@params, Match :$match) is export {
     my $type := $*CURPAD.lookup(CLASS,$name, :$match).class;
-    $type := $type.^parameterize(|@params.map(*.class)) if @params;
+    $type := $type.^parameterize(|@params) if @params;
     $type;
 }
 
@@ -198,7 +198,7 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
             # We need node to become a list. As long as the node matches the List's
             # element type we can just bless this node into a List[of-the-appropriate type]
             if $type ~~ tList() and $node.type !~~ tList() {
-                my $elem-type := derive-type($type);
+                my $elem-type := flattened-type($type);
                 my $list-type = $type === tList() ?? tList($elem-type) !! $type;
                 $node.stage2-node(
                     SAST::Blessed,
@@ -219,8 +219,15 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
     }
 }
 
-sub derive-type(Spit::Type $_) {
-    when tList() { .parameterized ?? .params[0] !! tStr() }
+# The type of the thing if it were flattened out
+sub flattened-type(Spit::Type $_) {
+    when tList() {
+        if .^find-parameters-for(tList()) -> $params {
+            $params[0]
+        } else {
+            tStr();
+        }
+    }
     default { $_ }
 }
 
@@ -593,13 +600,13 @@ class SAST::Elem is SAST::MutableChildren does SAST::Assignable {
         $!index .= do-stage2(tInt);
         $.elem-of .= do-stage2(tAny);
         with $.assign {
-            $_ .= do-stage2(derive-type($.elem-of.type),:desc("assigning to element of {$.elem-of.gist}"));
+            $_ .= do-stage2($.type, :desc("assigning to element of {$.elem-of.gist}"));
         }
         self;
     }
 
     method gist { $.elem-of.gist ~ '[' ~ $!index.gist ~ ']' }
-    method type { derive-type($.elem-of.type) }
+    method type { flattened-type($.elem-of.type) }
     method elem-of is rw { @.nodes[0] }
     method children { $.elem-of,$!index, ($.assign // Empty) }
     method spit-gist { $.elem-of.spit-gist ~ '[' ~ $!index.spit-gist ~ ']' }
@@ -746,10 +753,10 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         nextsame;
     }
 
-    multi method reified-return-type(:$reify!) {
-        my $return-type = self.return-type;
-        if $reify.parameterized and $return-type.HOW ~~ Spit::Metamodel::Placeholder {
-            $reify.params[$return-type.^param-pos]
+    multi method reified-return-type($call-invocant) {
+        my $return-type := self.return-type;
+        if $return-type.^needs-reification {
+            $return-type.^reify($call-invocant);
         } else {
             $return-type
         }
@@ -793,7 +800,7 @@ class SAST::Call  is SAST::Children {
         my $last-valid;
         for @pos-params.kv -> $i,$param {
             if $param.slurpy {
-                my $elem-type = derive-type($param.type);
+                my $elem-type = flattened-type($param.type);
                 until (my $arg := $pos-args.pull-one) =:= IterationEnd {
                     $arg .= do-stage2(
                         $elem-type,
@@ -881,24 +888,10 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
 
     method invocant is rw { self[0] }
     method type {
-        $!type ||= self.declaration.reified-return-type(:reify($.invocant.ostensible-type));
+        $!type ||= self.declaration.reified-return-type($.invocant.ostensible-type);
     }
     method gen-sig {
-        $!gen-sig //= do {
-            my $sig = self.declaration.signature;
-            if $.invocant.ostensible-type.parameterized {
-                $sig := $sig.clone;
-                for $sig.children {
-                    $_ .= clone;
-                    if .type.HOW ~~ Spit::Metamodel::Placeholder {
-                        .type = .type.^reify($.invocant.ostensible-type);
-                    }
-                }
-                $sig;
-            } else {
-                $sig;
-            }
-        }
+        $!gen-sig //= self.declaration.signature.reify($.invocant.ostensible-type);
     }
 
     method stage2($ctx) {
@@ -1004,6 +997,17 @@ class SAST::Signature is SAST::Children {
         ~ @.children.map({ "{.type.name} {.spit-gist}" }).join(", ");
     }
 
+    method reify(Spit::Type $call-invocant-type) {
+        if $call-invocant-type.^needs-reification {
+            my $copy = self.clone;
+            for $copy.children {
+                $_ .= clone;
+                .type = .type.^refiy($call-invocant-type);
+            }
+        } else {
+            self;
+        }
+    }
 }
 
 class SAST::ClassDeclaration does SAST::Declarable is SAST::Children {
@@ -1221,11 +1225,11 @@ class SAST::List is SAST::MutableChildren {
     has $.type;
     method type {
         $!type ||= do {
-            my $base-type = derive-common-parent @.children.map: { .type.&derive-type }
+            my $base-type = derive-common-parent @.children.map: { .type.&flattened-type }
             tList($base-type);
         }
     }
-    method elem-type { derive-type(self.type) }
+    method elem-type { flattened-type(self.type) }
 
     method stage2($) {
         $_ .= do-stage2(tStr) for @.children;
@@ -1415,7 +1419,7 @@ class SAST::For is SAST::Children {
         $!iter-var.do-stage2(tAny);
         $!block.declare: $!iter-var;
         my $*no-pipe = True;
-        $!block .= do-stage2($ctx.&derive-type,:loop,:!auto-inline);
+        $!block .= do-stage2($ctx.&flattened-type, :loop, :!auto-inline);
         self;
     }
 

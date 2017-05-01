@@ -1,6 +1,6 @@
 use Test;
 
-plan 14;
+plan 16;
 
 {
     class Foo {
@@ -23,6 +23,7 @@ plan 14;
     class Parent {
         static method ~dont-override { ":D"}
         static method ~override      { "parent" }
+        static method *return-self   { "parent" }
     }
 
     class Child is Parent {
@@ -34,6 +35,8 @@ plan 14;
     is Child.override,"child",'child overridden parent';
     is Child.child-only,"child-only",'child-only method works';
     is Parent.override,"parent","overridden method in parent still works";
+    is Parent.return-self.WHAT, 'Parent', '* return on parent returns Parent';
+    is Child.return-self.WHAT, 'Child', '* return Child returns Child';
 }
 
 
