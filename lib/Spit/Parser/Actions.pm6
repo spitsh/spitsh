@@ -333,7 +333,7 @@ method declaration:sym<method> ($/) {
 method routine-declaration ($/) {
 
     given $*ROUTINE -> $r {
-        $r.os-candidates =  $<on-switch>.ast || (tOS, $<blockoid>.ast);
+        $r.os-candidates =  $<on-switch>.ast || (tOS, $<cmd-blockoid>.ast);
         make $r;
     }
 }
@@ -368,7 +368,7 @@ method make-routine ($/,$type,:$static) {
 
 method on-switch ($/) {
     # XXX: BUG in rakudo. Value from seq disappears so assign to array first.
-    my @tmp = $/<candidates>.ast[0].map({  $_<os>.ast, $_<block>.ast }).flat;
+    my @tmp = $/<candidates>.ast[0].map({  $_<os>.ast, $_<cmd-block>.ast }).flat;
     make @tmp;
 }
 
@@ -779,6 +779,19 @@ method blockoid($/) {
     make $pad;
 }
 
+method cmd-blockoid($/) {
+    make do with $<cmd> {
+        my $pad = $*CURPAD;
+        $pad.append(.ast);
+        $pad;
+    } else {
+        $<blockoid>.ast;
+    }
+}
+
+method cmd-block($/)    {
+    make $<cmd-blockoid>.ast;
+}
 
 method block($/)    {
     make $<blockoid>.ast

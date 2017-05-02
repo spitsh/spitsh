@@ -1,6 +1,6 @@
 use Test;
 
-plan 32;
+plan 33;
 
 {
     sub foo() {
@@ -136,4 +136,11 @@ plan 32;
     }
 
     is list-param(<1 2 3 4>), <3 4 5 6>, 'Int @a as a param';
+}
+
+
+{
+    sub ~cmd-sub ${ printf 'foo' };
+
+    is cmd-sub(), 'foo', 'sub ${..} syntax';
 }

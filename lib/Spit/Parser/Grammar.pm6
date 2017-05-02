@@ -247,7 +247,7 @@ grammar Spit::Grammar is Spit::Lang {
         :my $*DECL;
         <.new-routine(|c)>
         <trait>*
-        [ <on-switch> || <blockoid> || <.expected("on switch or block to define routine")>]
+        [ <on-switch> || <cmd-blockoid> || <.expected("on switch or block to define routine")>]
         <.finishpad>
         <.ENDSTMT>
     }
@@ -269,7 +269,7 @@ grammar Spit::Grammar is Spit::Lang {
             (
                 <!before '}'>
                 [<os> || <.expected('OS name')> ]
-                [<block> || <.expected("A block for { $<os>.Str }")>]
+                [<cmd-block> || <.expected("A block for { $<os>.Str }")>]
             )*
         },'}'>
     }
@@ -507,6 +507,15 @@ grammar Spit::Grammar is Spit::Lang {
     # and a <.finishpad> after
     token blockoid {
         $<statementlist>=<.wrap('{',/<R=.statementlist>/,'}',:desc("block"))>
+    }
+
+    token cmd-blockoid {
+        | <cmd>
+        | <blockoid>
+    }
+
+    token cmd-block {
+        <?[${]> <.newpad> <cmd-blockoid> <.finishpad>
     }
 
     token block {

@@ -1,6 +1,6 @@
 use Test;
 
-plan 16;
+plan 17;
 
 {
     class Foo {
@@ -56,4 +56,12 @@ plan 16;
 
     is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";
     is (Foo<foo>.first: "bar"), "foobarbaz", '.method: syntax';
+}
+
+{
+    class Foo {
+        static method ~cmd ${ printf 'foo' }
+    }
+
+    is Foo.cmd, 'foo', 'method ${...} syntax';
 }
