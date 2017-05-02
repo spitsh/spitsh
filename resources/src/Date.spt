@@ -1,0 +1,11 @@
+class Date {
+    static method +year   ${date '+%Y'}
+    static method +month  ${date '+%-m'}
+    static method +day    ${date '+%-d'}
+    static method +dow    ${date '+%-w'}
+    static method +hour   ${date '+%-H'}
+    static method +minute ${date '+%-M'}
+    static method +second ${date '+%-S'}
+    static method +epoch  ${date '+%s'}
+    static method ~date   ${date '+%Y-%m-%d'}
+}

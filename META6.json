@@ -53,6 +53,7 @@
         "src/commands.spt",
         "src/Docker.spt",
         "src/HTTP.spt",
+        "src/Date.spt",
         "core-lib/Test.spt"
     ],
     "source-url" : "https://github.com/spitsh/spitsh.git",
