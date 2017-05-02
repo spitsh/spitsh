@@ -2,7 +2,7 @@ use Spit::Compile;
 use Test;
 use Spit::Exceptions;
 use Terminal::ANSIColor;
-plan 10;
+plan 11;
 
 my $name = 'syntax-tests';
 throws-like { compile( '"', :$name) },
@@ -57,3 +57,6 @@ throws-like {
     Foo[Int].echo("blah");
     END
 }, SX::TypeCheck,"wrong type of argument to parameterized class method";
+
+throws-like { compile('say "foo"; say "bar"; }', name => "unbalanced }") },
+              SX::Unexpected, 'unbalanced }';

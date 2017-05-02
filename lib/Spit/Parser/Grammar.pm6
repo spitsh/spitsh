@@ -29,7 +29,10 @@ grammar Spit::Grammar is Spit::Lang {
             self.define_slang('Regex',Spit::Regex, Spit::Regex-Actions);
         }
         <.newCU>
-        ^<statementlist>$
+        ^
+        <statementlist>
+        [$<unbalanced>=\S+ { SX::Unexpected.new(match => $<unbalanced>).throw } ]?
+        $
     }
 
     token opener { @openers }

@@ -169,6 +169,10 @@ class SX::Expected is SX {
     }
 }
 
+class SX::Unexpected is SX {
+     method message { "unexpected ‘{$.match.Str}’." }
+}
+
 class SX::MethodNotFound is SX {
     has Str:D $.name is required;
     has $.type is required;
