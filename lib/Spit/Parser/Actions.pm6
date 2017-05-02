@@ -6,6 +6,7 @@ need Spit::Metamodel;
 
 has $.outer;
 has $.debug;
+has $.use-bootstrap-types;
 
 method e ($/) { make $<thing>.ast }
 
@@ -213,8 +214,14 @@ method statement-control:sym<on> ($/) {
     make SAST::OnBlock.new: os-candidates => $<on-switch>.ast;
 }
 
-sub declare-new-type($/,$name,\MetaType) {
-    my $type := MetaType.new_type(:$name);
+method declare-new-type($/,$name,\MetaType) {
+    my $type :=
+      do if $!use-bootstrap-types and %bootstrapped-types{$name}
+      -> $predeclared {
+          $predeclared
+      } else {
+          MetaType.new_type(:$name);
+      }
     my $CLASS := SAST::ClassDeclaration.new(class => $type);
     $type.^set-declaration($CLASS);
     $*CLASS = $*CURPAD.declare: $CLASS;
@@ -223,11 +230,7 @@ sub declare-new-type($/,$name,\MetaType) {
 }
 
 sub set-primitive(Mu $type is raw) {
-    if $type.^primitive =:= Mu {
-        if $*CURPAD.lookup(CLASS,'Str') -> $str {
-            $type.^add_parent($str.class);
-        }
-    }
+    $type.^add_parent(tStr) if $type.^primitive =:= Mu;
     $type
 }
 
@@ -251,7 +254,7 @@ method declare-class-params ($/) {
 method new-class ($/) {
     my $class;
     with $<class-params><params><thing> {
-        $class = declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Parameterizable);
+        $class = self.declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Parameterizable);
         for $_<type-name>.map(*.Str).kv -> $i,$name {
             my $placeholder-type := Spit::Metamodel::Parameter.new_type(:$name);
             set-primitive($placeholder-type);
@@ -260,7 +263,7 @@ method new-class ($/) {
             $class.class.^placeholder-params.push($placeholder-type);
         }
     } else {
-        $class = declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Type);
+        $class = self.declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Type);
     }
     make $class;
 }
@@ -287,17 +290,14 @@ method old-class ($/) {
 method declaration:sym<enum-class> ($/) {
     my $enum-class =  $<new-enum-class>.ast;
     unless $enum-class.class.^parents {
-        if $*CURPAD.lookup(CLASS,'EnumClass') -> $enum-class-base {
-            $enum-class.class.^add_parent($enum-class-base.class);
-            $enum-class.class.^set-primitive($enum-class.class);
-        }
+        $enum-class.class.^add_parent(tEnumClass);
     }
     $enum-class.class.^compose;
     $/.make: $enum-class;
 }
 
 method new-enum-class ($/) {
-    make declare-new-type($/,$<type-name>.Str,Spit::Metamodel::EnumClass);
+    make self.declare-new-type($/,$<type-name>.Str,Spit::Metamodel::EnumClass);
 }
 
 method trait:sym<is> ($/){
@@ -333,7 +333,7 @@ method declaration:sym<method> ($/) {
 method routine-declaration ($/) {
 
     given $*ROUTINE -> $r {
-        $r.os-candidates =  $<on-switch>.ast || (tOS(), $<blockoid>.ast);
+        $r.os-candidates =  $<on-switch>.ast || (tOS, $<blockoid>.ast);
         make $r;
     }
 }
@@ -378,10 +378,10 @@ method declaration:var ($/) {
     make $*CURPAD.declare: $var;
 }
 
-method return-type-sigil:sym<~>($/) { make tStr() }
-method return-type-sigil:sym<+>($/) { make tInt() }
-method return-type-sigil:sym<?>($/) { make tBool() }
-method return-type-sigil:sym<@>($/) { make tList() }
+method return-type-sigil:sym<~>($/) { make tStr }
+method return-type-sigil:sym<+>($/) { make tInt }
+method return-type-sigil:sym<?>($/) { make tBool }
+method return-type-sigil:sym<@>($/) { make tList }
 method return-type-sigil:sym<*>($/) {
     $*CLASS or
       SX.new(message => 'Whatever-Invocant return type used outside of a class').throw;
@@ -533,7 +533,7 @@ method term:name ($/) {
         do with $<object> {
             do if $_<angle-quote>
                andthen (my $list = .ast) ~~ SAST::List
-               and $class-type !~~ tList()
+               and $class-type !~~ tList
             {
                 for $list.children {
                     $_ = SAST::Blessed.new(
@@ -745,10 +745,10 @@ method postfix:sym<⟶> ($/) { make SAST::Cast.new(to => $<type>.ast) }
 
 method index-accessor($/) { make SAST::Elem.new(index => $<EXPR>.ast) }
 
-method prefix:sym<~> ($/) { make SAST::Coerce.new(to => tStr()) }
-method prefix:sym<+> ($/) { make SAST::Coerce.new(to => tInt()) }
+method prefix:sym<~> ($/) { make SAST::Coerce.new(to => tStr) }
+method prefix:sym<+> ($/) { make SAST::Coerce.new(to => tInt) }
 method prefix:sym<-> ($/) { make SAST::Negative.new() }
-method prefix:sym<?> ($/) { make SAST::Coerce.new(to => tBool())}
+method prefix:sym<?> ($/) { make SAST::Coerce.new(to => tBool)}
 method prefix:sym<!> ($/) { make SAST::Neg.new() }
 method prefix:sym<++> ($/) { make SAST::Increment.new(:pre) }
 method prefix:sym<--> ($/) { make SAST::Increment.new(:pre,:decrement) }

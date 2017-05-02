@@ -273,7 +273,7 @@ multi method loop-return(SAST:D $_) {
 }
 
 multi method cond(SAST:D $_) {
-    if .type === tInt() {
+    if .type === tInt {
         'test ',|self.arg($_), ' -ne 0';
     } else {
         'test ',|self.arg($_);
@@ -301,7 +301,7 @@ multi method node(SAST::Var:D $var) {
         @var;
     } elsif $var ~~ SAST::VarDecl {
         if $var !~~ SAST::EnvDecl {
-            $name,'=',($var.type ~~ tInt() ?? '0' !! "''")
+            $name,'=',($var.type ~~ tInt ?? '0' !! "''")
         }
     } else {
         ': $',$name;
@@ -319,7 +319,7 @@ multi method arg(SAST::Var:D $var) {
             SX::NYI.new(feature => 'assignment as an argument',node => $var).throw
         }
     } else {
-        var $name, is-int => ($var.type ~~ tInt());
+        var $name, is-int => ($var.type ~~ tInt);
     }
 }
 
@@ -332,7 +332,7 @@ multi method compile-assign($var,SAST::Junction:D $j) {
         and $var.uses-Str-Bool # they Boolify using Str.Bool
         and .val.?declaration === $var.declaration # var refers to same thing
     }
-    if $or-equals and $var.type ~~ tStr() {
+    if $or-equals and $var.type ~~ tStr {
         my $name = self.gen-name($var);
         '${',$name,':=', |self.arg($j[1]).in-or-equals,'}';
     } else {
@@ -369,7 +369,7 @@ multi method node(SAST::If:D $_,:$else) {
          when SAST::Empty   { Empty }
          when SAST::If    { "\n{$*pad}",|self.node($_,:else) }
          when SAST::Stmts { "\n{$*pad}else\n",|self.node($_,:indent,:no-empty) }
-     } elsif .type ~~ tBool() {
+     } elsif .type ~~ tBool {
           # if false; then false; fi; actually exits 0 (?!)
           # So we have to make sure it exits 1 if the cond is false
           "\n{$*pad}else\n{$*pad}  false"
@@ -577,7 +577,7 @@ multi method cond(SAST::LastExitStatus:D $_) {
 }
 
 multi method arg(SAST::LastExitStatus:D $_) {
-    .ctx ~~ tBool() ?? callsame() !! '$?';
+    .ctx ~~ tBool ?? callsame() !! '$?';
 }
 
 #!CurrentPID
@@ -634,7 +634,7 @@ method call($name,@named-param-pairs,@pos) {
 }
 
 method maybe-quietly(@cmd,\ret-type,\ctx,:$match) {
-    if ctx === tAny() and ret-type !=== tAny() and ret-type !=== tBool() {
+    if ctx === tAny and ret-type !=== tAny and ret-type !=== tBool {
          |@cmd,' >&',|self.arg(self.scaf-ref('*NULL',:$match));
     } else {
         @cmd;
@@ -721,7 +721,7 @@ method compile-cmd(@cmd-body,@out-write,@out-append,@in) {
             $eval = True without $lhs-ct;
             @redir.push: list ($lhs-ct ~~ $default-lhs ?? '' !! self.arg($lhs));
             @redir.push($sym);
-            @redir.push: list ('&' if $rhs.type ~~ tFD()),
+            @redir.push: list ('&' if $rhs.type ~~ tFD),
                               ($rhs.compile-time ~~ -1 ?? '-' !! |self.arg($rhs));
         }
     }
@@ -748,7 +748,7 @@ multi method node(SAST::Return:D $ret) {
     } else {
         # If we're returning the exit status of the last cmd we can just do nothing
         # because that's what will be retuned if we do.
-        if $ret.val ~~ SAST::LastExitStatus and $ret.ctx ~~ tBool() {
+        if $ret.val ~~ SAST::LastExitStatus and $ret.ctx ~~ tBool {
             Empty;
         }
         elsif $ret.val.compile-time ~~ '' {
@@ -762,9 +762,9 @@ multi method node(SAST::Return:D $ret) {
 
 method compile-in-ctx($node,*%_) {
     given $node.ctx {
-        when tBool() { self.cond($node,|%_)       }
-        when tStr()  { self.cap-stdout($node,|%_) }
-        when tAny()  { self.node($node,|%_) }
+        when tBool { self.cond($node,|%_)       }
+        when tStr  { self.cap-stdout($node,|%_) }
+        when tAny  { self.node($node,|%_) }
         default {
             SX::Bug.new(:$node,desc => "{$node.^name}'s type context {.gist} is invalid").throw
         }
@@ -776,7 +776,7 @@ multi method  arg(SAST::Empty:D $_) { dq '' }
 
 #!Quietly
 multi method node(SAST::Quietly:D $_) {
-    |self.node(.block,:curlies),' 2>',('&' if .null.type ~~ tFD()),self.arg(.null);
+    |self.node(.block,:curlies),' 2>',('&' if .null.type ~~ tFD),self.arg(.null);
 }
 
 #!Neg
@@ -860,7 +860,7 @@ method compile-pattern($pattern is copy,@placeholders) {
 
 }
 multi method arg(SAST::Regex:D $_) {
-    if .ctx ~~ tPattern() {
+    if .ctx ~~ tPattern {
         self.compile-pattern(.patterns<case>,.placeholders);
     } else {
         self.compile-pattern(.patterns<ere>,.placeholders);

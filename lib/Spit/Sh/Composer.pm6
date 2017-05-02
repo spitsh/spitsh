@@ -3,7 +3,7 @@ use Spit::SAST;
 need Spit::Exceptions;
 need Spit::Constants;
 need Spit::DependencyList;
-need Spit::Metamodel;
+use Spit::Metamodel;
 need Spit::OptsParser;
 
 multi reduce-block(SAST::Stmts:D $block) {

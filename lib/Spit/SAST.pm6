@@ -18,27 +18,9 @@ sub class-by-name($name) {
 # A pair where the value has container we can mess with
 sub cont-pair($a,$b is copy) { $a => $b }
 
-# We can't know the class definition at p6 compile time yet so we
-# have to get and store them at runtime.
-# This solution works as long as there is only one definition
-# per run which is true for now.
-sub tAny is export { state $ = class-by-name('Any')   }
-sub tInt is export { state $ = class-by-name('Int')   }
-sub tStr is export { state $ = class-by-name('Str')   }
-sub tBool is export { state $ = class-by-name('Bool') }
-multi tList is export { state $ = class-by-name('List') }
-multi tList(Spit::Type \param) {
-    my $list := tList();
-    return param if param ~~ $list;
-    $list.^parameterize(param);
+sub tListp(Spit::Type \param) {
+    param ~~ tList ?? param !! tList.^parameterize(param);
 }
-sub tRegex is export { state $ = class-by-name('Regex') }
-sub tPattern is export { state $ = class-by-name('Pattern') }
-sub tOS is export { state $ = class-by-name('OS') }
-sub tFD is export { state $ = class-by-name('FD') }
-sub tFile is export { state $ = class-by-name('File')  }
-sub tEnumClass is export { state $ = class-by-name('EnumClass')  }
-sub tPID is export { state $ = class-by-name('PID')  }
 
 sub lookup-type($name,:@params, Match :$match) is export {
     my $type := $*CURPAD.lookup(CLASS,$name, :$match).class;
@@ -108,7 +90,7 @@ role SAST is rw {
         self.bless(:$match,|a);
     }
     # A Bool is never the topic
-    method topic { $.type ~~ tBool() ?? Nil !! self }
+    method topic { $.type ~~ tBool ?? Nil !! self }
 
     method assign-type { IMMUTABLE }
     method assignable  { self.assign-type !== IMMUTABLE }
@@ -142,7 +124,7 @@ role SAST is rw {
         )
     }
     method uses-Str-Bool {
-        self.type.^find-spit-method('Bool') === tStr().^find-spit-method('Bool');
+        self.type.^find-spit-method('Bool') === tStr.^find-spit-method('Bool');
     }
 
     method make-new(\type,|args){
@@ -197,9 +179,9 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
         else {
             # We need node to become a list. As long as the node matches the List's
             # element type we can just bless this node into a List[of-the-appropriate type]
-            if $type ~~ tList() and $node.type !~~ tList() {
+            if $type ~~ tList and $node.type !~~ tList {
                 my $elem-type := flattened-type($type);
-                my $list-type = $type === tList() ?? tList($elem-type) !! $type;
+                my $list-type = $type === tList ?? tListp($elem-type) !! $type;
                 $node.stage2-node(
                     SAST::Blessed,
                     class-type => $list-type,
@@ -221,11 +203,11 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
 
 # The type of the thing if it were flattened out
 sub flattened-type(Spit::Type $_) {
-    when tList() {
-        if .^find-parameters-for(tList()) -> $params {
+    when tList {
+        if .^find-parameters-for(tList) -> $params {
             $params[0]
         } else {
-            tStr();
+            tStr;
         }
     }
     default { $_ }
@@ -233,8 +215,8 @@ sub flattened-type(Spit::Type $_) {
 
 sub type-from-sigil(Str:D $sigil --> Spit::Type) {
     do given $sigil {
-        when '$' { tStr() }
-        when '@' { tList() }
+        when '$' { tStr }
+        when '@' { tList }
         default { die "got bogus sigil '$sigil'" }
     };
 }
@@ -339,7 +321,7 @@ class SAST::CompUnit is SAST::Children {
 
     method do-stage2 {
         my $*CU = self;
-        $!block .= do-stage2(tAny(),:!auto-inline);
+        $!block .= do-stage2(tAny,:!auto-inline);
         self.stage2-done = True;
         self;
     }
@@ -416,10 +398,10 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 sub figure-out-var-type($sigil, $type is rw, \decl-type, :$assign is raw, :$desc) {
     my $sigil-type := type-from-sigil($sigil);
     if decl-type {
-        $type = do if $sigil-type === tList() {
-            tList(decl-type);
+        $type = do if $sigil-type === tList {
+            tListp(decl-type);
         } else {
-            decl-type;
+             decl-type;
         };
 
         $assign .= do-stage2($type,:$desc) if $assign;
@@ -428,8 +410,8 @@ sub figure-out-var-type($sigil, $type is rw, \decl-type, :$assign is raw, :$desc
             $assign .= do-stage2($sigil-type, :$desc);
             $assign.type;
         } else {
-            if $sigil-type === tList() {
-                tList(tStr);
+            if $sigil-type === tList {
+                tListp(tStr);
             } else {
                 $sigil-type;
             }
@@ -482,7 +464,7 @@ class SAST::Stmts is SAST::MutableChildren {
             $_ .= do-stage2(tAny) unless $_ =:= $last-stmt;
         }
         if $last-stmt {
-            if $ctx !=== tAny() {
+            if $ctx !=== tAny {
                 $last-stmt = SAST::Return.new(val => $last-stmt,match => $last-stmt.match,:$loop)
             }
             $last-stmt .= do-stage2($ctx,:desc<return value of block>);
@@ -579,7 +561,7 @@ class SAST::PhaserBlock is SAST::Children {
 
     method stage2 ($) { $!block .= do-stage2(tAny,:!auto-inline); self }
     method children { $!block, }
-    method type { tAny() }
+    method type { tAny }
 }
 
 class SAST::Return is SAST::Children {
@@ -652,7 +634,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
 
-    method type { $.ctx !=== tAny() ?? $.ctx !! tStr }
+    method type { $.ctx !=== tAny ?? $.ctx !! tStr }
 }
 
 class SAST::Coerce is SAST::MutableChildren {
@@ -670,7 +652,7 @@ class SAST::Cast is SAST::MutableChildren {
 
     method type { $!to }
     method stage2 ($) {
-        self[0] .= do-stage2(tStr());
+        self[0] .= do-stage2(tStr);
         self;
     }
     method gist { $.node-name ~ "({$!to.name})" ~ $.gist-children }
@@ -702,7 +684,7 @@ class SAST::Negative is SAST::MutableChildren {
 class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OSMutant {
     has Str $.name is required;
     has SAST::Signature $.signature is rw;
-    has Spit::Type $.return-type is rw = tAny();
+    has Spit::Type $.return-type is rw = tAny;
     has @.os-candidates is rw;
     has $.is-native is rw;
     has $.chosen-block is rw;
@@ -722,7 +704,7 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
         @!os-candidates .= flatmap: -> $os,$block { cont-pair $os,$block };
         for @.os-candidates {
             .value .= do-stage2(
-                $!is-native ?? tAny() !! $.return-type,
+                $!is-native ?? tAny !! $.return-type,
                 :!auto-inline,
                 :desc("return value of $.spit-gist didn't match return type of $!name"));
             .return-by-var = $!return-by-var with .value.returns;
@@ -902,7 +884,7 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     method stage2($ctx) {
         my $is-type = $.invocant.WHAT === SAST::Type;
         if not $.invocant.stage2-done {
-            $.invocant .= do-stage2: $is-type ?? tAny() !! tStr();
+            $.invocant .= do-stage2: $is-type ?? tAny !! tStr;
         }
         if not $.declaration.static and $is-type and not $.invocant.ostensible-type.enum-type {
             SX.new(message => q|Instance method called on a type.|,:$.match).throw;
@@ -917,7 +899,7 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     method children { $.invocant,|@.pos,|%.named.values }
 
     method topic {
-        $!topic //= do if $.type ~~ tBool() {
+        $!topic //= do if $.type ~~ tBool {
             $.invocant.topic
         } else {
             self;
@@ -1092,7 +1074,7 @@ class SAST::CondReturn is SAST::Children  {
 
     method stage2($ctx) {
         $!val .= do-stage2($ctx);
-        if $!val.type !~~ tBool() {
+        if $!val.type !~~ tBool {
             $!Bool-call = SAST::MethodCall.new(
                 match => $!val.match,
                 name => 'Bool',
@@ -1119,7 +1101,7 @@ class SAST::Junction is SAST::MutableChildren {
         # RETURN-WHEN-TRUE: We care about its value when it's Bool ctx is True.
         # RETURN-WHEN-FALSE: The converse
         given $junct-ctx {
-            when $ctx === tAny() {
+            when $ctx === tAny {
                 # Tell the LHS to be a Bool and pass on Any context to RHS.
                 $!LHS-junct-ctx = NEVER-RETURN;
                 $!RHS-junct-ctx = JUST-RETURN;
@@ -1215,7 +1197,7 @@ class SAST::Pair is SAST::Children {
     has SAST:D $.key is required;
     has SAST:D $.value is required;
 
-    method type { tAny() }
+    method type { tAny }
     method stage2($) {
         self.make-new(SX::NYI, feature => "Pairs as values").throw;
     }
@@ -1236,7 +1218,7 @@ class SAST::List is SAST::MutableChildren {
     method type {
         $!type ||= do {
             my $base-type = derive-common-parent @.children.map: { .type.&flattened-type }
-            tList($base-type);
+            tListp($base-type);
         }
     }
     method elem-type { flattened-type(self.type) }
@@ -1278,7 +1260,7 @@ class SAST::BVal does SAST::CompileTimeVal {
     has Bool:D $.val is required is rw;
     method type { tBool }
     method compile-time { $!val }
-    # method stage2 ($ctx where { $_ ~~ tInt() }) {
+    # method stage2 ($ctx where { $_ ~~ tInt }) {
     #     SAST::IVal.new(val => +$!val,:$.match).do-stage2($ctx);
     # }
 }
@@ -1387,7 +1369,7 @@ class SAST::While is SAST::Children {
         self;
     }
     method children { $!cond,$!block,($!topic-var // Empty) }
-    method type { $!type ||= tList($!block.type) }
+    method type { $!type ||= tListp($!block.type) }
 }
 
 class SAST::Given is SAST::Children is rw {
@@ -1434,7 +1416,7 @@ class SAST::For is SAST::Children {
     }
 
     method children { $!list,$!block,$!iter-var }
-    method type { $!type ||= tList($!block.type) }
+    method type { $!type ||= tListp($!block.type) }
 }
 
 class SAST::Empty does SAST {
@@ -1457,7 +1439,7 @@ class SAST::Type does SAST {
     method stage2($ctx) {
         if self.class-type.enum-type  {
             self;
-        } elsif $ctx ~~ tStr() {
+        } elsif $ctx ~~ tStr {
             SAST::SVal.new(val => self.class-type.^name,:$.match).do-stage2($ctx);
         } else {
             self;
@@ -1511,7 +1493,7 @@ class SAST::Range is SAST::MutableChildren {
     }
 
     method gist { $.node-name ~ "({'^' if $.exclude-start}..{'^' if $.exclude-end})" ~ $.gist-children }
-    method type { tList(tInt) }
+    method type { tListp(tInt) }
 
     method itemize { False }
 }
@@ -1547,7 +1529,7 @@ class SAST::PRIMITIVE is SAST::MutableChildren {
 }
 
 class SAST::WHAT is SAST::MutableChildren {
-    method type { tStr() }
+    method type { tStr }
     method stage2($) {
         self[0] .= do-stage2(tAny);
         my $type = self[0].ostensible-type;
@@ -1556,7 +1538,7 @@ class SAST::WHAT is SAST::MutableChildren {
 }
 
 class SAST::WHY is SAST::MutableChildren {
-    method type { tStr() }
+    method type { tStr }
 
     method stage2($) {
         self[0] .= do-stage2(tAny);
@@ -1572,7 +1554,7 @@ class SAST::WHY is SAST::MutableChildren {
 }
 
 class SAST::NAME is SAST::MutableChildren {
-    method type { tStr() }
+    method type { tStr }
 
     method stage2($) {
         self[0] .= do-stage2(tAny);
@@ -1591,7 +1573,7 @@ class SAST::Eval is SAST::Children   {
         self
     }
 
-    method type { tStr() }
+    method type { tStr }
 
     method children { $!src, |%!opts.values }
 }
@@ -1602,17 +1584,17 @@ class SAST::Regex is SAST::Children is rw {
 
     method type {
         given $.ctx {
-            when tBool() { $.ctx }
-            when tPattern() {
+            when tBool { $.ctx }
+            when tPattern {
                 %!patterns<case>:exists
-                    ?? tPattern()
+                    ?? tPattern
                     !! self.make-new(SX, message => "Unable to convert this regex to pattern").throw;
             }
-            default { tRegex() }
+            default { tRegex }
         }
     }
     method stage2($ctx){
-        if $ctx ~~ tBool() {
+        if $ctx ~~ tBool {
             self.make-new(
                 SAST::ACCEPTS,
                 SAST::Var.new(sigil => '$',name => '_', :$.match),
@@ -1711,7 +1693,7 @@ class SAST::OnBlock is SAST::Children does SAST::OSMutant {
 }
 
 class SAST::LastExitStatus does SAST {
-    method type { $.ctx ~~ tBool() ?? tBool() !! tInt() }
+    method type { $.ctx ~~ tBool ?? tBool !! tInt }
 }
 
 class SAST::CurrentPID does SAST {

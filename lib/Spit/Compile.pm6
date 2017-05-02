@@ -26,7 +26,11 @@ sub compile  ($input is copy,
         my \SPIT_ACTIONS = (once light-load 'Spit::Parser::Actions', target => 'Spit::Actions');
         my \SPIT_GRAMMAR = (once light-load 'Spit::Parser::Grammar', target => 'Spit::Grammar');
         my $parser  = SPIT_GRAMMAR.new;
-        my $actions = SPIT_ACTIONS.new(:$outer, :$debug);
+        my $actions = SPIT_ACTIONS.new(
+            :$outer,
+            :$debug,
+            use-bootstrap-types => $*SETTING === False,
+        );
         my $*ACTIONS = $actions;
         note "$name parsing.. " if $debug;
         my \before = now;

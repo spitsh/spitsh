@@ -79,18 +79,10 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
     method declaration(Mu $) { $!declaration }
     method set-declaration(Mu $,Mu $declaration) { $!declaration = $declaration }
 
-    method add_parent(Mu $type,Mu $parent) {
-        $!dispatcher.add-parent($parent.^dispatcher) if $parent.HOW ~~ Spit::Metamodel::Type;
-        if $parent ~~ Spit::Type and $parent.primitive {
-            if $!primitive {
-                if $!primitive === $parent.primitive or $!primitive ~~ $parent.primitive {
-                    $!primitive = $parent.primitive;
-                } else {
-                    die "Incompatible primitive types in inheritence";
-                }
-            } else {
-                $!primitive = $parent.primitive;
-            }
+    method add_parent(Mu $,Mu \parent) {
+        if parent ~~ Spit::Type {
+            $!dispatcher.add-parent(parent.^dispatcher);
+            $!primitive = parent.primitive if $!primitive.WHAT =:= Mu;
         }
         callsame;
     }
@@ -99,6 +91,17 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
         $!dispatcher.compose;
         die "Primitive not set on {type.^name} at composition time" if $!primitive.WHAT =:= Mu;
         callsame;
+        if not type.^is-primitive {
+            # check that something contradictory hasn't been declared like:
+            # class Foo is Int is Bool { }
+            for type.^parents(:local) {
+                .^primitive ~~ $!primitive or
+                  SX.new(
+                    message => "{.^name} is incompatible with {type.^name}'s other parents",
+                    node => $!declaration
+                  ).throw;
+            }
+        }
         my \we-invocant = $!whatever-invocant;
         if we-invocant !=:= Mu and not we-invocant.^is_composed {
             we-invocant.^add_parent(type);
@@ -253,3 +256,39 @@ class Spit::Metamodel::WhateverInvocant is Spit::Metamodel::Type {
         "WhateverInvocant({type.^parents[0].^name})";
     }
 }
+
+sub gen-type($name,\parent,:$metatype = Spit::Metamodel::Type,:$primitive) {
+    my $type := $metatype.new_type(:$name);
+    $type.^add_parent(parent) if parent;
+    $type.^set-primitive($type) if $primitive;
+    $type.^compose;
+};
+
+constant tAny is export  = gen-type('Any', Nil, :primitive);
+constant tStr is export  = gen-type('Str', tAny, :primitive);
+constant tInt is export  = gen-type('Int', tStr, :primitive);
+constant tBool is export = gen-type('Bool', tStr, :primitive);
+constant tEnumClass is export = gen-type('EnumClass',tStr, :primitive);
+constant tRegex is export = gen-type('Regex', tStr);
+constant tPattern is export = gen-type('Pattern', tStr);
+constant tFD is export = gen-type('FD', tInt,);
+constant tFile is export  = gen-type('File', tStr);
+constant tOS is export  = gen-type('OS', tEnumClass, metatype => Spit::Metamodel::EnumClass);
+constant tPID is export = gen-type('PID', tInt);
+
+constant tList is export = do {
+    my $list := Spit::Metamodel::Parameterizable.new_type(:name<List>);
+    $list.^set-primitive($list);
+    $list.^add_parent(tStr);
+    my $elem-type := Spit::Metamodel::Parameter.new_type(:name<Elem-Type>);
+    $elem-type.^add_parent(tStr);
+    $elem-type.^set-param-of($list,0);
+    $elem-type.^compose;
+    $list.^placeholder-params.push($elem-type);
+    $list.^compose;
+}
+
+constant %bootstrapped-types is export  = %(
+    (tAny,tStr,tInt,tBool,tList,tRegex,tPattern,tEnumClass,tFD,tOS, tPID)\
+      .map({ .^name => $_ }).eager.Slip;
+);
