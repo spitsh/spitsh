@@ -590,6 +590,10 @@ method term:cmd ($/) {
     make $<cmd>.ast;
 }
 
+method term:cmd-capture ($/) {
+    make SAST::List.new(|$<cmd>.ast.nodes);
+}
+
 sub gen-method-call($/) {
     my (:@pos,:%named) := $<args>.ast;
     my $name = $<name>.Str;

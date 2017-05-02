@@ -423,6 +423,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     rule term:cmd { <cmd> }
+    rule term:cmd-capture { '\\'<cmd> }
 
     # .call for @something
     rule term:topic-call {

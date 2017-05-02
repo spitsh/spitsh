@@ -1,6 +1,6 @@
 use Test;
 
-plan 27;
+plan 28;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -59,4 +59,9 @@ my $a = <one two three>;
     my File $file .= tmp;
     $file.write(<one two three>);
     is ${cat < $file},<one two three>, 'can read input from a file';
+}
+
+
+{
+    is \${ printf "hello world" }, ("printf", "hello world"), '\${...}';
 }
