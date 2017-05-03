@@ -6,11 +6,43 @@ if not Pkg<curl> {
    say "installed $_ {.version}";
 }
 }
+constant Int $*pkglist-stale = 60*60*24;
 
+constant File $*pkglist-path = on {
+    Debian { "/var/lib/apt/lists"  }
+    Alpine { "/var/cache/apk"  }
+    RHEL   { "/var/cache/yum"  }
+}
 
-my $?updated = False;
 class Pkg {
 
+    #| Tells the system specific package manager to update its list of pacakges.
+    static method ?update-pkglist on {
+        Debian ${ apt-get update *>X   }
+        RHEL   { ${yum clean expire-cache >X} && ${ yum check-update >X}; $? != 1 }
+        Alpine { ${ apk update -q } && $*pkglist-path.touch }
+    }
+
+    static method last-updated(-->DateTime) on {
+        Any { $*pkglist-path.mtime }
+        RHEL ${
+            date -d
+            ${
+                yum repolist enabled -v
+                | grep -m1 Repo-expire
+                | sed -r 's/.*last: |\)//g'
+             }
+            '+%FT%T.%3N'
+        }
+    }
+
+    static method ?check-update {
+        my $last-updated = Pkg.last-updated;
+        if now().posix - $last-updated.posix > $*pkglist-stale {
+            note "updating pkglist because it was last updated at $last-updated";
+            Pkg.update-pkglist;
+        }
+    }
 
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
@@ -25,20 +57,11 @@ class Pkg {
         Alpine { ${apk info $self >X} }
     }
 
-    #| Tells the system specific package manager to update its list of pacakges.
-    static method update-pkgs on {
-        Debian {
-            ${apt-get update *>X};
-            $?updated = True;
-        }
-        RHEL { ${yum check-update} }
-        Alpine { ${apk update -q}  }
-    }
     #| Gets the version of the currently installed package
     method ~version on {
-        Debian { ${dpkg -s $self |sed -n 's/^Version: //p' } }
-        RHEL   { ${yum info installed $self |sed -n 's/Version *: //p'} }
-        Alpine { ${apk version $self | sed -rn '2s/\w+-(\S*).*/\1/p' } }
+        Debian ${dpkg -s $self |sed -n 's/^Version: //p' }
+        RHEL   ${yum info installed $self |sed -n 's/Version *: //p'}
+        Alpine ${apk version $self | sed -rn '2s/\w+-(\S*).*/\1/p' }
     }
 
     #| In Bool context Pkgs return `.installed`
@@ -58,17 +81,13 @@ augment List[Pkg] {
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
     method ?install on {
-        RHEL { ${yum install -y @$self *>X} }
+        RHEL ${yum install -y @$self *>X}
         Debian {
-            unless ${apt-get install -y -q @$self *>X} or $?updated {
-                # for now see if we can install and if not try an update and try again.
-                # TODO: pfigure out a better way?
-                Pkg.update-pkgs;
-                ${apt-get install -y -q @$self *>X};
-            }
+            Pkg.check-update;
+            ${apt-get install -y -q --no-install-recommends @$self *>X};
         }
         Alpine {
-            Pkg.update-pkgs;
+            Pkg.check-update;
             ${ apk add @$self -q --no-progress !>X };
         }
     }
