@@ -1,6 +1,6 @@
 use Test;
 
-plan 54;
+plan 55;
 
 {
     my File $file .= tmp;
@@ -179,6 +179,13 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
         is .grep(/i.{1,2}$/), <five six nine>, '.grep';
         is .first(/i.{1,2}$/), <five>, '.first';
     }
+}
+
+{
+    my $first = File.tmp.mtime;
+    sleep 1;
+    my $diff = File.tmp.mtime.posix - $first.posix;
+    ok $diff >= 1 || $diff <= 2, '.mtime';
 }
 
 # {

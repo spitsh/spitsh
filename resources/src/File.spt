@@ -56,6 +56,11 @@ augment File {
     #| Alias for .size
     method +s      { $self.size }
 
+    method mtime(-->DateTime) on {
+        GNU     ${ date -u -r $self '+%FT%T.%3N' }
+        BusyBox ${ stat -c '%y' $self | sed -r 's/ /T/;s/0{6}$//' }
+    }
+
     method +lines { ${wc -l < $self} }
     #| Returns the line of text at an index. `.at-pos` is the
     #| internal method called when using postcircumfix `[]`.
