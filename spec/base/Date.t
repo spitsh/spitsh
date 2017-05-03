@@ -1,8 +1,9 @@
 use Test;
 
-plan 22;
+plan 24;
 
 given DateTime<2017-05-03T04:03:06.042> {
+    ok .valid, 'is valid';
     is .year,    2017, '.year';
     is .month,   5,    '.month';
     is .day,     3,    '.day';
@@ -14,6 +15,8 @@ given DateTime<2017-05-03T04:03:06.042> {
 
     is .Date, '2017-05-03', '.Date';
 }
+
+nok DateTime<2017-05-03T04:03:06.042Z>.valid, 'timezone is invalid';
 
 given Date<2017-05-03> {
     is .year,    2017, 'date only .year';

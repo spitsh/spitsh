@@ -47,6 +47,10 @@ augment DateTime {
 
     method +posix  ${@date $self '+%s'}
 
+    method ?valid {
+        $self.matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/);
+    }
+
     method Date { $self.${cut -dT -f1} }
 
     static method *now on {
