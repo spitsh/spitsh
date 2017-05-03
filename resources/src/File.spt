@@ -94,7 +94,7 @@ augment File {
     }
     #| Calls `touch(1)` on the file.
     #|{ .touch unless File<foo.txt> }
-    method touch {
+    method ?touch {
         # Ohhh when I think about you I
         ${touch $self}
     }
