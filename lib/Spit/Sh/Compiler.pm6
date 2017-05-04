@@ -526,7 +526,7 @@ multi method compile-junction($node,:$junct-ctx) {
 #!CondReturn
 multi method cap-stdout(SAST::CondReturn:D $_) {
     if .when === True  and !.Bool-call {
-        '{ ',self.cond(.val), ' && ',self.scaf('e'), ' 1;',' }';
+        '{ ',|self.cond(.val), ' && ',self.scaf('e'), ' 1;',' }';
     } elsif .when === False and .val.uses-Str-Bool or !.Bool-call {
         # Special case shell optimization!!!
         # $(test "$foo" || { echo "$foo" && false; }  && echo "$bar")
