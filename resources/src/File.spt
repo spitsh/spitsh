@@ -5,10 +5,12 @@ env File $?PWD;
 
 
 augment List[File] {
-    method ?remove { ${rm -rf @$self !>X} }
+    method ?remove { $self.${xargs rm -rf !>X} }
 
     method @cat { ${cat @$self} }
 }
+
+my File $?cleanup-list = ${mktemp};
 
 #| File is string representing a filesystem path (relative or absolute).
 #|{
@@ -199,7 +201,6 @@ augment File {
     #|{ say File</etc/foo>.add('foo.cfg') #->/etc/foo/foo.cfg }
     method ~add($name --> File) { $self.path ~ '/' ~ $name }
 
-    my File $tmplist = ${mktemp};
     #| Creates a tempfile via mktemp(1) and adds it to a list of
     #| files which will be removed at the END.
     #|{
@@ -207,10 +208,12 @@ augment File {
     }
     static method tmp(Bool :$dir --> File) {
         my File $tmpfile = ${mktemp ('-d' if $dir)};
-        ${printf '%s\n' $tmpfile >> $tmplist};
+        ${printf '%s\n' $tmpfile >> $?cleanup-list};
         $tmpfile;
-        END { ${rm -rf @($tmplist.slurp) $tmplist } }
+        END { ${rm -rf @($?cleanup-list.slurp) $?cleanup-list } }
     }
+
+    method *cleanup ${printf '%s\n' $self | tee -a $?cleanup-list}
 
     #| Returns a list of children that match the criteria.
     #|{
@@ -224,6 +227,10 @@ augment File {
     }
     method find(Pattern :$name --> List[File]) {
         ${find $self ('-name', $name if $name)}
+    }
+
+    method ls(:$all -->List[File]) {
+        ${ls ('-A' if $all) $self }
     }
 
     static method tmp-fifo(--> File) {
