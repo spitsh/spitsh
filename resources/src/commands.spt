@@ -14,3 +14,9 @@ constant Cmd $*wget = on {
         'wget'
     }
 }
+
+constant Cmd $*gcc-make = on {
+    Debian { Pkg<gcc make libc-dev>.install; 'make' }
+    RHEL   { Pkg<gcc make glibc-devel>.install; 'make' }
+    Alpine { Pkg<gcc make libc-dev>.install;    'make' }
+}
