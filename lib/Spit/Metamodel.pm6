@@ -115,7 +115,10 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
     method needs-reification(Mu $) { False }
 
     method whatever-invocant(Mu $type) {
-        $!whatever-invocant ||=  Spit::Metamodel::WhateverInvocant.new_type();
+        if nqp::decont($!whatever-invocant) =:= Mu {
+            $!whatever-invocant = Spit::Metamodel::WhateverInvocant.new_type();
+        }
+        $!whatever-invocant;
     }
 
     method find-parameters-for(Mu \type,Mu \target) {
