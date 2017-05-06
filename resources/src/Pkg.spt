@@ -50,6 +50,10 @@ class Pkg {
         $self-->List[Pkg].install;
     }
 
+    method ?ensure-install {
+        $self.installed || $self.install;
+    }
+
     #| Returns True if a version of the package is installed.
     method ?installed on {
         Debian { ${dpkg -s $self *>X} }
