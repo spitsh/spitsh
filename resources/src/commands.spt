@@ -3,7 +3,10 @@
 #|{ say ${ $*curl -V } }
 constant Cmd $*curl = on {
     RHEL { 'curl' }
-    Debian { Cmd<curl>.ensure-install }
+    Debian {
+        Pkg<ca-certificates>.ensure-install;
+        Cmd<curl>.ensure-install;
+    }
     Alpine { Cmd<curl>.ensure-install }
 }
 
