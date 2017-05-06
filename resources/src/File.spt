@@ -10,7 +10,7 @@ augment List[File] {
     method @cat { ${cat @$self} }
 }
 
-my File $?cleanup-list = ${mktemp};
+my File $?file-cleanup = ${mktemp};
 
 #| File is string representing a filesystem path (relative or absolute).
 #|{
@@ -208,12 +208,12 @@ augment File {
     }
     static method tmp(Bool :$dir --> File) {
         my File $tmpfile = ${mktemp ('-d' if $dir)};
-        ${printf '%s\n' $tmpfile >> $?cleanup-list};
+        ${printf '%s\n' $tmpfile >> $?file-cleanup};
         $tmpfile;
-        END { ${rm -rf @($?cleanup-list.slurp) $?cleanup-list } }
+        END { ${rm -rf @($?file-cleanup.slurp) $?file-cleanup } }
     }
 
-    method *cleanup ${printf '%s\n' $self | tee -a $?cleanup-list}
+    method *cleanup ${printf '%s\n' $self | tee -a $?file-cleanup}
 
     #| Returns a list of children that match the criteria.
     #|{
