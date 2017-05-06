@@ -33,7 +33,7 @@ class GitHubRepo {
 
     #| Clones the GitHubRepo.
     #|{
-        GitHubRepo<spitsh/spitsh/>.clone.cd;
+        GitHubRepo<spitsh/spitsh>.clone.cd;
         say ${ $*git status };
     }
     method clone(#|[Path to clone the repo to] :$to --> File) {
