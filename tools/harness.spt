@@ -1,0 +1,24 @@
+constant $*run = <base packages docker>;
+constant @*on       = <alpine centos debian>;
+constant $*verbose = True;
+Cmd<docker> || die "spit harness requires the docker cli";
+
+ok Cmd<spit>, 'spit command exists';
+
+${set -e};
+
+if $*run.contains('base') {
+    ${spit prove 'spec/base' "-d={@*on.join(',')}"};
+}
+
+if $*run.contains('pacakges') {
+    ${spit prove 'spec/packages' "-d={@*on.join(',')}"};
+}
+
+if $*run.contains('docker') {
+    for @*on {
+        my $test = Docker.tmp($_, :mount-socket);
+        $test.start-sleep;
+        ${spit prove ('-v' if $*verbose) "-D=$test" "--os=$_" 'spec/docker/'};
+    }
+}

@@ -1,4 +1,5 @@
 language: perl6
+
 perl6:
   - latest
 
@@ -7,13 +8,11 @@ services:
 
 install:
   - rakudobrew build zef
+  - zef install . && spit eval 'say "hello world"'
 
 env:
   - PATH="/home/travis/.rakudobrew/moar-nom/install/share/perl6/site/bin:$PATH"
 
 script:
-  - zef install . && spit eval 'say "hello world"'
   - spit -d compile spec/base/sanity.t
-  - spit prove spec/base -d=alpine,centos,debian
-  - spit prove spec/packages -d=alpine,centos,debian
-  - spit prove spec/docker -s -d=alpine,centos,debian
+  - spit compile tools/harness.spt --RUN
