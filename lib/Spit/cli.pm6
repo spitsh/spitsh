@@ -39,11 +39,14 @@ Options:
     Output debugging information + timings for each compilation stage.
 
   -d --in-docker[=<image>]
-    Pipes script it into a docker container made from <image>.
-    If <image> isn't specified 'debian' is used. The container is
-    automatically removed. This automatically sets the 'os' option
-    based on the image name (if it can) unless you specify another
-    in --opts or --os.
+    Pipes script into a docker container derived from <image>. This
+    automatically sets the 'os' option based on the image name (if it can)
+    unless you specify another in --opts or --os. The container is removed
+    after execution.
+
+  -D --in-container=<id>
+    Runs the script in an already running docker container by execing
+    A new `/bin/sh` process inside it.
 
   -s --mount-docker-socket
     Mounts /var/run/docker.sock into the container.
@@ -70,7 +73,7 @@ Options:
   --target=<stage name>
     Sets the compilation stage to finish at:  Can be any of:
       - parse:   A .gist of the match object from parsing the program.
-      - stage1:  A .gist of the SAST tree after parsing.
+      - stage1:  A .gist of the SAST tree after parsing (BROKEN)
       - stage2:  A .gist of the SAST tree after contextualisation.
       - stage3:  A .gist of the SAST tree after composition.
       - compile: The compiled shell script (default)
@@ -127,12 +130,26 @@ This command is just quick way of writing something like:
 
 Options:
   -d --in-docker=<image list>
-      Docker images to execute the scripts under prove. Multiple image names
-      must be comma separated.
+    Docker images to derive containers from to execute the scripts under
+    prove. Multiple image names must be comma separated. If the image name
+    matches an OS then --os will automatically be set.
+
+  -D --in-container=<id list>
+    Docker containers to execute the scripts under prove using `docker exec`.
+    Multiple container ids must be comma separated. The containers must
+    already be running.
+
   -j --jobs=<number>
-      The number of jobs that prove should run.
+    The number of jobs that prove should run.
+
+  --os=<os name>
+    Pass --os to the underlying `spit compile`
+
   -s --mount-docker-socket
-      Mounts /var/run/docker.sock inside the containers.
+    Mounts /var/run/docker.sock inside the containers.
+
+  -v --verbose
+    Pass --verbose to the underlying prove(1) command.
 
 Examples:
   spit prove mytest.t
@@ -178,11 +195,22 @@ my class commands {
         compile($src, :$debug, :$target, :$opts, :$no-inline, name => "eval").gist;
     }
 
-    method prove(Str:D $path, Str:D $in-docker, :$mount-docker-socket, :$jobs) {
-        my @runs = $in-docker.split(',').map: { "-d=$_" };
+    method prove(Str:D $path, :$in-docker, :$in-container,
+                 :$mount-docker-socket, :$jobs, :$os, :$opts,
+                 :$verbose
+                ) {
+
+        my @runs = |($in-docker andthen .split(',').map: { "-d=$_" }),
+                   |($in-container andthen .split(',').map({"-D=$_"}));
+
         for @runs {
-            my @run = "prove", ("-j$_" with $jobs), '-r', '-e',
-                      "$*EXECUTABLE $*PROGRAM $_ compile{' -s' if $mount-docker-socket}", $path;
+            my @run =
+            "prove", ("-j$_" with $jobs),('-v' if $verbose),'-r', '-e',
+            "$*EXECUTABLE $*PROGRAM $_ " ~
+              ("--os=$os " if $os) ~
+              ("--opts=$opts " if $opts) ~
+              "compile{' -s' if $mount-docker-socket}",
+            $path;
             note "running: ", @run.perl;
             my $run = run @run;
             exit $run.exitcode unless $run.exitcode == 0;
@@ -190,23 +218,31 @@ my class commands {
     }
 }
 
+sub fail-print-usage($section = "general") {
+    note %usage{$section}; exit 1;
+}
 sub do-main() is export {
     my (@pos,%named) := parse-args(@*ARGS);
 
     if not @pos {
-        print %usage<general>
+        fail-print-usage;
     } else {
         given @pos[0] {
             when %named<help>:exists { print %usage{$_} // %usage<general> }
             when 'compile'|'eval' {
+                @pos[1]:exists or fail-print-usage($_);
                 compile-or-eval(@pos.shift, @pos, %named)
             }
             when 'prove' {
+                @pos[1]:exists or fail-print-usage($_);
+                %named<opts> //= %named<o>;
                 %named<jobs> //= %named<j>;
                 %named<mount-docker-socket> //= %named<s>;
+                %named<verbose> //= %named<v>;
                 my $in-docker = %named<in-docker> // %named<d>;
-                $in-docker =  'debian' unless $in-docker ~~ Str:D;
-                commands.prove(@pos[1], $in-docker, |%named);
+                my $in-container = %named<in-container> // %named<D>;
+                $in-docker =  'debian' unless ($in-docker|$in-container) ~~ Str:D;
+                commands.prove(@pos[1], :$in-docker, :$in-container, |%named);
             }
             when *.contains(<. />.any) {
                 compile-or-eval('compile', @pos, %named);
@@ -223,6 +259,7 @@ sub compile-or-eval($command, @pos, %named) {
     ];
     %named<opts> //= %named<o>;
     %named<in-docker> //= %named<d>;
+    %named<in-container> //= %named<D>;
     %named<interactive> //= %named<i>;
     %named<force-interactive> //= %named<I>;
     %named<in-docker> = 'debian' if %named<in-docker> === True;
@@ -250,7 +287,8 @@ sub compile-or-eval($command, @pos, %named) {
         }
     }
 
-    my ($docker,$promise) = do with %named<in-docker> {
+    my ($docker,$promise) = do
+    with %named<in-docker> {
         if m/<!after ':'> (\w|'-')+ <!before '/'>/ {
             %named<opts><os> //= Spit::LateParse.new(
                 val => "OS<$_>",
@@ -260,7 +298,13 @@ sub compile-or-eval($command, @pos, %named) {
         if %named<target> eq 'compile' {
             start-docker $_, |%named;
         }
-    };
+    }
+    orwith %named<in-container> {
+
+        if %named<target> eq 'compile' {
+            exec-docker $_, |%named;
+        }
+    }
 
     my $res = try given $command {
         when 'compile' {
@@ -300,6 +344,13 @@ sub start-docker($image is copy, :$mount-docker-socket, *%) {
     note "starting docker with {@args[1..*].gist}" if $*debug;
     my $docker = Proc::Async.new(|@args,:w);
     ($docker,$docker.start);
+}
+
+sub exec-docker($container, *%) {
+    my @args = 'docker', 'exec', '-i', $container, 'sh';
+    note "starting docker with {@args[1..*].gist}" if $*debug;
+    my $docker = Proc::Async.new(|@args, :w);
+    ($docker, $docker.start);
 }
 
 sub write-docker($docker,$p,$shell) {
