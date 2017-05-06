@@ -1566,7 +1566,7 @@ class SAST::NAME is SAST::MutableChildren {
 
 class SAST::Eval is SAST::Children   {
     has %.opts;
-    has SAST::SVal:D $.src is required;
+    has SAST:D $.src is required;
     has SAST::Block:D $.outer is required;
 
     method stage2($) {
