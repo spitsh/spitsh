@@ -896,7 +896,9 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
         $.invocant.ostensible-type.^find-spit-method($.name,:$.match);
     }
 
-    method children { $.invocant,|@.pos,|%.named.values }
+    method children {
+        ($.invocant unless $.declaration.static), |@.pos, |%.named.values
+    }
 
     method topic {
         $!topic //= do if $.type ~~ tBool {
