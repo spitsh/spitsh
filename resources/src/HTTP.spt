@@ -1,4 +1,4 @@
-class HTTP {
+augment HTTP {
     method ~get {
         # it would be nice to use BusyBox's wget on Alpine
         # But it's too broken.
