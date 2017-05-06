@@ -2,9 +2,7 @@ use Test;
 
 plan 3;
 
-my $copy-test = Docker<copy_test>;
-
-$copy-test.create("alpine");
+my $copy-test = Docker.create("alpine", :name<spit_copy_test>);
 
 my File $tmp .= tmp;
 

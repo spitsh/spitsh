@@ -17,16 +17,27 @@ constant $*docker = {
     Cmd<docker>;
 };
 
+constant $*docker-socket = '/var/run/docker.sock';
 
+constant $*moby-github = GitHubRepo<moby/moby>;
+
+constant File $?docker-cleanup = ${mktemp};
 augment Docker {
+
+    static method ~latest-build-ver {
+        my $gh-release-url = $*moby-github.latest-release-url;
+        die "unable to get latest docker version" unless $gh-release-url;
+        $gh-release-url.${sed 's/.*\/v//'};
+    }
+
+    static method latest-build-tgz-url(-->HTTP) {
+        my $latest-v = Docker.latest-build-ver;
+        "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
+    }
     static method install-cli {
         unless Cmd<docker> {
-            note 'installing docker-cli from build';
-            constant $latest-v = HTTP<https://github.com/moby/moby/releases/latest>
-                                 .redirect-url.${sed 's/.*\/v//'};
-            note "latest docker build is $latest-v";
-            constant HTTP $url = "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
-            note "getting build from $url";
+            my $url = Docker.latest-build-tgz-url;
+            note "getting latest build from $url";
             $url.get.${tar xz};
             note "installing to /usr/local/bin/docker";
             File<docker/docker>.move-to('/usr/local/bin/docker');
@@ -34,22 +45,37 @@ augment Docker {
         }
     }
 
-    static method socket(-->File) { '/var/run/docker.sock' }
-
     static method ?hello-world {
         ${ $*docker run -i --rm hello-world >X };
     }
 
-    static method anon-create($from --> Docker) {
-        ${ $*docker create -i $from sh } || die "couldn't create container from $from";
+    static method tmp($from, :@args, :$mount-socket --> Docker) {
+        Docker.create($from, :@args, :$mount-socket)
+          .${tee -a $?docker-cleanup};
+
+        END {
+            ${$*docker rm -f @($?docker-cleanup.slurp) *>X};
+            $?docker-cleanup.remove;
+        }
     }
 
-    method ?exists { ${ $*docker container inspect $self *>X } }
-    method Bool   { $self.exists }
-
-    method ?create($from) {
-        ${ $*docker create -i --name $self $from sh >X};
+    static method create(
+        $from,
+        :$name,
+        :@args,
+        :$mount-socket
+        -->Docker
+    ) {
+        ${
+            $*docker create -i
+            ("--name=$_" if $name)
+            ("-v=$*docker-socket:$*docker-socket" if $mount-socket)
+            @args $from sh
+        };
     }
+
+    method ?exists ${ $*docker container inspect $self *>X }
+    method Bool    { $self.exists }
 
     method copy($from,$to) {
         ${ $*docker cp $from "$self:$to" }
@@ -61,9 +87,13 @@ augment Docker {
         ${ $*docker inspect -f '{{.State.Status}}' $self } eq 'running';
     }
 
+    method start-sleep {
+        'while true; do sleep 1; done'.${ $*docker start $self };
+    }
+
     method ?exec(Str $eval) {
         if $self.running {
-            ${ $*docker exec -i $self sh -c $eval }
+            $eval.${ $*docker exec -i $self sh };
         } else {
             $eval.${ $*docker start -i $self };
         }
@@ -100,7 +130,7 @@ augment Docker {
 augment DockerImg {
     method ?exists { ${ $*docker image inspect $self *>X } }
     method ?remove { ${ $*docker rmi $self >X} }
-
+    method Bool { $self.exists }
     method once-off($code) {
         $code.${ $*docker run -i --rm --entrypoint sh };
     }
