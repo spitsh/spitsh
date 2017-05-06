@@ -38,7 +38,7 @@ augment File {
     method ?f      { $self.file }
     #| Removes (unlinks) the file and returns True if it was successful.
     #| If the file is a directory it will recursively it's children.
-    method ?remove { $self-->List[File].remove }
+    method ?remove ${rm -rf $self}
     #| Returns True if the file is empty
     method ?empty  { ! ${test -s $self} }
     #| Returns True if the file is writable by the current user.
