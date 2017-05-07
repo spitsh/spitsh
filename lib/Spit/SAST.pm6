@@ -101,7 +101,7 @@ role SAST is rw {
     method itemize { True }
     method depends { Empty }
     method child-deps { self.depends }
-    method all-depends { |self.depends, |@.extra-depends }
+    method all-depends { |@.extra-depends, |self.depends  }
     method type {...} # The type for type checking
     method ostensible-type { self.type } # The the type that the thing looks like
     method deep-clone { self.clone }
