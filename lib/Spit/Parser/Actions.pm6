@@ -106,7 +106,7 @@ method pragma:sym<use>($/) {
             }
         }
     } else {
-        SX::ModuleNotFound.new(|%use,:@*reps).throw;
+        SX::ModuleNotFound.new(|%use,:@*repos).throw;
     }
     make SAST::Empty.new;
 }
