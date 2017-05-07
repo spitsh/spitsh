@@ -214,6 +214,9 @@ augment Str {
     method *write-to(File $to) {
         $self.${awk -v "f=$to" -v 'RS=^$' '{printf $0>f;printf $0}'}
     }
+
+    method *append-to(File $to) {
+        $self.${tee -a $to}
     }
 
     method ~gist { $self }
