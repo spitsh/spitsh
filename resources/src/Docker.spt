@@ -51,8 +51,7 @@ augment Docker {
 
     static method tmp($from, :@args, :$mount-socket --> Docker) {
         Docker.create($from, :@args, :$mount-socket)
-          .${tee -a $?docker-cleanup};
-
+              .append-to($?docker-cleanup);
         END {
             ${$*docker rm -f @($?docker-cleanup.slurp) *>X};
             $?docker-cleanup.remove;
