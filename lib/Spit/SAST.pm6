@@ -605,6 +605,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
     has SAST @.write;
     has SAST @.append;
     has SAST %.set-env;
+    has $.silence is rw;
 
     method stage2($ctx) is default {
         $_ .= do-stage2(tStr) for ($!pipe-in,|@.nodes,|%!set-env.values).grep(*.defined);
@@ -1627,19 +1628,15 @@ class SAST::Case is SAST::Children is rw {
 
 class SAST::Quietly is SAST::Children {
     has SAST::Block:D $.block is required;
-    has SAST $.null is rw;
 
     method stage2($ctx) {
         $!block .= do-stage2($ctx,:!auto-inline);
-        $!null = $*SETTING.lookup(SCALAR,'*NULL')
-                          .gen-reference(match => $!block.match)
-                          .do-stage2(tFD);
         self;
     }
 
     method type { $!block.type }
 
-    method children { $!block,$!null }
+    method children { $!block, }
 }
 
 class SAST::Doom does SAST {

@@ -157,6 +157,12 @@ method scaf-ref($name,:$match) {
     }
 }
 
+has $!null;
+
+method null(:$match) {
+    $!null //= '&' ~ self.arg(self.scaf-ref('*NULL', :$match));
+}
+
 method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
     my $*pad = '';
     my $*depends = $CU.depends-on;
@@ -573,7 +579,7 @@ multi method cap-stdout(SAST::Stmts $_, :$tight) {
 
 #!LastExitStatus
 multi method cond(SAST::LastExitStatus:D $_) {
-    'expr $? = 0 >', '&',self.arg(self.scaf-ref('*NULL',match => .match));
+    'expr $? = 0 >', self.null(match => .match);
 }
 
 multi method arg(SAST::LastExitStatus:D $_) {
@@ -635,7 +641,7 @@ method call($name,@named-param-pairs,@pos) {
 
 method maybe-quietly(@cmd,\ret-type,\ctx,:$match) {
     if ctx === tAny and ret-type !=== tAny and ret-type !=== tBool {
-         |@cmd,' >&',|self.arg(self.scaf-ref('*NULL',:$match));
+         |@cmd,' >',self.null(:$match);
     } else {
         @cmd;
     }
@@ -683,11 +689,11 @@ multi method cap-stdout(SAST::Call:D $_) is default {
     self.node($_)
 }
 #!Cmd
-multi method node(SAST::Cmd:D $cmd,:$silence) {
+multi method node(SAST::Cmd:D $cmd) {
 
     if $cmd.nodes == 0 {
         my @cmd-body = self.cap-stdout($cmd.pipe-in);
-        self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,());
+        self.compile-redirection(@cmd-body,$cmd);
     } else {
         my @in = $cmd.in;
         my @cmd-body  = |$cmd.nodes.map({ $++
@@ -695,7 +701,7 @@ multi method node(SAST::Cmd:D $cmd,:$silence) {
                                           !! self.arg($_).itemize(.itemize) }
                                        ).flat;
 
-        my $full-cmd := |self.compile-cmd(@cmd-body,$cmd.write,$cmd.append,@in);
+        my $full-cmd := |self.compile-redirection(@cmd-body,$cmd);
 
         my $pipe := do if $cmd.pipe-in andthen not .?is-piped {
             |(|self.cap-stdout($cmd.pipe-in),'|');
@@ -707,13 +713,15 @@ multi method node(SAST::Cmd:D $cmd,:$silence) {
     }
 }
 
-method compile-cmd(@cmd-body,@out-write,@out-append,@in) {
+method compile-redirection(@cmd-body, $cmd) {
     my @redir;
     my $eval;
 
-    my @redirs := 1,'>' ,@out-write,
-                  1,'>>',@out-append,
-                  0,«<» ,@in;
+    my @redirs := 1,'>' ,$cmd.write,
+                  1,'>>',$cmd.append,
+                  0,«<» ,$cmd.in;
+
+    @redir.push('', '>', self.null(match => $cmd.match)) if $cmd.silence;
 
     for @redirs -> $default-lhs, $sym, @list {
         for @list -> $lhs,$rhs {
@@ -776,7 +784,7 @@ multi method  arg(SAST::Empty:D $_) { dq '' }
 
 #!Quietly
 multi method node(SAST::Quietly:D $_) {
-    |self.node(.block,:curlies),' 2>',('&' if .null.type ~~ tFD),self.arg(.null);
+    |self.node(.block,:curlies),' 2>', self.null;
 }
 
 #!Neg

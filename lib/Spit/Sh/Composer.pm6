@@ -630,6 +630,9 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     # can be done.
     $replacement.stage3-done = False;
     self.walk($replacement);
+    if $replacement ~~ SAST::Cmd and $outer.ctx === tAny and $outer.type ~~ tStr {
+        $replacement.silence = True;
+    }
     $replacement;
 }
 

@@ -1,6 +1,6 @@
 use Test;
 
-plan 33;
+plan 34;
 
 {
     sub foo() {
@@ -143,4 +143,6 @@ plan 33;
     sub ~cmd-sub ${ printf 'foo' };
 
     is cmd-sub(), 'foo', 'sub ${..} syntax';
+
+    is eval{ cmd-sub }.${sh}, '', "sub returning Str in Any ctx should be silent";
 }
