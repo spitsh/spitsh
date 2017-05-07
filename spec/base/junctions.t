@@ -1,6 +1,6 @@
 use Test;
 
-plan 138;
+plan 139;
 
 my $true = True;
 my $false = False;
@@ -38,6 +38,12 @@ my $false = False;
 
 {
     nok ?${false} || ?${false},'?${false} || ?${false}';
+}
+
+{
+    my $canary = False;
+    ${true} and ${true} and $canary = True;
+    ok $canary, '${true} and ${true} and... in Any ctx';
 }
 
 {

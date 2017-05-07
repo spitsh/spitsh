@@ -1104,13 +1104,13 @@ class SAST::Junction is SAST::MutableChildren {
         # RETURN-WHEN-TRUE: We care about its value when it's Bool ctx is True.
         # RETURN-WHEN-FALSE: The converse
         given $junct-ctx {
+            when NEVER-RETURN {
+                $!LHS-junct-ctx = $!RHS-junct-ctx = NEVER-RETURN;
+            }
             when $ctx === tAny {
                 # Tell the LHS to be a Bool and pass on Any context to RHS.
                 $!LHS-junct-ctx = NEVER-RETURN;
                 $!RHS-junct-ctx = JUST-RETURN;
-            }
-            when NEVER-RETURN {
-                $!LHS-junct-ctx = $!RHS-junct-ctx = NEVER-RETURN;
             }
             when { ! .defined or $_ == JUST-RETURN } {
                 $!LHS-junct-ctx = $!dis ?? RETURN-WHEN-TRUE !! RETURN-WHEN-FALSE;
