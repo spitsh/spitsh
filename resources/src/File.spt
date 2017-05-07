@@ -94,10 +94,15 @@ augment File {
     #| Appends raw data to the file.
     method append(#|[data to append] $data) { $data.${ >> $self } }
 
-    #| Adds a line to a file. If the file doesn't end in a `\n`, a one
-    #| will be appended before the line being added.
-    method push(#|[line to add] $line) {
-        $self.slurp.push($line).write-to($self)
+    #| Appends a string to a file,. If the file doesn't end in a
+    #| newline, one will be prepended to the string. A newline is
+    #| appended to the string regardless of whether it already ends in
+    #| a string. Returns the argument string.
+    method ~push(#|[string to push] $str) {
+        $self.slurp.${
+            awk :l($str) -v "f=$self"
+             '{print>f}END{l=ENVIRON["l"];print l>f; printf l}'
+        }
     }
     #| Calls `touch(1)` on the file.
     #|{ .touch unless File<foo.txt> }
