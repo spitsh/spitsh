@@ -2,8 +2,8 @@
  a Pkg represents a package installable via the system's package manager, like `apt-get` or `yum`.
 ```perl6
 if not Pkg<curl> {
-   .install;
-   say "installed $_ {.version}";
+    .install;
+    say "installed $_ {.version}";
 }
 ```
 ## Bool
@@ -18,8 +18,8 @@ if not Pkg<curl> {
 >method installed( ⟶ [Bool](./Bool.md))
 
  Returns True if a version of the package is installed.
-## update-pkgs
->method update-pkgs()
+## update-pkglist
+>method update-pkglist( ⟶ [Bool](./Bool.md))
 
  Tells the system specific package manager to update its list of pacakges.
 ## version

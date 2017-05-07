@@ -9,7 +9,7 @@
 
  Clones the GitHubRepo.
 ```perl6
-GitHubRepo<spitsh/spitsh/>.clone.cd;
+GitHubRepo<spitsh/spitsh>.clone.cd;
 say ${ $*git status };
 ```
 

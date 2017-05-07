@@ -20,7 +20,7 @@ is File</etc/meaning-of-life.cfg>.slurp,'42',"configured with correct MOL";
 |**$b**| The expected string|
 |**$msg**| The associated message|
 # list
->sub list([List](../List.md) ***@list** ⟶ [List](../List.md))
+>sub list([List[Str]](../List[Str].md) ***@list** ⟶ [List](../List.md))
 
  Joins arguments on a `\n` creating a `List`.
 # nok

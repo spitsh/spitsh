@@ -60,8 +60,6 @@ Right now the only two OS variants that pass the spec are Debian and RHEL.
  For OS's that have [GNU core utilities](https://www.gnu.org/software/coreutils/coreutils.html) installed by default.
 ### Linux
  For OS's that use a Linux kernel.
-### OS
- The base of the Operating Sytem enum class
 ### RHEL
  For OS's based on the [Redhat Enterprise Linux distribution](https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux)
 ### UNIXish

@@ -1,3 +1,32 @@
+## 0.0.26
+
+Many bug fixes and new features but not much new documentation.
+
+- Add \${ ... } for making a list with command syntax. E.g.
+  `my @cmd = ${ printf "foo" }`
+- Add short syntax for declaration a routine body as a command. E.g.
+  Instead of `sub foo { ${ printf "foo"} }` you can just do
+  `sub foo ${printf "foo"}`.
+- Add `DateTime` and `Date` (no docs yet)
+- `File.touch` returns a Bool
+- Add `File.mtime` which returns a `DateTime` of the mtime
+- Add `$*gcc-make` for getting gcc, make and libc development headers
+- Add `File.cleanup` which will add the file to the list of temp files
+  to be cleanup up at END
+- Add -D switch to execute script in an already running docker container
+- Add `GitHubRepo.release-url` and `.latest-release-url`
+- Add `Pkg.ensure-install` which installs it only if a version isn't
+  already installed.
+- The test harness is now written in spit and lives in `tools/harness`.
+- Add `$*docker-socket` to replace `Docker.socket`.
+- Add GitHubRepo `$*moby-github`
+- Add `Docker.start-sleep` which keeps a container sleeping so it can
+  be exec'd into.
+- `File.push` now returns the pushed item.
+- `Str.write-to` now returns what was written
+- Add `Str.append-to` which appends to a file and returns what was appended.
+
+
 ## 0.0.25
 - Add .grep and .first for List and File
 - Much more piping between commands instead of command substitution.
