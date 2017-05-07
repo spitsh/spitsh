@@ -1,6 +1,6 @@
 use Test;
 
-plan 37;
+plan 38;
 
 ok "foo" ~~ /oo$/,'basic re match (true)';
 nok "foo" ~~ /ar$/,'basic re match (false)';
@@ -93,4 +93,8 @@ nok "foo" ~~ /ar$/,'basic re match (false)';
     ok '<(o_O)><(^_^)><(*-*)>' ~~ /^<$interpolate><$interpolate><$interpolate>$/,
     'Three separated variable interpoldations';
     ok '<(o_O)><(^_^)><(*-*)>' ~~ /^(<$interpolate>)+$/,'interpolated regex+';
+}
+
+{
+    ok "foo\n".matches(/^foo\n$/), '.matches string ending in  a newline';
 }

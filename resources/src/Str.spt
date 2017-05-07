@@ -203,16 +203,8 @@ augment Str {
     }
     method ?matches(Regex $r) on {
         Debian {
-            my $RE = $r.subst('#','\\#');
-            $self.${
-                sed -nr
-                (
-                    # slurp the input
-                    'H;1h;$!d;x;' ~
-                    # quit with exit code 1 if it doesn't match
-                    "\\#$RE#!q1"
-                )
-            }
+            # because mawk is the worst
+            $self.${perl -e '(join "",<STDIN>) =~ /@ARGV[0]/s or exit 1' $r}
         }
         Any {
             $self.${awk :$r -v 'RS=^$' '! match($0,ENVIRON["r"]) { exit 1 }'};
