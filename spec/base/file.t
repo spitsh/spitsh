@@ -1,6 +1,6 @@
 use Test;
 
-plan 57;
+plan 51;
 
 {
     my File $file .= tmp;
@@ -180,12 +180,6 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
     ok $diff >= 1 || $diff <= 2, '.mtime';
 }
 
-{
-    my $cleanup = File<foo.txt>.cleanup;
-    $cleanup.touch;
-    ok $cleanup, '.cleanup exists before';
-    END { nok $cleanup, '.cleanup was removed' };
-}
 
 # {
 #     my $file = File.tmp;

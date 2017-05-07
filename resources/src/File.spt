@@ -211,14 +211,14 @@ augment File {
     #|{
       my $tmpfile = File.tmp; # Will be removed at the end
     }
-    static method tmp(Bool :$dir --> File) {
-        my File $tmpfile = ${mktemp ('-d' if $dir)};
-        ${printf '%s\n' $tmpfile >> $?file-cleanup};
-        $tmpfile;
-        END { ${rm -rf @($?file-cleanup.slurp) $?file-cleanup } }
+    static method tmp(Bool :$dir -->File) {
+        ${mktemp ('-d' if $dir)}-->File.cleanup
     }
 
-    method *cleanup ${printf '%s\n' $self | tee -a $?file-cleanup}
+    method *cleanup {
+        $?file-cleanup.push($self);
+        END { ${rm -rf @($?file-cleanup.slurp) $?file-cleanup } }
+    }
 
     #| Returns a list of children that match the criteria.
     #|{
