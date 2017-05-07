@@ -1,6 +1,6 @@
 use Test;
 
-plan 37;
+plan 39;
 
 {
     ok "0","'0' is true";
@@ -100,4 +100,12 @@ plan 37;
     nok $str.starts-with("*f.oo"),'!starts-with';
     ok $str.ends-with("b?ar"),'ends-with';
     nok $str.ends-with("oar"),'!ends-with';
+}
+
+{
+    given File.tmp {
+        .write("foo");
+        is .slurp.uc.write-to($_), 'FOO', '.write-to returns what it writes';
+        is .slurp, 'FOO', '.slurp...write-to($_)';
+    }
 }

@@ -211,8 +211,9 @@ augment Str {
         }
     }
 
-    method write-to(File $to) {
-        $self.${awk -v "f=$to" -v 'RS=^$' 'END{printf $0>f}'}
+    method *write-to(File $to) {
+        $self.${awk -v "f=$to" -v 'RS=^$' '{printf $0>f;printf $0}'}
+    }
     }
 
     method ~gist { $self }
