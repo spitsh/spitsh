@@ -585,7 +585,7 @@ class SAST::Elem is SAST::MutableChildren does SAST::Assignable {
     method stage2($ctx) {
         SX::NYI.new(feature => 'element assignment modifiers',node => $_).throw with $.assign-mod;
         $!index .= do-stage2(tInt);
-        $.elem-of .= do-stage2(tAny);
+        $.elem-of .= do-stage2(tStr);
         with $.assign {
             $_ .= do-stage2($.type, :desc("assigning to element of {$.elem-of.gist}"));
         }
