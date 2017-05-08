@@ -2,6 +2,7 @@
 #| installed.
 #|{ say ${ $*curl -V } }
 constant Cmd $*curl = on {
+    Spit-Helper { 'curl' }
     RHEL { 'curl' }
     Debian {
         Pkg<ca-certificates>.ensure-install;

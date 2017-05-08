@@ -1,10 +1,7 @@
 use Spit::Compile;
 use Spit::OptsParser;
+use Spit::Util :spit-version;
 need Spit::Repo;
-
-sub get-ver {
-    try $*REPO.resolve(CompUnit::DependencySpecification.new(:short-name<Spit::Compile>)).distribution.meta<ver>
-}
 
 sub parse-args(@args) {
     my (@pos,%named);
@@ -48,8 +45,8 @@ Options:
     Runs the script in an already running docker container by execing
     A new `/bin/sh` process inside it.
 
-  -s --mount-docker-socket
-    Mounts /var/run/docker.sock into the container.
+  -h --in-helper
+    Runs the script in the spit-helper image.
 
   -i --interactive
     Compile a script where $*interactive will be set to whether STDIN is
@@ -69,6 +66,9 @@ Options:
 
   --os=<os name> (default: debian)
     Shortcut for --opts='{ "os" : ": OS<debian>" }'
+
+  -s --mount-docker-socket
+    Mounts /var/run/docker.sock into the container.
 
   --target=<stage name>
     Sets the compilation stage to finish at:  Can be any of:
@@ -157,29 +157,52 @@ Examples:
   spit prove -d=centos,alpine t/
 END
 
+constant $helper-usage = q:to/END/;
+Usage: spit helper [build|clean]
+
+Builds, removes or upgrades the spit-helper docker image. spit-helper
+is a small docker image pre-built with useful utilties for deploying
+shell scripts.
+
+Sub-commands:
+  build    builds the latest spit-helper
+
+  remove   removes the spit-helper image
+           (--force uses 'docker rmi -f')
+
+  upgrade  removes an old spit-helper image
+END
+
 constant $general-usage = q:to/END/;
-Spook in the Shell Script compiler v\qq[{get-ver() || 'DEV'}]
+Spook in the Shell compiler v\qq[{spit-version}]
 
 Usage: spit [COMMAND|PATH]
 
 If the first argument contains '/' or '.' it's assumed to be a PATH and is
 run with the compile command.
 
+Options:
+  --help     Print this help message
+  --version  Print version by itself
+
 Commands:
   compile  Compile a file as spit code
   eval     Compile a string as spit code
   prove    Run prove(1) with test files written in spit
+  helper   build/remove/update the spit-helper image
 
 run 'spit COMMAND --help' for more information about a command
 END
-
 
 my constant %usage = %(
     eval => $eval-usage,
     compile => $compile-usage,
     general => $general-usage,
     prove   => $prove-usage,
+    helper  => $helper-usage,
 );
+
+my constant $helper-image = "spit-helper:{spit-version}";
 
 my class commands {
     method compile(Str:D $file,
@@ -216,13 +239,37 @@ my class commands {
             exit $run.exitcode unless $run.exitcode == 0;
         }
     }
+
+    method helper($_) {
+        when 'build' {
+            my ($helper-builder, $p) = start-docker('alpine', :mount-docker-socket);
+            my $build-helper-src =  %?RESOURCES<tools/build-helper.spt>.absolute.IO;
+            my $compile = compile(
+                $build-helper-src.slurp,
+                name => $build-helper-src,
+                opts => {
+                    os => late-parse('Alpine'),
+                }
+            );
+            write-docker($helper-builder, $p, $compile);
+        }
+        when 'remove' {
+            exit (run 'docker', 'rmi', $helper-image).exitcode;
+        }
+        default {
+            fail-print-usage('helper');
+        }
+    }
 }
 
 sub fail-print-usage($section = "general") {
     note %usage{$section}; exit 1;
 }
+
 sub do-main() is export {
     my (@pos,%named) := parse-args(@*ARGS);
+
+    if %named<version>:exists { say spit-version(); exit(0) }
 
     if not @pos {
         fail-print-usage;
@@ -244,6 +291,9 @@ sub do-main() is export {
                 $in-docker =  'debian' unless ($in-docker|$in-container) ~~ Str:D;
                 commands.prove(@pos[1], :$in-docker, :$in-container, |%named);
             }
+            when 'helper' {
+                commands.helper(@pos[1]);
+            }
             when *.contains(<. />.any) {
                 compile-or-eval('compile', @pos, %named);
             }
@@ -260,11 +310,12 @@ sub compile-or-eval($command, @pos, %named) {
     %named<opts> //= %named<o>;
     %named<in-docker> //= %named<d>;
     %named<in-container> //= %named<D>;
+    %named<in-helper> //= %named<h>;
     %named<interactive> //= %named<i>;
     %named<force-interactive> //= %named<I>;
     %named<in-docker> = 'debian' if %named<in-docker> === True;
     %named<target> //= 'compile';
-    %named<mount-docker-socket> //= %named<s>;
+    %named<mount-docker-socket> //= %named<s> //= %named<in-helper>;
     my $*debug = %named<debug>;
 
     with %named<opts> {
@@ -273,17 +324,14 @@ sub compile-or-eval($command, @pos, %named) {
         $_ = {};
     };
     with %named<os> {
-        %named<opts><os> //= Spit::LateParse.new(
-            val => "OS<$_>",
-            match => (m/.*/),
-        ),
+        %named<opts><os> //= late-parse("OS<$_>")
     }
 
     with %named<interactive> {
-        %named<opts><interactive> = Spit::LateParse.new(val => '$?IN.tty');
+        %named<opts><interactive> = late-parse('$?IN.tty');
     } else {
         if %named<force-interactive> {
-            %named<opts><interactive> = Spit::LateParse.new( val => 'True')
+            %named<opts><interactive> = late-parse('True');
         }
     }
 
@@ -305,6 +353,9 @@ sub compile-or-eval($command, @pos, %named) {
             exec-docker $_, |%named;
         }
     }
+    orwith %named<in-helper> {
+        start-docker $helper-image, :mount-docker-socket, |%named;
+    }
 
     my $res = try given $command {
         when 'compile' {
@@ -316,7 +367,7 @@ sub compile-or-eval($command, @pos, %named) {
     };
 
     if $! {
-        # should kill docker here.
+        .kill(SIGTERM) with $docker;
         note $!.gist;
         exit 1;
     }
@@ -332,6 +383,18 @@ sub compile-or-eval($command, @pos, %named) {
 
 constant $docker-socket = '/var/run/docker.sock';
 
+my @containers;
+
+sub cleanup-containers {
+    once do {
+        signal(SIGINT,SIGTERM).tap: {
+            note "$_ recieved killing container";
+            .kill(SIGTERM) for @containers;
+            exit(0);
+        }
+    }
+}
+
 sub start-docker($image is copy, :$mount-docker-socket, *%) {
     my $mount := do if $mount-docker-socket {
         $docker-socket.IO.e or
@@ -342,15 +405,22 @@ sub start-docker($image is copy, :$mount-docker-socket, *%) {
 
     my @args = 'docker','run',|$mount,'-i','--rm',$image,'sh';
     note "starting docker with {@args[1..*].gist}" if $*debug;
-    my $docker = Proc::Async.new(|@args,:w);
-    ($docker,$docker.start);
+    my $docker = Proc::Async.new(|@args, :w);
+    cleanup-containers();
+    @containers.push($docker);
+    my $p = $docker.start;
+    $docker.write(qq{trap 'exit 0' TERM;\n}.encode('utf8'));
+
+    ($docker, $p);
 }
 
 sub exec-docker($container, *%) {
     my @args = 'docker', 'exec', '-i', $container, 'sh';
     note "starting docker with {@args[1..*].gist}" if $*debug;
     my $docker = Proc::Async.new(|@args, :w);
-    ($docker, $docker.start);
+    my $p := $docker.start;
+    $docker.write(qq{trap 'exit 0' TERM;\n}.encode('utf8'));
+    ($docker, $p);
 }
 
 sub write-docker($docker,$p,$shell) {
