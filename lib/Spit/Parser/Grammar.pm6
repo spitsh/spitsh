@@ -426,10 +426,7 @@ grammar Spit::Grammar is Spit::Lang {
     rule term:cmd-capture { '\\'<cmd> }
 
     # .call for @something
-    rule term:topic-call {
-        '.'$<name>=<.identifier>
-        [$<args>=<.wrap: '(', /<R=.args>/,')',:desc<call arguments>>]?
-    }
+    rule term:topic-call { <method-call> }
     # -->Pkg.install unless Cmd<curl>
     rule term:topic-cast {
         <.longarrow> [ <type> || <.expected('A type to cast $_ to')> ]
@@ -469,13 +466,16 @@ grammar Spit::Grammar is Spit::Lang {
 
     proto token postfix {*}
 
-    token postfix:method-call {
+    token method-call {
         '.'<.ws>$<name>=<.identifier>
         [
             |':' <.ws> <args>
             |$<args>=<.r-wrap: '(',/<R=.args>/,')', :desc<method call arguments>>
         ]?
     }
+
+    token postfix:method-call { <method-call> }
+
     token postfix:cmd-call {
         '.'<.ws><cmd>
     }

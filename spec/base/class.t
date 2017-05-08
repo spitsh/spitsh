@@ -1,6 +1,6 @@
 use Test;
 
-plan 20;
+plan 22;
 
 {
     class Foo {
@@ -18,6 +18,7 @@ plan 20;
     is Bar.
        doit(),"bar", 'method call with \n after teh dot';
 }
+
 
 {
     class Parent {
@@ -58,6 +59,11 @@ plan 20;
     is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";
     is (Foo<foo>.first: "bar"), "foobarbaz", '.method: syntax';
     is Foo<foo>.return-self.WHAT, 'Foo', '* return on instance';
+
+    given Foo<foo> {
+        is .first("bar"), "foobarbaz", 'topic method-call($a)';
+        is (.first: "bar"), "foobarbaz", 'topic method-call: $a';
+    }
 }
 
 {
