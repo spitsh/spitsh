@@ -52,6 +52,16 @@ class SAST::Cmd {...}
 class SAST::ACCEPTS {...}
 class SAST::Itemize {...}
 
+sub sastify($_, :$match!) is export {
+    when Associative { .map: { .key => sastify(.value) } }
+    when Positional  { .map: &sastify }
+    when Spit::Type  { SAST::Type.new(class-type => $_,:$match) }
+    when Int         { SAST::IVal.new(val => $_,:$match) }
+    when Str         { SAST::SVal.new(val => $_,:$match) }
+    when Bool        { SAST::BVal.new(val => $_,:$match) }
+    default          { Nil }
+}
+
 role SAST is rw {
     has Match:D $.match is required is rw;
     has %.ann; # a place to put stuff that doesn't fit anywhere

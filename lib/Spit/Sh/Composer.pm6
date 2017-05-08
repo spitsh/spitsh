@@ -350,25 +350,12 @@ multi method walk(SAST::Eval:D $THIS is rw) {
     # copy the old constant values into fresh SAST objects for use in the new
     # compilation
     for %opts.values <-> $opt {
-        #TODO: roll this into its own routine
-        my $match = $opt.match;
-        $opt = do given $opt.compile-time {
-            when Spit::Type {
-                SAST::Type.new(class-type => $_,:$match);
-            }
-            when Int {
-                SAST::IVal.new(val => $_,:$match);
-            }
-            when Str {
-                SAST::SVal.new(val => $_,:$match);
-            }
-            when Bool {
-                SAST::BVal.new(val => $_,:$match);
-            }
-            default {
-                SX.new( match => $opt.match,
-                        message => "can't use non-compile time value as arg to eval").throw;
-            }
+        my $ct = $opt.compile-time;
+        if  $ct or $ct.defined {
+            $opt = sastify($ct, match => $opt.match);
+        } else {
+            SX.new( match => $opt.match,
+                    message => "can't use non-compile time value as arg to eval").throw;
         }
     }
 
