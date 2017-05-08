@@ -179,7 +179,7 @@ method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
     my @BEGIN = @compiled-depends && @compiled-depends.map({ ("\n" if $++),|$_}).flat;
     my @run;
 
-    if $one-block {
+    if $one-block and not @END {
         @compiled.append: self.maybe-oneline-block:
             [
                 |(|@BEGIN,"\n" if @BEGIN)
