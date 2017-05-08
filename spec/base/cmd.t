@@ -1,6 +1,6 @@
 use Test;
 
-plan 28;
+plan 29;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -64,4 +64,8 @@ my $a = <one two three>;
 
 {
     is \${ printf "hello world" }, ("printf", "hello world"), '\${...}';
+}
+
+{
+    is Cmd<ls>.path, '/bin/ls', '.path';
 }

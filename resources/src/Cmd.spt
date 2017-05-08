@@ -20,4 +20,7 @@ class Cmd {
         -->Pkg.install unless $self;
         $self;
     }
+
+    method path(-->File) ${ command -v $self }
+
 }
