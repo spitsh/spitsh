@@ -15,4 +15,4 @@ env:
 
 script:
   - spit -d compile spec/base/sanity.t
-  - spit compile tools/harness.spt --RUN
+  - spit compile resources/tools/harness.spt --RUN
