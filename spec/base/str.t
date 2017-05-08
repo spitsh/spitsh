@@ -1,6 +1,6 @@
 use Test;
 
-plan 39;
+plan 41;
 
 {
     ok "0","'0' is true";
@@ -108,4 +108,17 @@ plan 39;
         is .slurp.uc.write-to($_), 'FOO', '.write-to returns what it writes';
         is .slurp, 'FOO', '.slurp...write-to($_)';
     }
+}
+
+
+{
+    File.tmp(:dir).cd;
+    my $to-archive = File.tmp(:dir);
+    $to-archive.add('foo.txt').touch;
+    my $archive = $to-archive.archive;
+    File.tmp(:dir).cd;
+    my $extracted = $archive.slurp.extract;
+    $archive.remove;
+    ok $extracted.d, 'Str.extract result is a directory';
+    ok $extracted.add('foo.txt'), 'foo.txt exists inside';
 }

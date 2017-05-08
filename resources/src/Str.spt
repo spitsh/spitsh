@@ -219,6 +219,9 @@ augment Str {
         $self.${tee -a $to}
     }
 
+    method extract(-->File) {
+        $self.${ tar xvz | sed -n '1s/\/.*//p' };
+    }
     method ~gist { $self }
 
     #| Returns True if the invocant and argument string are equal.
