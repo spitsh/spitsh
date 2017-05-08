@@ -13,7 +13,11 @@ class Spit::LateParse is rw {
     method gist { "Spit::LateParse($.name => $.val)" }
 }
 
-my $actions = my class Spit::OptsParser::Actions is JSON5::Tiny::Actions {
+sub late-parse($val) is export {
+    Spit::LateParse.new(match => Match.new, :$val);
+}
+
+my constant $actions = my class Spit::OptsParser::Actions is JSON5::Tiny::Actions {
     method value:int ($/) { make SAST::IVal.new(val => +$/.Int); }
     method value:num ($/) { die "$/ NYI" }
     method value:exp ($/) { die "$/ NYI" }
