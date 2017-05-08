@@ -8,6 +8,8 @@ enum-class Linux is OS { }
 enum-class BusyBox is UNIXish is Linux { }
 #| Alpine linux distribution: https://alpinelinux.org/
 enum-class Alpine is BusyBox { }
+
+enum-class Spit-Helper is Alpine { }
 #| For OS's that have [GNU core utilities](https://www.gnu.org/software/coreutils/coreutils.html)
 #| installed by default.
 enum-class GNU is UNIXish { }
