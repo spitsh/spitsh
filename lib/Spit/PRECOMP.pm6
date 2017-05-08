@@ -4,7 +4,7 @@ use Spit::SETTING;
 
 my constant $src = slurp-SETTING();
 
-constant $SETTING is export = do {
+my constant $SETTING is export = do {
     note "precompiling SETTING";
     compile(
         $src,
@@ -15,7 +15,7 @@ constant $SETTING is export = do {
     ).block;
 }
 
-constant $SETTING-sha1 is export = sha1-SETTING;
+my constant $SETTING-sha1 is export = sha1-SETTING;
 
 my constant %core-lib is export = {
     Test => compile(
