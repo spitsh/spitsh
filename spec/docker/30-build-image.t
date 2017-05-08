@@ -1,6 +1,6 @@
 use Test;
 
-plan 8;
+plan 12;
 
 
 {
@@ -19,6 +19,13 @@ plan 8;
 
     ok $img.exists, '.commit means the image exists';
     ok $img,        'DockerImg.Bool means .exists (true)';
+    {
+        my $tagged = $img.tag('run_test:goof');
+        is $tagged, 'run_test:goof', 'tag returned what it was given';
+        ok $tagged, 'tagged image exists';
+        ok $tagged.remove, 'tagged image removed';
+        ok $img, ‘removing tagged image doesn't remove original’;
+    }
     ok $img.remove, '.remove a image that exists';
     nok $img.exists, '.exists after remove';
     nok $img,        'DockerImg.Bool means .exists (false)';

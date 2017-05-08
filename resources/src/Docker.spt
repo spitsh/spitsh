@@ -1,27 +1,18 @@
 class Docker { }
 class DockerImg { }
 
-constant $*docker-cli = {
-    Docker.install-cli;
-    Cmd<docker>;
+constant File $*docker-socket = '/var/run/docker.sock';
+constant File $*docker-install-cli-path = '/usr/local/bin/docker';
+
+constant Cmd $*docker = on {
+    Spit-Helper { 'docker' }
+    Linux { Cmd<docker> || Docker.install-cli }
 }
-
-constant $*docker = {
-    unless Cmd<docker> {
-        if File</var/run/docker.sock> {
-            Docker.install-cli;
-        } else {
-            ${ sh -c (HTTP<https://get.docker.com>.get) };
-        }
-    }
-    Cmd<docker>;
-};
-
-constant $*docker-socket = '/var/run/docker.sock';
 
 constant $*moby-github = GitHubRepo<moby/moby>;
 
 constant File $?docker-cleanup = ${mktemp};
+
 augment Docker {
 
     static method ~latest-build-ver {
@@ -34,15 +25,17 @@ augment Docker {
         my $latest-v = Docker.latest-build-ver;
         "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
     }
-    static method install-cli {
-        unless Cmd<docker> {
-            my $url = Docker.latest-build-tgz-url;
-            note "getting latest build from $url";
-            $url.get.${tar xz};
-            note "installing to /usr/local/bin/docker";
-            File<docker/docker>.move-to('/usr/local/bin/docker');
-            File<docker>.remove;
-        }
+    static method install-cli(-->File) {
+        my $url = Docker.latest-build-tgz-url;
+        note "getting latest build from $url";
+        my $docker-dir = $url.get.extract.cleanup;
+        note "installing to $*docker-install-cli-path";
+        $docker-dir.add('docker').move-to($*docker-install-cli-path);
+        $*docker-install-cli-path;
+    }
+
+    static method install-daemon {
+        ${ sh -c (HTTP<https://get.docker.com>.get) };
     }
 
     static method ?hello-world {
@@ -92,9 +85,9 @@ augment Docker {
 
     method ?exec(Str $eval) {
         if $self.running {
-            $eval.${ $*docker exec -i $self sh };
+            $eval.${ $*docker exec -i $self sh};
         } else {
-            $eval.${ $*docker start -i $self };
+            $eval.${ $*docker start -i $self};
         }
     }
 
@@ -132,5 +125,8 @@ augment DockerImg {
     method Bool { $self.exists }
     method once-off($code) {
         $code.${ $*docker run -i --rm --entrypoint sh };
+    }
+    method *tag ($tag) {
+        ?${$*docker tag $self $tag} && $tag;
     }
 }
