@@ -816,7 +816,16 @@ multi method arg (SAST::BVal:D $_) { .val ?? '1' !! '""' }
 multi method cond(SAST::BVal:D $_) { .val ?? 'true' !! 'false' }
 multi method int-expr(SAST::BVal $ where { .val === False } ) { '0' }
 #!SVal
-multi method arg(SAST::SVal:D $_) { escape .val }
+multi method arg(SAST::SVal:D $_) {
+    if (my $lines := .val.lines) > 2 {
+        cs
+          "cat <<-'\c[GHOST]'\n\t",
+          $lines.join("\n\t"),
+          "\n\t\c[GHOST]\n$*pad";
+    } else {
+        escape .val
+    }
+}
 #!IVal
 multi method arg(SAST::IVal:D $_) { .val.Str }
 multi method int-expr(SAST::IVal:D $_) { .val.Str }
