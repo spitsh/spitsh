@@ -511,8 +511,13 @@ method var ($/)   {
     with $<special-var> {
         make .ast;
     } else {
-        if $<name> eq '?PID' and $<sigil> eq '$' {
+        my $name = $<name>.Str;
+        if $name eq '?PID' and $<sigil> eq '$' {
             make SAST::CurrentPID.new
+        }
+        elsif $name eq '?spit-version' {
+            use Spit::Util :spit-version;
+            make SAST::SVal.new(val => spit-version());
         }
         else {
             make SAST::Var.new(
