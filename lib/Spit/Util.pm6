@@ -1,4 +1,5 @@
 unit module Spit::Util;
+use Spit::Constants;
 
 sub descend-WHO($WHO is copy,Str:D $path) {
     my @parts = $path.split('::');
@@ -66,3 +67,8 @@ sub spit-version is export(:spit-version) {
     }
 }
 
+
+sub SETTING-lookup(SymbolType \symbol-type, $name) is export(:SETTING-lookup) {
+    require Spit::PRECOMP <$SETTING>;
+    $SETTING.lookup(symbol-type, $name);
+}
