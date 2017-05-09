@@ -21,6 +21,11 @@ class Cmd {
         $self;
     }
 
-    method path(-->File) ${ command -v $self }
+    method path(-->File) on {
+        RHEL   ${whereis -b $self | awk '{print $2}'}
+        Debian ${whereis -b $self | awk '{print $2}'}
+        Any ${ command -v $self }
+    }
+
 
 }
