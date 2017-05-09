@@ -293,6 +293,7 @@ method declaration:sym<enum-class> ($/) {
         $enum-class.class.^add_parent(tEnumClass);
     }
     $enum-class.class.^compose;
+    $enum-class.block = $<block>.ast;
     $/.make: $enum-class;
 }
 
