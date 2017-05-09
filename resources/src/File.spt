@@ -63,6 +63,12 @@ augment File {
         BusyBox ${ stat -c '%y' $self | sed -r 's/ /T/;s/0{6}$//' }
     }
 
+    method ctime(-->DateTime) on {
+        #TODO: roll these into one
+        GNU     ${ stat -c '%z' $self | sed -r 's/ /T/;s/[0-9]{6} \S*$//' }
+        BusyBox ${ stat -c '%z' $self | sed -r 's/ /T/;s/0{6}$//' }
+    }
+
     method +lines { ${wc -l < $self} }
     #| Returns the line of text at an index. `.at-pos` is the
     #| internal method called when using postcircumfix `[]`.
