@@ -1,7 +1,7 @@
 constant Int $*pkglist-stale = 60*60*24;
 
 constant File $*pkglist-path = on {
-    Debian { "/var/lib/apt/lists"  }
+    Debian { "/var/lib/apt/lists/deb.debian.org_debian_dists_{Debian.release-name}_Release"  }
     Alpine { "/var/cache/apk"  }
     RHEL   { "/var/cache/yum"  }
 }
