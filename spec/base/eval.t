@@ -12,5 +12,5 @@ plan 3;
 {
     constant $os = Alpine;
 
-    is eval(:$os){ say $*os }.${sh}, 'Alpine', 'can use a constant as a eval option';
+    is eval(:$os){ say $*os.name }.${sh}, 'Alpine', 'can use a constant as a eval option';
 }
