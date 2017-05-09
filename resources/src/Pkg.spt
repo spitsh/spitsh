@@ -24,7 +24,9 @@ class Pkg {
     }
 
     static method last-updated(-->DateTime) on {
-        Any { $*pkglist-path.mtime }
+        Any {
+            $*pkglist-path ?? $*pkglist-path.ctime !! DateTime.epoch-start;
+        }
         RHEL ${
             date -d
             ${
