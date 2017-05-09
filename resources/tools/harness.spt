@@ -14,7 +14,7 @@ if $*run.contains('base') {
     ${$*spit prove 'spec/base' "-d={@*on.join(',')}"};
 }
 
-if $*run.contains('pacakges') {
+if $*run.contains('packages') {
     ${$*spit prove 'spec/packages' "-d={@*on.join(',')}"};
 }
 
