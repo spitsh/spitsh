@@ -1,6 +1,6 @@
 use Test;
 
-plan 49;
+plan 50;
 
 {
     my @a;
@@ -147,6 +147,7 @@ plan 49;
 
     is @l.grep(/i.{1,2}$/), <five six nine>, '.grep';
     is @l.first(/i.{1,2}$/), <five>, '.first';
+    is @l.grep(/i.{1,2}$/)[0], <five>, '.grep(/.../)[0]';
 
     my @m = <42 58 1337 8888>;
 

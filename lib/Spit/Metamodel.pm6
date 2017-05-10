@@ -254,6 +254,9 @@ class Spit::Metamodel::EnumClass is Spit::Metamodel::Type {
 class Spit::Metamodel::WhateverInvocant is Spit::Metamodel::Type {
     method needs-reification(Mu $) { True }
     method reify(Mu $, Mu \invocant-type) { invocant-type }
+    method reify-parameter(Mu \type, Mu \invocant-type) {
+        type.^parents[0].^reify-parameter(invocant-type);
+    }
 
     method name(Mu \type) {
         "WhateverInvocant({type.^parents[0].^name})";
