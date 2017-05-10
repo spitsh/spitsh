@@ -447,6 +447,11 @@ class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
 
 class SAST::EnvDecl is SAST::VarDecl { }
 
+# MaybeReplace represents a conditional topic $_ like thing. If its
+# assignment is pure (compile-time/variable) then references will just
+# inline themselves during composition. Otherwise the references stick
+# and during compilation it turns into a real $_ variable in the
+# shell.
 class SAST::MaybeReplace is SAST::VarDecl {
     has @.references;
 
