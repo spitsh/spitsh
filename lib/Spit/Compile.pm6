@@ -14,7 +14,7 @@ sub compile  ($input is copy,
               :$one-block,
               *%,
              ) is export {
-
+    my \start-compile = now if $debug;
     # if we are compiling the SETTING itself $*SETTING will be set to False so
     # it won't trigger this.
     without $*SETTING {
@@ -33,7 +33,7 @@ sub compile  ($input is copy,
         );
         my $*ACTIONS = $actions;
         note "$name parsing.. " if $debug;
-        my \before = now;
+        my \before = now if $debug;
         my $match = $parser.parse($input,:$actions);
         die "Parser completely failed to match input ($name)" unless $match;
         note "$name parsing ✔ {now - before}" if $debug;
@@ -46,7 +46,7 @@ sub compile  ($input is copy,
 
         if not $input.stage2-done {
             note "$name contextualzing.." if $debug;
-            my \before = now;
+            my \before = now if $debug;
             $input .= do-stage2();
             note "$name contextualzing ✔ {now - before}" if $debug;
             return $input if $target eq 'stage2';
@@ -58,7 +58,7 @@ sub compile  ($input is copy,
         if not $input.stage3-done {
             note "$name composing.." if $debug;
             my \SPIT_COMPOSER = (once light-load 'Spit::Sh::Composer');
-            my \before = now;
+            my \before = now if $debug;
             SPIT_COMPOSER.new(
                 :%opts,
                 scaffolding => $compiler.scaffolding,
@@ -79,5 +79,6 @@ sub compile  ($input is copy,
         die "Can't compile a {$input.^name}";
     }
 
+    note "$name finished {now - start-compile}" if $debug;
     $input;
 }
