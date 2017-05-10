@@ -518,7 +518,7 @@ method var ($/)   {
         }
         elsif $name eq '?spit-version' {
             use Spit::Util :spit-version;
-            make SAST::SVal.new(val => spit-version());
+            make SAST::SVal.new(val => spit-version().Str);
         }
         else {
             make SAST::Var.new(

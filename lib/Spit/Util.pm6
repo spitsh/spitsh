@@ -63,7 +63,7 @@ sub spit-version is export(:spit-version) {
         use JSON5::Tiny;
         (try $*REPO.resolve(CompUnit::DependencySpecification.new(:short-name<Spit::Compile>)).distribution.meta<ver>)
         or
-        'META6.json'.IO.slurp.&from-json<version>;
+        Version.new('META6.json'.IO.slurp.&from-json<version>);
     }
 }
 
