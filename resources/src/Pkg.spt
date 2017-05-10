@@ -1,8 +1,8 @@
 constant Int $*pkglist-stale = 60*60*24;
 
 constant File $*pkglist-path = on {
-    Debian { "/var/lib/apt/lists/deb.debian.org_debian_dists_{Debian.release-name}_Release"  }
-    Alpine { "/var/cache/apk"  }
+    Debian { "/var/lib/apt/lists/"  }
+    Alpine { "/var/cache/apk/"  }
     RHEL   { "/var/cache/yum"  }
 }
 
@@ -20,13 +20,16 @@ class Pkg {
     static method ?update-pkglist on {
         Debian ${ apt-get update *>X   }
         RHEL   { ${yum clean expire-cache >X} && ${ yum check-update >X}; $? != 1 }
-        Alpine { ${ apk update -q } && $*pkglist-path.touch }
+        Alpine ${ apk update -q }
     }
 
     static method last-updated(-->DateTime) on {
-        Any {
-            $*pkglist-path ?? $*pkglist-path.ctime !! DateTime.epoch-start;
+        Debian {
+            $*pkglist-path
+              .add("deb.debian.org_debian_dists_{Debian.release-name}_Release")
+              .ctime;
         }
+        Alpine { $*pkglist-path.find(name => '*.gz')[0].ctime }
         RHEL ${
             date -d
             ${
@@ -40,8 +43,12 @@ class Pkg {
 
     static method ?check-update {
         my $last-updated = Pkg.last-updated;
-        if now().posix - $last-updated.posix > $*pkglist-stale {
-            note "updating pkglist because it was last updated at $last-updated";
+        if !$last-updated || now().posix - $last-updated.posix > $*pkglist-stale {
+            note "Updating pkglist because it " ~ (
+                $last-updated
+                  ?? "was last updated at $last-updated"
+                  !! ‘doesn't exist’
+            );
             Pkg.update-pkglist;
         }
     }
