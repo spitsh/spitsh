@@ -264,13 +264,17 @@ multi method walk(
 
     }
 
-    elsif $decl ~~ SAST::MaybeReplace and $decl.replace-with -> $val {
-        $THIS.switch: do given $val {
-            when SAST::Var {$val.gen-reference(match => $THIS.match,:stage2-done) }
-            default { $val.deep-clone() }
+    elsif $decl ~~ SAST::MaybeReplace  {
+        if $decl.replace-with -> $val {
+            $THIS.switch: do given $val {
+                when SAST::Var {$val.gen-reference(match => $THIS.match,:stage2-done) }
+                default { $val.deep-clone() }
+            }
+            $THIS.stage3-done = False;
+            self.walk($THIS);
+        } else {
+            $decl.add-ref($THIS);
         }
-        $THIS.stage3-done = False;
-        self.walk($THIS);
     }
 
     elsif $decl ~~ SAST::Invocant and not $should-pipe {

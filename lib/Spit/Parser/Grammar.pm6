@@ -135,7 +135,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     rule statement-control:sym<while> {
-        $<sym>=['while'|'until'] <EXPR> ['->' <var-and-type>]? <block>
+        $<sym>=['while'|'until'] <EXPR> ['->' <var-and-type('topic')>]? <block>
         <.ENDSTMT>
     }
 

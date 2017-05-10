@@ -100,7 +100,7 @@ role SAST is rw {
         self.bless(:$match,|a);
     }
     # A Bool is never the topic
-    method topic { $.type ~~ tBool ?? Nil !! self }
+    method topic($self is rw:) { $.type ~~ tBool ?? Nil !! return-rw $self }
 
     method assign-type { IMMUTABLE }
     method assignable  { self.assign-type !== IMMUTABLE }
@@ -286,11 +286,12 @@ class SAST::Children does SAST {
     }
 
     method descend($self is rw: &block) {
-        &block($self);
+        &block($self) && return True;
         for $self.children {
-            when SAST::Children { .descend(&block) }
-            default { &block($_) }
+            when SAST::Children { .descend(&block) && return True }
+            default { &block($_) && return True }
         }
+        return False;
     }
 
     method deep-clone(|c){
@@ -447,7 +448,7 @@ class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
 class SAST::EnvDecl is SAST::VarDecl { }
 
 class SAST::MaybeReplace is SAST::VarDecl {
-    method writable { $.assign }
+    has @.references;
 
     method replace-with {
         given $.assign {
@@ -455,6 +456,10 @@ class SAST::MaybeReplace is SAST::VarDecl {
             when SAST::Var|SAST::Param|SAST::Invocant { $_ }
             default { Nil }
         }
+    }
+
+    method add-ref($ref) {
+        @!references.push: $ref;
     }
 }
 
@@ -678,7 +683,7 @@ class SAST::Neg is SAST::MutableChildren {
         self;
     }
 
-    method topic { self[0].topic }
+    method topic is rw { self[0].topic }
 }
 
 # Negative number
@@ -911,11 +916,11 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
         ($.invocant unless $.declaration.static), |@.pos, |%.named.values
     }
 
-    method topic {
-        $!topic //= do if $.type ~~ tBool {
+    method topic($self is rw:)  is rw {
+        $!topic or do if $.type ~~ tBool {
             $.invocant.topic
         } else {
-            self;
+            $self;
         }
     }
 
@@ -1308,11 +1313,12 @@ sub dollar_(Match :$match!,*%_) {
 }
 
 sub generate-topic-var(:$var! is rw,:$cond! is rw,:@blocks!) {
-    if $cond.topic -> $topic-val {
+    if $cond.topic <-> $topic-container {
         $var //= dollar_(match => $cond.match);
-        $var.decl-type ||= $topic-val.type;
+        $var.decl-type ||= $topic-container.type;
         $var .= do-stage2(tAny);
-        $var.assign = $topic-val;
+        $var.assign = $topic-container;
+        $topic-container = $var.gen-reference(match => $topic-container.match).do-stage2(tAny);
         .declare($var) for @blocks;
     } elsif $var {
         SX.new(message => "Illegal declaration of topic variable {$var.spit-gist}. " ~
@@ -1324,7 +1330,7 @@ class SAST::If is SAST::Children is rw {
     has SAST:D $.cond is required is rw;
     has SAST::Block $.then is rw;
     has SAST $.else is rw;
-    has SAST::VarDecl $.topic-var;
+    has SAST::MaybeReplace $.topic-var;
     has $.when;
 
     method stage2($ctx) is default {
@@ -1371,7 +1377,7 @@ class SAST::While is SAST::Children {
     has SAST:D $.cond is required is rw;
     has SAST::Block $.block is rw;
     has $.until;
-    has SAST::VarDecl $.topic-var;
+    has SAST::MaybeReplace $.topic-var;
     has $!type;
 
     method stage2($ctx) {
@@ -1388,7 +1394,7 @@ class SAST::While is SAST::Children {
 class SAST::Given is SAST::Children is rw {
     has SAST:D $.given is required;
     has SAST $.block is required;
-    has SAST::VarDecl $.topic-var;
+    has SAST::MaybeReplace $.topic-var;
 
     method stage2($ctx) {
         $!topic-var = dollar_(match => $!given.match,assign => $!given,:dont-depend);

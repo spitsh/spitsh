@@ -362,13 +362,14 @@ multi method int-expr(SAST::Var:D $_) {
         $name;
     }
 }
+
 #!If
-multi method node(SAST::If:D $_,:$else) {
-
-    substitute-cond-topic(.topic-var,.cond);
-
+multi method node(SAST::If:D $_, :$else) {
     ($else ?? 'elif' !! 'if'),' ',
-    |(|self.node(.topic-var),'; ' if .topic-var andthen .depended),
+    |self.compile-topic(
+        .topic-var,
+        (.cond, .then, (.else if .else ~~ SAST::Stmts))
+    ),
     |self.cond(.cond),"; then\n",
     |self.node(.then,:indent,:no-empty),
     |(with .else {
@@ -387,18 +388,32 @@ multi method node(SAST::If:D $_,:$else) {
 # if test "$(cat $file)"; do ...
 # into:
 # if _1="$(cat $file)"; if test "$_1"; do ...
-sub substitute-cond-topic($topic-var,$cond is rw) {
-    if $topic-var andthen .depended {
-        my $target := $topic-var.assign;
-        $cond.descend: {
-            if $_ === $target {
-                $_ = $topic-var.gen-reference(
-                    match => $cond.match,
-                    :stage3-done,
-                );
-            }
-        }
+
+method compile-topic($topic-var, @associated-sast) {
+    if not $topic-var.defined {
+       Empty
     }
+    elsif $topic-var.references > 1 {
+        |self.node($topic-var),'; '
+    }
+    elsif $topic-var.references == 1 {
+        search-and-replace(
+            $topic-var.references[0],
+            $topic-var.assign,
+            @associated-sast,
+        )
+        ?? Empty
+        !! SX::Bug.new(desc => "Unable to find reference to topic variable in if statement").throw
+    }
+    else {
+        Empty;
+    }
+}
+sub search-and-replace($target, $replacement, @places-to-look) {
+    for @places-to-look <-> $thing {
+        $thing.descend({ $_ === $target and $_ = $replacement }) and return True;
+    }
+    return False;
 }
 
 multi method arg(SAST::If:D $_) {
@@ -436,10 +451,8 @@ multi method cap-stdout(SAST::If:D $_) {
 }
 #!While
 multi method node(SAST::While:D $_) {
-    substitute-cond-topic(.topic-var,.cond);
-
     .until ?? 'until' !! 'while',' ',
-    |(|self.node(.topic-var),'; ' if .topic-var andthen .depended),
+    |self.compile-topic(.topic-var, (.cond, .block)),
     |self.cond(.cond),"; do \n",
     |self.node(.block,:indent,:no-empty),
     "\n{$*pad}done";
@@ -447,7 +460,7 @@ multi method node(SAST::While:D $_) {
 multi method cap-stdout(SAST::While:D $_) { self.node($_) }
 #!Given
 multi method node(SAST::Given:D $_) {
-    |(|self.node(.topic-var),'; ' if .topic-var.depended),
+    |self.compile-topic(.topic-var, (.block,)),
     |self.node(.block,:curlies)
 }
 
