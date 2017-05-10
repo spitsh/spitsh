@@ -51,6 +51,8 @@ augment DateTime {
         $self.matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/);
     }
 
+    method Bool { $self.valid }
+
     method Date { $self.${cut -dT -f1} }
 
     static method *epoch-start { '1970-01-01T00:00:00.000' }

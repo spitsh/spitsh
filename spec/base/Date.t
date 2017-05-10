@@ -1,9 +1,10 @@
 use Test;
 
-plan 25;
+plan 27;
 
 given DateTime<2017-05-03T04:03:06.042> {
     ok .valid, 'is valid';
+    ok $_, '.Bool is .valid (True)';
     is .year,    2017, '.year';
     is .month,   5,    '.month';
     is .day,     3,    '.day';
@@ -17,7 +18,7 @@ given DateTime<2017-05-03T04:03:06.042> {
 }
 
 nok DateTime<2017-05-03T04:03:06.042Z>.valid, 'timezone is invalid';
-
+nok DateTime<2017-05-03T04:03:06.042Z>, '.Bool is .valid (False)';
 given Date<2017-05-03> {
     is .year,    2017, 'date only .year';
     is .month,   5,    'date only .month';
