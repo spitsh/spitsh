@@ -1,5 +1,5 @@
 use Test;
-plan 47;
+plan 49;
 
 if True {
    pass "basic if works";
@@ -281,5 +281,23 @@ if $true and $false {
         flunk '$? command (false)'
     } else {
         is $res,"winlose", '$? command (true)';
+    }
+}
+
+{
+    class JustBool { method ?doit { True } }
+    if JustBool<foo>.doit {
+        is $_, "foo",
+          ‘inlining a method doesn't disappear the topic’;
+    }
+}
+
+{
+    my @c = <one two three>;
+
+    if @c.grep(/^t/)[1] {
+        is $_, "three", '.grep(...)[1] as topic';
+    } else {
+        flunk '.grep(...)[1] as topic';
     }
 }
