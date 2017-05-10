@@ -243,7 +243,7 @@ my class commands {
     method helper($_) {
         when 'build' {
             my ($helper-builder, $p) = start-docker('alpine', :mount-docker-socket);
-            my $build-helper-src =  %?RESOURCES<tools/build-helper.spt>.absolute.IO;
+            my $build-helper-src =  %?RESOURCES<tools/spit-helper.spt>.absolute.IO;
             my $compile = compile(
                 $build-helper-src.slurp,
                 name => $build-helper-src,
