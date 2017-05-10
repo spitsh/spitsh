@@ -1,6 +1,6 @@
 use Test;
 
-plan 24;
+plan 25;
 
 given DateTime<2017-05-03T04:03:06.042> {
     ok .valid, 'is valid';
@@ -38,4 +38,8 @@ given Date<2017-05-03> {
         ok .milli  ~~ /^\d{1,3}$/, 'sanity .milli';
         ok .posix ~~ /^\d+$/, 'sanity .posix';
     }
+}
+
+{
+    ok DateTime.epoch-start.valid, '.epoch-start returns a valid DateTime';
 }
