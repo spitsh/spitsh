@@ -805,6 +805,7 @@ multi method cond(SAST::Neg:D $_) { '! ',|self.cond(.children[0],:tight) }
 
 #!Cmp
 multi method cond(SAST::Cmp:D $cmp) {
+    my $negate = False;
     my $shell-sym = do given $cmp.sym {
         when '==' { '-eq' }
         when 'eq' {  '=' }
@@ -816,12 +817,12 @@ multi method cond(SAST::Cmp:D $cmp) {
         when 'ne' {  '!=' }
         when 'lt' {  '<'  }
         when 'gt' {  '>'  }
-        when 'le' {  '<=' }
-        when 'ge' {  '>=' }
+        when 'le' { $negate = True; '>' }
+        when 'ge' { $negate = True; '<' }
         default { "'$_' comparison NYI" }
     }
 
-    '[ ',|self.arg($cmp[0])," $shell-sym ",|self.arg($cmp[1]),' ]';
+    '[ ',('! ' if $negate),|self.arg($cmp[0])," ", escape($shell-sym)," ",|self.arg($cmp[1]),' ]';
 }
 
 #!BVal
