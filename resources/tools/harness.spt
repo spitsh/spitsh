@@ -1,4 +1,4 @@
-constant $*run = <base packages docker>;
+constant $*run = <base packages docker helper>;
 constant @*on       = <alpine centos debian>;
 constant $*verbose = True;
 constant $*spit = Cmd<spit>;
@@ -24,4 +24,9 @@ if $*run.contains('docker') {
         $test.start-sleep;
         ${$*spit prove ('-v' if $*verbose) "-D=$test" "--os=$_" 'spec/docker/'};
     }
+}
+
+if $*run.contains('helper') {
+    ok ${$*spit helper build}, 'helper build';
+    ok DockerImg("spit-helper:$?spit-version"), 'helper exists';
 }
