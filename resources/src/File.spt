@@ -59,14 +59,14 @@ augment File {
     method +s      { $self.size }
 
     method mtime(-->DateTime) on {
-        GNU     ${ date -u -r $self '+%FT%T.%3N' }
-        BusyBox ${ stat -c '%y' $self | sed -r 's/ /T/;s/0{6}$//' }
+        GNU     ${ date -u -r $self '+%FT%T.%3N' !>X}
+        BusyBox ${ stat -c '%y' $self !>X| sed -r 's/ /T/;s/0{6}$//' }
     }
 
     method ctime(-->DateTime) on {
         #TODO: roll these into one
-        GNU     ${ stat -c '%z' $self | sed -r 's/ /T/;s/[0-9]{6} \S*$//' }
-        BusyBox ${ stat -c '%z' $self | sed -r 's/ /T/;s/0{6}$//' }
+        GNU     ${ stat -c '%z' $self !>X | sed -r 's/ /T/;s/[0-9]{6} \S*$//' }
+        BusyBox ${ stat -c '%z' $self !>X | sed -r 's/ /T/;s/0{6}$//' }
     }
 
     method +lines { ${wc -l < $self} }
