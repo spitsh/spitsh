@@ -369,7 +369,10 @@ grammar Spit::Grammar is Spit::Lang {
     token twigil:sym<*> { <sym> }
     token twigil:sym<?> { <sym> }
     token term:block { <block> <.ENDSTMT> }
-    token term:sym<self>  { <sym> }
+    token term:sym<self>  {
+        <sym>
+        { SX.new(message => 'Use of Perl 6 sytle invocant. In Spit use ‘$self’').throw }
+    }
     token term:name {
         $<name>=<.identifier> {}
         [
