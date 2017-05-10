@@ -552,20 +552,23 @@ method inline-value($inner,$outer,$_ is raw) {
         } elsif $decl ~~ SAST::Invocant {
             $outer.invocant;
         } else {
-            #XXX: since we only inline blocks with 1 node in them this should be ok
-            # not $inner.deep-first(* =:= $decl)
+            #XXX: A variable that isn't a param ref. Pass it through
+            # and hope that it's something from the outer lexical scope (for now).
             $_;
         }
     }
     # if arg inside inner is a blessed value, try inlining the value
     when SAST::Blessed|SAST::Neg {
         if self.inline-value($inner,$outer,.children[0]) -> $val {
-            .children[0] = $val;
-            # because we're changing child of a rather than the node itself
-            # we'll need to re-walk it so it has a chance to re-optimize itself.
-            .stage3-done = False;
-            self.walk($_);
-            $_;
+            # clone because we don't want to mutate a node from the inner call
+            my $clone = .clone;
+            $clone.children[0] = $val;
+            # Because we're changing child of node a rather than the
+            # node itself we re-walk it because with the new child
+            # further optimizations might be possible.
+            $clone.stage3-done = False;
+            self.walk($clone);
+            $clone;
         }
     }
     when *.compile-time.defined {
@@ -581,8 +584,10 @@ method inline-value($inner,$outer,$_ is raw) {
         };
         if @inlined.all.defined {
             $*char-count += $char-count;
-            .children = @inlined;
-            $_;
+            # clone because we don't want to mutate a node from the inner call
+            my $clone = .clone;
+            $clone.children = @inlined;
+            $clone;
         }
     }
     default {
@@ -605,7 +610,9 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     # Can't inline is rw methods yet. Probs need to redesign it before we can.
     return if ($outer ~~ SAST::MethodCall) && $outer.declaration.rw;
 
-    my $replacement = $inner.deep-clone;
+    # No need to deep-clone. .inline-value will opportunistically
+    # clone when necessary.
+    my $replacement = $inner.clone;
 
     my $*char-count = 0;
     my $max = 10; #TODO: allow customization of this
