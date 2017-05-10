@@ -1,6 +1,6 @@
 use Test;
 
-plan 51;
+plan 54;
 
 {
     my File $file .= tmp;
@@ -174,10 +174,18 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
 }
 
 {
-    my $first = File.tmp.mtime;
-    sleep 1;
-    my $diff = File.tmp.mtime.posix - $first.posix;
-    ok $diff >= 1 || $diff <= 2, '.mtime';
+    given File.tmp {
+        my $before = .mtime;
+        ok .ctime eq .mtime, '.ctime eq .mtime after first created';
+        sleep 1;
+        .write("goof");
+        my $diff = .mtime.posix - $before.posix;
+        ok $diff >= 1 || $diff <= 2,     '.mtime is small';
+        ok .ctime eq .mtime, '.ctime eq .mtime after writing';
+        sleep 1;
+        .chmod(777);
+        ok .ctime gt .mtime, 'ctime > mtime after chmod';
+    }
 }
 
 
