@@ -207,7 +207,10 @@ augment Str {
             $self.${perl -e '(join "",<STDIN>) =~ /@ARGV[0]/s or exit 1' $r}
         }
         Any {
-            $self.${awk :$r -v 'RS=^$' '! match($0,ENVIRON["r"]) { exit 1 }'};
+            $self.${
+                awk :$r -v 'RS=^$'
+                'END{if(!match($0,ENVIRON["r"])){ exit 1 }}'
+            }
         }
     }
 

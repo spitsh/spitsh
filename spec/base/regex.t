@@ -1,6 +1,6 @@
 use Test;
 
-plan 38;
+plan 40;
 
 ok "foo" ~~ /oo$/,'basic re match (true)';
 nok "foo" ~~ /ar$/,'basic re match (false)';
@@ -97,4 +97,9 @@ nok "foo" ~~ /ar$/,'basic re match (false)';
 
 {
     ok "foo\n".matches(/^foo\n$/), '.matches string ending in  a newline';
+}
+
+{
+    nok "".matches(/a/), '"".matches';
+    ok "".matches(//), '"".matches(//)';
 }
