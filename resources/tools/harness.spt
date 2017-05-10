@@ -11,11 +11,11 @@ ok $*spit, 'spit command exists';
 ${set -e};
 
 if $*run.contains('base') {
-    ${$*spit prove 'spec/base' "-d={@*on.join(',')}"};
+    ${$*spit prove ('-v' if $*verbose) 'spec/base' "-d={@*on.join(',')}"};
 }
 
 if $*run.contains('packages') {
-    ${$*spit prove 'spec/packages' "-d={@*on.join(',')}"};
+    ${$*spit prove ('-v' if $*verbose) 'spec/packages' "-d={@*on.join(',')}"};
 }
 
 if $*run.contains('docker') {
