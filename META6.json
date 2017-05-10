@@ -2,7 +2,7 @@
     "name" : "Spit",
     "license" : "Artistic-2.0",
     "perl" : "6.c",
-    "version" : "0.0.26",
+    "version" : "0.0.27",
     "description" : "The Spook in the Shell Script (Spit-sh) compiler",
     "authors" : ["Lloyd Fournier lloyd.fourn@gmail.com"],
     "provides" : {
@@ -54,7 +54,9 @@
         "src/Docker.spt",
         "src/HTTP.spt",
         "src/Date.spt",
-        "core-lib/Test.spt"
+        "core-lib/Test.spt",
+        "tools/harness.spt",
+        "tools/spit-helper.spt"
     ],
     "source-url" : "https://github.com/spitsh/spitsh.git",
     "support": {

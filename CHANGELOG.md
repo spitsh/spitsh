@@ -1,3 +1,19 @@
+## 0.0.27
+
+- Add `DateTime.Bool` (which calls .valid)
+- Make `lt`, `gt`, `ge` and `le` work
+- Add `File.ctime` to get the last changed time from a file
+- Add `DateTime.epoch-start` (1970-01-01T00:00:00.000)
+- Add resources/tools/spit-helper.spt which builds an image with a few
+  useful default things installed. I hope to use it to deploy scripts.
+  - Add `spit helper build` to build the helper
+  - Add `-h` and `--in-helper` to `spit compile` to run the script in
+    the helper
+- Add `Str.extract` which treats the content as a tgz and extracts it
+- Add `Cmd.path` to get the path to a command
+- .call: args syntax works with topic calls
+- Add `$?spit-version` to give you the version of spit as a variable
+
 ## 0.0.26
 
 Many bug fixes and new features but not much new documentation.
