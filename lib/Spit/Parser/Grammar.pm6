@@ -307,11 +307,6 @@ grammar Spit::Grammar is Spit::Lang {
     rule param {
         $<pos>=[
             <type>? $<slurpy>='*'?<var>
-            {
-                if $<slurpy>.Str and $<var><sigil>.Str ne '@' {
-                    self.invalid("slurpy parameter")
-                }
-            }
             ]
         ||
         $<named>=[<type>? ':'<var>]
