@@ -337,9 +337,9 @@ sub compile-or-eval($command, @pos, %named) {
 
     my ($docker,$promise) = do
     with %named<in-docker> {
-        if m/<!after ':'> (\w|'-')+ <!before '/'>/ {
+        if m/<!after ':'> [\w|'-']+ <!before '/'>/ -> $os {
             %named<opts><os> //= Spit::LateParse.new(
-                val => "OS<$_>",
+                val => "OS<$os>",
                 match => $/,
             );
         }
