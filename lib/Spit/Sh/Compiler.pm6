@@ -324,7 +324,10 @@ multi method node(SAST::Var:D $var) {
 }
 
 multi method arg(SAST::Var:D $var) {
-    return DollarAT.new if $var.declaration.?slurpy;
+    if $var.declaration.?slurpy {
+        self.scaf('?IFS');
+        return DollarAT.new;
+    }
     my $name = self.gen-name($var);
     my $assign = $var.assign;
     with $assign {
