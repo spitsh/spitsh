@@ -40,15 +40,16 @@ Which ouputs the following shell at the time of writing:
 
 ``` shell
 BEGIN(){
+  e(){ printf %s "$1"; }
   exec 4>/dev/null
   installed(){ yum list installed "$1" >&4 2>&4; }
-  install(){ yum install -y "$1" >&4 2>&4; }
+  install(){ yum install -y $1 >&4 2>&4; }
   exists(){ command -v "$1" >&4; }
   exec 3>&1
   say(){ printf '%s\n' "$1" >&3; }
-  die(){ say "$1" && exit 1; }
+  note(){ printf '%s\n' "$1" >&2; }
+  die(){ note "$1" && kill "-TERM" $$ >&4; }
   ok(){ test "$1" && say "✔ - $2" || die "✘ - $2"; }
-  e(){ printf %s "$1"; }
 }
 MAIN(){
   if ! installed nc; then
@@ -61,14 +62,15 @@ BEGIN && MAIN
 If you have docker installed you can test this with:
 
 ``` shell
-# at the moment --in-docker --rm's the container
-spit --in-docker=centos eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"'
+# --in-docker --rm's the container
+spit eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"' --in-docker=centos
 ✔ - nc command exists now
 ```
 
 Unfortunately on Debian the package is named 'netcat'. Let's deal with that:
 
 ``` perl
+# install-nc.spt
 constant Pkg $nc = on {
     Debian { 'netcat' }
     Any    { 'nc' } # the default
@@ -82,7 +84,7 @@ And now it should work on both the RHEL and Debian families of
 Linux distributions.
 
 ```
-spit --in-docker=ubuntu:latest compile install-nc.spt
+spit --in-docker=debian:latest compile install-nc.spt
 ✔ - nc command exists now
 ```
 
