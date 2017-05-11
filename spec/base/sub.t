@@ -1,6 +1,6 @@
 use Test;
 
-plan 40;
+plan 41;
 
 {
     sub foo() {
@@ -170,4 +170,13 @@ plan 40;
 
     is less-simple-slurpy("one", "two", "three", "four"), <$a=one $b=two @a=three four>,
       '($a, $b, *@a) with four args';
+}
+
+{
+    sub @for-slurpy($c, *@a) {
+        .uc for @a;
+    }
+
+    is for-slurpy("one", <two three four>), <TWO THREE FOUR>,
+      'iterate over slurpy parameter';
 }
