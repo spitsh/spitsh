@@ -262,10 +262,14 @@ class SX::BadCall is SX {
 class SX::BadCall::WrongNumber is SX::BadCall {
     has Int:D $.got is required;
     has Int:D $.expected is required;
+    has $.at-least;
     has @.arg-hints;
+
+    method hint { @.arg-hints.join(', ') }
+
     method reason {
         ($!got > $!expected ?? "Too many" !! "Not enough") ~
-        " positional arguments. Expected $!expected, got $!got.";
+        " positional arguments. Expected{ " at least" if $.at-least } $!expected, got $!got.";
     }
     method mark-before {
         $!got > $!expected ?? callsame() !! ''
@@ -291,9 +295,6 @@ class SX::BadCall::WrongNumber is SX::BadCall {
             (${ :after(colored($hint,'green')), :$from, :to($from) },)
         }
     }
-
-    method hint { @.arg-hints.join(', ') }
-
 }
 
 

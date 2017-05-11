@@ -1,6 +1,6 @@
 use Test;
 
-plan 22;
+plan 24;
 
 {
     class Foo {
@@ -85,4 +85,22 @@ plan 22;
 
     is Parent.return-self, 'augment return-self', 'call method added by augment';
     is Child.return-self, 'augment return-self', 'call method added by augment on child';
+}
+
+{
+    class HasSlurpy {
+        method @slurpy(*@a) {
+            "\$self=$self", "\@a=@a";
+        }
+
+        method @slurpy2($a, *@a) {
+            "\$self=$self", "\$a=$a", "\@a=@a";
+        }
+    }
+
+    is HasSlurpy<one>.slurpy("two", "three"), <$self=one @a=two three>,
+      'non-static method (*@a) 2 args';
+
+    is HasSlurpy<one>.slurpy2("two", "three"), <$self=one $a=two @a=three>,
+      'non-static method ($a, *@a) 2 args';
 }

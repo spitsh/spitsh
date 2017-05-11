@@ -1,6 +1,6 @@
 use Test;
 
-plan 34;
+plan 40;
 
 {
     sub foo() {
@@ -145,4 +145,29 @@ plan 34;
     is cmd-sub(), 'foo', 'sub ${..} syntax';
 
     is eval{ cmd-sub }.${sh}, '', "sub returning Str in Any ctx should be silent";
+}
+
+
+{
+    sub @simple-slurpy(*@a) {
+        "zero", @a;
+    }
+    is simple-slurpy(), "zero", '(*@a) with 0 args';
+    is simple-slurpy("one"), <zero one>, '(*@a) with 1 arg';
+    is simple-slurpy("one", "two", "three"), <zero one two three>,
+       '(*@a) three args';
+    is simple-slurpy("one", <two three>), <zero one two three>,
+       '<...> flattens out into slurpy';
+}
+
+{
+    sub @less-simple-slurpy($a, $b, *@a) {
+        "\$a=$a", "\$b=$b","\@a=@a"
+    }
+
+    is less-simple-slurpy("one", "two", "three"), <$a=one $b=two @a=three>,
+      '($a, $b, *@a) with three args';
+
+    is less-simple-slurpy("one", "two", "three", "four"), <$a=one $b=two @a=three four>,
+      '($a, $b, *@a) with four args';
 }

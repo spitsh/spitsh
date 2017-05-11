@@ -530,7 +530,7 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
             exception => $THIS.make-new(
                 SX::RoutineNotDefOnOS,
                 name => $THIS.name,
-                |(class => $THIS.ostensible-type with $THIS.?invocant),
+                |(class => $THIS.ostensible-type if $THIS ~~ SAST::MethodCall),
                 candidates => $THIS.declaration.os-candidates.map(*.key),
                 :$.os,
             )
@@ -546,7 +546,12 @@ method inline-value($inner,$outer,$_ is raw) {
         my $decl := .declaration;
         return Nil if $_ === $decl; # don't wanna inline a variable declaration
         if $decl ~~ SAST::PosParam {
-            $outer.pos[$decl.ord];
+            if $decl.slurpy {
+                my $reference-node = $outer.pos[$decl.ord] || $outer;
+                $reference-node.stage2-node: SAST::List, |$outer.pos[$decl.ord..*];
+            } else {
+                $outer.pos[$decl.ord];
+            }
         } elsif $decl ~~ SAST::NamedParam {
             $outer.named{$decl.name} || $outer.stage3-node(SAST::BVal,val => False);
         } elsif $decl ~~ SAST::Invocant {

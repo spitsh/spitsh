@@ -2,7 +2,7 @@ use Spit::Compile;
 use Test;
 use Spit::Exceptions;
 use Terminal::ANSIColor;
-plan 11;
+plan 12;
 
 my $name = 'syntax-tests';
 throws-like { compile( '"', :$name) },
@@ -39,11 +39,17 @@ throws-like { compile('say $*foo',:$name) },
 
 throws-like { compile('sub foo($a,$b) { }; foo("bar")',:$name)},
               SX::BadCall,"too few arguments",
-              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("bar", $b↩)');
+              gist => *.&colorstrip.contains('foo("bar", $b↩)');
+
+throws-like { compile('sub foo($a,*@b) { }; foo()',:$name)},
+              SX::BadCall::WrongNumber, "too few arguments with slurpy",
+              gist => *.&colorstrip.contains('foo($a↩)'),
+              message => *.contains('at least 1');
 
 throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) },
               SX::BadCall,"too many arguments",
-              gist => *.&colorstrip.contains('sub foo($a,$b) { }; foo("foo","bar","baz")');
+              gist => *.&colorstrip.contains('foo("foo","bar","baz")');
+
 
 throws-like { compile('my $a = "foo"; $a .= "foo".${cat}',:$name) },
               SX::Invalid, '.= to a command that already has input';

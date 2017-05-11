@@ -401,7 +401,9 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 
     method desc { "Assignment to $.spit-gist" }
 
-    method is-piped { self.declaration.?piped }
+    method is-piped {
+        ($_ = $.declaration) ~~ SAST::Invocant and .piped;
+    }
 
     method itemize { itemize-from-sigil($!sigil) }
 }
@@ -638,7 +640,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
             self.make-new(SX,message => ‘command can't be empty’).throw;
         }
 
-        if ($!pipe-in andthen .?is-piped) and $*no-pipe {
+        if ($!pipe-in ~~ SAST::Var and $!pipe-in.is-piped) and $*no-pipe {
             $!pipe-in.declaration.piped = False;
         }
         self;
@@ -747,7 +749,7 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
 class SAST::MethodDeclare is SAST::RoutineDeclare {
     has $.rw is rw;
     has SAST::ClassDeclaration $.invocant-type is rw;
-    has $.invocant is rw;
+    has SAST::Invocant $.invocant is rw;
 
     method static { !$!invocant }
 
@@ -824,12 +826,14 @@ class SAST::Call  is SAST::Children {
                     );
                     $last-valid := $arg;
                 } else {
+                    my @non-slurpy = @pos-params.grep(!*.slurpy);
                     SX::BadCall::WrongNumber.new(
                         :$.declaration,
-                        expected => +@pos-params,
+                        expected => +@non-slurpy,
                         got => +@!pos,
                         match => ($last-valid andthen .match or $.match),
-                        arg-hints => @pos-params[+@!pos..*]».spit-gist,
+                        at-least => ?$signature.slurpy-param,
+                        arg-hints => @non-slurpy[+@!pos..*]».spit-gist,
                     ).throw;
                 }
             }
@@ -942,10 +946,14 @@ class SAST::SubCall is SAST::Call {
 
     method spit-gist { $.name ~ "(...)" }
 }
+role SAST::ShellPositional {
+    method shell-position {...}
+}
 
-class SAST::Invocant does SAST does SAST::Declarable {
+class SAST::Invocant does SAST does SAST::Declarable does SAST::ShellPositional {
     has $.class-type is required;
     has $.piped is rw = True; # Whether the invocant should be piped in
+    has $.signature is rw;
     method name { 'self' }
     method symbol-type { SCALAR }
     method gist { $.node-name ~ "($.spit-gist)" }
@@ -954,6 +962,7 @@ class SAST::Invocant does SAST does SAST::Declarable {
     method dont-depend { True }
     method stage2 ($) { self }
     method itemize { True }
+    method shell-position { 1 }
 }
 
 class SAST::Param does SAST does SAST::Declarable {
@@ -971,11 +980,15 @@ class SAST::Param does SAST does SAST::Declarable {
     method itemize { itemize-from-sigil($!sigil) }
 }
 
-class SAST::PosParam is SAST::Param {
+
+class SAST::PosParam is SAST::Param does SAST::ShellPositional {
     has $.slurpy;
     has Int $.ord is rw;
 
     method spit-gist { ('*' if $!slurpy) ~ "$.sigil$.name" }
+    method shell-position {
+        ~($.ord + (($.signature.invocant andthen !.piped) ?? 1 !! 0 ) + 1);
+    }
 }
 
 class SAST::NamedParam is SAST::Param {
@@ -986,7 +999,7 @@ class SAST::NamedParam is SAST::Param {
 class SAST::Signature is SAST::Children {
     has SAST::PosParam @.pos;
     has SAST::NamedParam %.named;
-    has $.invocant is rw;
+    has SAST::Invocant $.invocant is rw;
 
     method stage2 ($) {
         for @!pos.kv -> $i,$p is rw {
@@ -994,6 +1007,7 @@ class SAST::Signature is SAST::Children {
             $p.signature = self;
             $p .= do-stage2(tAny);
         }
+        $!invocant andthen .signature = self;
         $_ .= do-stage2(tAny) for %!named.values;
         self;
     }
@@ -1022,6 +1036,10 @@ class SAST::Signature is SAST::Children {
         } else {
             self;
         }
+    }
+
+    method slurpy-param {
+        (my $last = @!pos.tail).?slurpy ?? $last !! Nil;
     }
 }
 

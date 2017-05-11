@@ -99,12 +99,25 @@ multi method gen-name(SAST::Declarable:D $decl,:$name is copy = $decl.bare-name,
 }
 
 multi method gen-name(SAST::PosParam:D $_) {
-    return  ~(.ord + ((.signature.invocant andthen !.piped) ?? 1 !! 0 ) + 1);
+    if .slurpy {
+        self.scaf('?IFS');
+        '*'
+    }
+    elsif .signature.slurpy-param {
+        callsame;
+    }
+    else {
+        .shell-position.Str;
+    }
 }
 
 multi method gen-name(SAST::Invocant:D $_) {
     SX::Bug.new(desc => 'Tried to compile a piped parameter', match => .match).throw if .piped;
-    '1'
+    if .signature.slurpy-param {
+        callsame;
+    } else {
+        '1';
+    }
 }
 
 multi method gen-name(SAST::Var:D $_ where { $_ !~~ SAST::VarDecl }) {
@@ -315,6 +328,7 @@ multi method node(SAST::Var:D $var) {
 }
 
 multi method arg(SAST::Var:D $var) {
+    return DollarAT.new if $var.declaration.?slurpy;
     my $name = self.gen-name($var);
     my $assign = $var.assign;
     with $assign {
@@ -639,17 +653,36 @@ multi method node(SAST::RoutineDeclare:D $_) {
     my @compiled = do if .is-native {
         self.require-native(.name);
     } else {
+        |(if .signature.slurpy-param {
+             my @non-slurpy =
+                 (.invocant andthen (.piped ?? Empty !! $_) when SAST::MethodDeclare),
+                 |.signature.pos[^(*-1)];
+
+             if @non-slurpy {
+                 "$*pad  ",
+                 |flat @non-slurpy.map({
+                     (" " if $++), self.gen-name($_),'=$', .shell-position.Str;
+                 }),
+                 " shift {+@non-slurpy}\n"
+             }
+        }),
         self.node(.chosen-block,:indent,:no-empty);
     }
     $name,'()',|self.maybe-oneline-block(@compiled)
 }
 
-method call($name,@named-param-pairs,@pos) {
+method call($name, @named-param-pairs, @pos, :$slurpy-start) {
     |@named-param-pairs.\ # Errr rakudo, why do I need \ here?
        grep({.value.compile-time !=== False }).\
        map({ self.gen-name(.key),"=",|self.arg(.value),' '} ).flat,
     $name,
-    |@pos.map({ ' ',|self.arg($_) }).flat;
+    |flat @pos.kv.map: -> $i, $_ {
+        ' ',
+        |($slurpy-start.defined && $i >= $slurpy-start
+            ?? self.arg($_).itemize(False)
+            !! self.arg($_)
+         )
+    }
 }
 
 method maybe-quietly(@cmd,\ret-type,\ctx,:$match) {
@@ -663,25 +696,36 @@ method maybe-quietly(@cmd,\ret-type,\ctx,:$match) {
 #!Call
 multi method node(SAST::Call:D $_)  {
     self.maybe-quietly:
-        self.call(self.gen-name(.declaration), .param-arg-pairs, .pos),
-        .type,
-        .ctx,
-        match => .match;
+      self.call(
+          self.gen-name(.declaration),
+          .param-arg-pairs,
+          .pos,
+          slurpy-start => (.declaration.signature.slurpy-param andthen .ord)
+      ),
+      .type,
+      .ctx,
+      match => .match;
 }
 
 multi method node(SAST::MethodCall:D $_) {
     my $call;
-    if .declaration.invocant.?piped {
+    my $slurpy-start = (.declaration.signature.slurpy-param andthen .ord);
+
+    if .declaration.invocant andthen .piped {
         $call := |self.cap-stdout(.invocant), '|',
                  |self.call:
                    self.gen-name(.declaration),
                    .param-arg-pairs,
-                   .pos;
+                   .pos,
+                   :$slurpy-start;
     } else {
         $call := |self.call:
-                  self.gen-name(.declaration),
-                  .param-arg-pairs,
-                  ((.declaration.static ?? Empty !! .invocant ), |.pos);
+                   self.gen-name(.declaration),
+                   .param-arg-pairs,
+                   ((.declaration.static ?? Empty !! .invocant ), |.pos),
+                   slurpy-start => (.declaration.static
+                                      ?? $slurpy-start + 1
+                                      !! $slurpy-start)
     }
 
     if .declaration.rw and .invocant.assignable {

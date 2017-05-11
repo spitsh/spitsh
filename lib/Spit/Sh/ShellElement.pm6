@@ -98,3 +98,10 @@ class NoNeedQuote does DynamicShellElement {
     method as-flat { @!bits }
     method in-case-pattern { @!bits }
 }
+
+# $@ or $* depending on context
+class DollarAT does DynamicShellElement {
+    method in-DQ   { '$*'   }
+    method as-item { '"$*"' }
+    method as-flat { '"$@"' }
+}
