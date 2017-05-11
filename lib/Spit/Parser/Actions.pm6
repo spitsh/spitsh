@@ -314,6 +314,8 @@ method trait:sym<is> ($/){
         $*ROUTINE.return-by-var = True;
     } elsif $<impure> {
         $*ROUTINE.impure = True;
+    } elsif $<no-inline> {
+        $*ROUTINE.no-inline = True;
     } else {
         $*CLASS.class.^add_parent($<type>.ast);
     }

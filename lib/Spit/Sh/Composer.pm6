@@ -507,10 +507,11 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
 
 multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
     return if $.no-inline;
-    self.walk($THIS.declaration);
+    my $decl := $THIS.declaration;
+    self.walk($decl);
 
-    if $THIS.declaration.chosen-block -> $block {
-        if $block ~~ SAST::Block and not $block.ann<cant-inline> {
+    if $decl.chosen-block -> $block {
+        if $block ~~ SAST::Block and not $block.ann<cant-inline> and not $decl.no-inline {
             # only inline routines with one child for now
             if $block.one-stmt <-> $last-stmt {
                 if self.inline-call($THIS,$last-stmt) -> $replacement {
@@ -531,7 +532,7 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
                 SX::RoutineNotDefOnOS,
                 name => $THIS.name,
                 |(class => $THIS.ostensible-type if $THIS ~~ SAST::MethodCall),
-                candidates => $THIS.declaration.os-candidates.map(*.key),
+                candidates => $decl.os-candidates.map(*.key),
                 :$.os,
             )
         );

@@ -222,6 +222,7 @@ grammar Spit::Grammar is Spit::Lang {
             |$<primitive>='primitive'
             |$<native>='native'
             |$<export>='export'
+            |$<no-inline>='no-inline'
             |$<rw>='rw'
             |$<return-by-var>='return-by-var'
             |$<impure>='impure'

@@ -13,10 +13,6 @@ my %native = (
         body => Q<"$@" || { eval "printf %s \"\$$#\"" && return 1; }>,
         deps => (),
     )),
-    list  => Map.new((
-        body => q|printf "%s\n" "$*"|,
-        deps => ('?IFS'),
-    )),
 );
 
 sub nnq { NoNeedQuote.new: bits => @_ }

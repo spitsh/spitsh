@@ -713,6 +713,7 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
     has $.chosen-block is rw;
     has $.return-by-var is rw;
     has $.impure is rw;
+    has $.no-inline is rw;
 
     method symbol-type { SUB }
 
