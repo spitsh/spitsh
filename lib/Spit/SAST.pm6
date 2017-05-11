@@ -1491,7 +1491,7 @@ class SAST::Blessed is SAST::MutableChildren is SAST::Type {
                 if self.class-type.^lookup-by-str($str) -> $lookup {
                     SAST::Type.new(class-type => $lookup, match => self[0].match).do-stage2($ctx);
                 } else {
-                    self.make-new(SX, message => "'$str' is not part of the {self.class-type.name}").throw;
+                    self.make-new(SX, message => "'$str' is not a member of the {self.class-type.name} enum.").throw;
                 }
             } else {
                 self.make-new(SX, message => message => "Can't lookup a {self.class-type.name} with a runtime value").throw;
