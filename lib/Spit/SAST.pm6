@@ -1695,7 +1695,7 @@ class SAST::Itemize is SAST::MutableChildren {
         self;
     }
 
-    method gist { $.node-name ~ "($!sigil)" ~ $.gist-children }
+    method gist { $.node-name ~ "({$!itemize ?? '$' !! '@'})" ~ $.gist-children }
 
     method type { self[0].type }
 }
