@@ -675,7 +675,7 @@ method call($name, @named-param-pairs, @pos, :$slurpy-start) {
     |flat @pos.kv.map: -> $i, $_ {
         ' ',
         |($slurpy-start.defined && $i >= $slurpy-start
-            ?? self.arg($_).itemize(False)
+            ?? self.arg($_).itemize(.itemize)
             !! self.arg($_)
          )
     }
