@@ -172,7 +172,7 @@ method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
 
     my @END = ($CU.phasers[END] andthen self.compile-nodes($_,:indent));
 
-    my @compiled-depends = $*depends.reverse-iterate: {
+    my @compiled-depends = grep *.so, $*depends.reverse-iterate: {
         self.compile-nodes([$_],:indent).grep(*.defined);
     };
 
