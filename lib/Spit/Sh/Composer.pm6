@@ -548,7 +548,7 @@ method inline-value($inner,$outer,$_ is raw) {
         if $decl ~~ SAST::PosParam {
             if $decl.slurpy {
                 my $reference-node = $outer.pos[$decl.ord] || $outer;
-                $reference-node.stage2-node: SAST::List, |$outer.pos[$decl.ord..*];
+                $reference-node.stage3-node: SAST::List, |$outer.pos[$decl.ord..*];
             } else {
                 $outer.pos[$decl.ord];
             }

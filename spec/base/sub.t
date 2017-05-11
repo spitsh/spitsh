@@ -1,6 +1,6 @@
 use Test;
 
-plan 41;
+plan 42;
 
 {
     sub foo() {
@@ -179,4 +179,10 @@ plan 41;
 
     is for-slurpy("one", <two three four>), <TWO THREE FOUR>,
       'iterate over slurpy parameter';
+}
+
+{
+    sub typed-slurpy(File *@a) { ${ printf @a >X } }
+    typed-slurpy("one", "two", "three");
+    pass 'typed slurpy call in Any context';
 }
