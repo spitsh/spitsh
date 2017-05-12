@@ -1,6 +1,6 @@
 use Test;
 
-plan 24;
+plan 28;
 
 {
     is '\'', "'",'single quotes can be escaped';
@@ -48,9 +48,14 @@ plan 24;
 
 {
     my $b = "foo bar";
-    is "$b baz", "foo bar baz",'variable interpolation';
-    is “"$b" baz”, '"foo bar" baz','variable interpolation “”';
-    is ‘$b baz’, '$b baz', 'no variable interpolation ‘’';
+    my @b = "foo bar";
+    is "$b baz", "foo bar baz",'$ variable interpolation';
+    is "@b baz", "foo bar baz", '@ variable interpolation';
+    is “"$b" baz”, '"foo bar" baz','$ variable interpolation “”';
+    is “"@b" baz”, '"foo bar" baz','@ variable interpolation “”';
+    is ‘$b baz’, '$b baz', 'no $ variable interpolation ‘’';
+    is '@b baz', "\@b baz", ‘no @ variable interpolatoin ''’;
+    is ‘@b baz’, '@b baz', 'no @ variable interpolatoin ‘’';
     is "\$b baz", '$b baz', 'escape variable interpolation';
     is "\\$b baz", '\\foo bar baz','escape backslash before variable interpolation';
     is qq|$b baz|,"foo bar baz",'qq variable interpolation';
