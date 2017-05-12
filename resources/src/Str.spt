@@ -50,16 +50,19 @@ augment Str {
        $a.subst('o','e',:g).say;
        say $a;
     }
+
+constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
+{
+    while((g || !i) && (i = index(substr($0,w + 1),t))){
+        $0 = substr($0,1,i + w - 1) r substr($0,w + i + length(t));
+        w += length(r) - length(t) + i
+    }
+    print;
+}';
+
     method ~subst(#|[The string to be replaced]$target,
                   #|[The string to replace it with]$replacement,
                   #|[Turns on global matching]Bool :$g){
-        constant $subst-awk = '
-        BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
-        {
-          while( (g || !i) && (i = index($0,t)) )
-          $0 = substr($0,1,i-1) r substr($0,i + length(t));
-          print;
-        }';
         $self.${awk -v "g=$g" $subst-awk :T($target) :R($replacement)};
     }
     #| Returns true if the string contains `$needle`.
