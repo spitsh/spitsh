@@ -111,9 +111,9 @@ plan 44;
 
 {
     given File.tmp {
-        .write("foo");
-        is .slurp.uc.write-to($_), 'FOO', '.write-to returns what it writes';
-        is .slurp, 'FOO', '.slurp...write-to($_)';
+        .write('%foo');
+        is .slurp.uc.write-to($_), '%FOO', '.write-to returns what it writes';
+        is .slurp, '%FOO', '.slurp...write-to($_)';
     }
 }
 

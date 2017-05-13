@@ -1,6 +1,6 @@
 use Test;
 
-plan 54;
+plan 55;
 
 {
     my File $file .= tmp;
@@ -41,6 +41,9 @@ plan 54;
     is $file.slurp.${cat},"foobar\nbaz",'.slurp.${cat}';
 
     is $file.size,11,'.size changes after appending';
+
+    $file.push('%s');
+    is $file.slurp, "foobar\nbaz\n%s", ‘.push('%s')’;
 
     END { nok $file.exists,"tempfiles should be rm by END" }
 }

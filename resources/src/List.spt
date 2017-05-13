@@ -53,7 +53,7 @@ augment List {
         }
     }
     method push(#|[The item to add to the list]Elem-Type $item) is rw {
-        $self.${awk -v "i=$item" '{print}END{printf i}'}
+        $self.${awk -v "i=$item" '{print}END{printf "%s", i}'}
     }
     #| Removes the first line from the list
     #|{
@@ -81,7 +81,7 @@ augment List {
     #| Returns the result of removing the `\n` between each line and
     #| replacing it with a new separtor.
     method ~join(#|[The separator to join on]$sep) {
-        $self.${awk -v "s=$sep" '{if(NR != 1) printf s; printf $0}'}
+        $self.${awk :s($sep) '{if(NR != 1) printf "%s", ENVIRON["s"]; printf "%s", $0}'}
     }
 
     method @numeric-sort {

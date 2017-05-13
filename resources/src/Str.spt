@@ -218,7 +218,7 @@ constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
     }
 
     method *write-to(File $to) {
-        $self.${awk -v "f=$to" -v 'RS=^$' '{printf $0>f;printf $0}'}
+        $self.${awk -v "f=$to" -v 'RS=^$' '{printf "%s",$0>f;printf "%s",$0}'}
     }
 
     method *append-to(File $to) {

@@ -1,6 +1,6 @@
 use Test;
 
-plan 50;
+plan 54;
 
 {
     my @a;
@@ -95,8 +95,10 @@ plan 50;
     my @f;
     @f.push("much    whitespace  ");
     @f.push("   more  ");
+    @f.push('%s');
     is @f[0],"much    whitespace  ",'.push preserves whitespace 1';
     is @f[1],"   more  ",'.push preserves whitespace 2';
+    is @f[2], '%s', ‘.push('%s')’;
 }
 
 {
@@ -114,6 +116,9 @@ plan 50;
 {
     my @h = <foo bar baz>;
     is @h.join(', '),'foo, bar, baz','.join(", ")';
+    is @h.join('%s'),'foo%sbar%sbaz', ‘.join('%s')’;
+    is @h.join("\t"),"foo\tbar\tbaz", '.join("\t")';
+    is @h.join('\t'),'foo\tbar\tbaz', ‘.join('\t')’;
 }
 
 {
