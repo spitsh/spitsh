@@ -8,7 +8,7 @@ has $.outer;
 has $.debug;
 has $.use-bootstrap-types;
 
-method e ($/) { make $<thing>.ast }
+method e ($/) { make $<wrapped>.ast }
 
 method TOP($/){
     $*CURPAD.append: ($<statementlist>.ast // ());
@@ -253,7 +253,7 @@ method declare-class-params ($/) {
 
 method new-class ($/) {
     my $class;
-    with $<class-params><params><thing> {
+    with $<class-params><params><wrapped> {
         $class = self.declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Parameterizable);
         for $_<type-name>.map(*.Str).kv -> $i,$name {
             my $placeholder-type := Spit::Metamodel::Parameter.new_type(:$name);
@@ -269,7 +269,7 @@ method new-class ($/) {
 }
 
 method class-params ($/) {
-    make cache  $<params><thing><type-name>.map: {
+    make cache  $<params><wrapped><type-name>.map: {
         $*CURPAD.lookup(CLASS, .Str, match => $_).class;
     };
 }
@@ -923,10 +923,10 @@ method quote:sym<eval> ($/) {
 }
 
 method wrap ($/) {
-    with $<thing><R> {
+    with $<wrapped><R> {
         make .ast;
     } else {
-        make $<thing>;
+        make $<wrapped>;
     }
 }
 

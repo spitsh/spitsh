@@ -176,7 +176,9 @@ grammar Spit::Grammar is Spit::Lang {
         <class-params>?
     }
     rule class-params {
-        $<params>=<.r-wrap: '[', rule { <type-name>* % ','},']', :desc<class parameter list> >
+        $<params>=<.r-wrap: '[',']', 'class parameter list', rule {
+            <type-name>* % ','
+        }>
     }
     token declare-class-params { <?> }
     rule declaration:sym<class> {
@@ -260,20 +262,20 @@ grammar Spit::Grammar is Spit::Lang {
         { $*DECL = $*ACTIONS.make-routine($/,|c) }
         <.attach-pre-doc>
         [
-            $<param-def>=<.r-wrap:'(',rule {
+            $<param-def>=<.r-wrap:'(',')', 'parameter list', rule {
                 <paramlist> [<.longarrow> [$<return-type>=<.type> || <.invalid("return type")> ] ]?
-            },')'>
+            }>
         ]?
     }
 
     rule on-switch {
-        'on' $<candidates>=<.wrap: '{', rule {
+        'on' $<candidates>=<.wrap: '{','}','on switch', rule {
             (
                 <!before '}'>
                 [<os> || <.expected('OS name')> ]
                 [<cmd-block> || <.expected("A block for { $<os>.Str }")>]
             )*
-        },'}'>
+        }>
     }
 
     rule declaration:var {
@@ -378,11 +380,15 @@ grammar Spit::Grammar is Spit::Lang {
             <class-params>?
             $<object>=(
                 |<angle-quote>
-                | $<EXPR>=<.r-wrap('(',/<R=.EXPR>/,')',:desc<object definition>)>
+                | $<EXPR>=<.r-wrap: '(',')','object definition', token {
+                      <R=.EXPR>
+                  }>
             )?
             ||
             $<call-args>=(
-                | $<args>=<.r-wrap('(',/<R=.args>/,')',:desc("call to {$<name>.Str}'s arguments"))>
+                | $<args>=<.r-wrap: '(',')',"call to {$<name>.Str}'s arguments", token {
+                      <R=.args>
+                  }>
                 | \s+ <args>
             )?
         ]
@@ -405,7 +411,7 @@ grammar Spit::Grammar is Spit::Lang {
         ':'
           [
               |$<key>=<.identifier> [
-                  | $<value>=<.wrap: '(', /<R=.EXPR>/, ')',:desc<pair value>>
+                  | $<value>=<.wrap: '(',')', 'pair value', token {<R=.EXPR>}>
                   | $<value>=<.angle-quote>
               ]?
               |<var>
@@ -419,7 +425,9 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token term:parens {
-        $<statementlist>=<.wrap: '(',rule { '' <R=.statementlist> },')',:desc<parenthesized expression>>
+        $<statementlist>=<.wrap: '(',')', 'parenthesized expression', rule {
+            '' <R=.statementlist>
+        }>
     }
 
     rule term:cmd { <cmd> }
@@ -470,7 +478,9 @@ grammar Spit::Grammar is Spit::Lang {
         '.'<.ws>$<name>=<.identifier>
         [
             |':' <.ws> <args>
-            |$<args>=<.r-wrap: '(',/<R=.args>/,')', :desc<method call arguments>>
+            |$<args>=<.r-wrap: '(',')','method call arguments', token {
+                <R=.args>
+            }>
         ]?
     }
 
@@ -485,7 +495,9 @@ grammar Spit::Grammar is Spit::Lang {
     token postfix:sym<⟶> { <.longarrow> [<type> || <.expected("A type to cast to.")>] }
     token postfix:sym<[ ]> {  <index-accessor> }
 
-    token index-accessor { $<EXPR>=<.wrap: '[',/<R=.EXPR>/,']',:desc<positional accessor>> }
+    token index-accessor {
+        $<EXPR>=<.wrap: '[',']','positional accessor', token { <R=.EXPR> }>
+    }
 
     proto token prefix {*}
     token prefix:sym<++> { <sym> }
@@ -506,7 +518,7 @@ grammar Spit::Grammar is Spit::Lang {
     # requires a <.newpad> before invocation
     # and a <.finishpad> after
     token blockoid {
-        $<statementlist>=<.wrap('{',/<R=.statementlist>/,'}',:desc("block"))>
+        $<statementlist>=<.wrap: '{','}','block', token { <R=.statementlist> }>
     }
 
     token cmd-blockoid {
@@ -531,7 +543,7 @@ grammar Spit::Grammar is Spit::Lang {
     token type-name { <.identifier> }
 
     token cmd {
-        $<cmd-pipe-chain>=<.wrap: '${',rule { <R=.cmd-pipe-chain> },'}'>
+        $<cmd-pipe-chain>=<.wrap: '${','}','command', rule { <R=.cmd-pipe-chain> },>
     }
 
     token cmd-pipe-chain {
@@ -560,7 +572,7 @@ grammar Spit::Grammar is Spit::Lang {
     token redirection {
         $<src>=(
             |$<all>='*'
-            |$<fd>=<.wrap: '(',/<R=.EXPR>/,')', :desc<redirection left-hand-side>>
+            |$<fd>=<.wrap: '(',')','redirection left-hand-side', token { <R=.EXPR> }>
             |$<err>='!'
         )?
         [$<append>='>>' | $<write>=<[>›]> | $<in>=<[<‹]>]
@@ -575,38 +587,34 @@ grammar Spit::Grammar is Spit::Lang {
 
     proto token quote {*}
 
-
     token quote:double-quote {
-        $<str>=<.wrap(
-            '"',
-            /<R=.LANG('Quote-qq',:opener('"'),:closer('"'),:tweaks<curlies>)>/,
-            '"', :desc<double-quoted string>)>
+        $<str>=<.wrap: '"','"', 'double-quoted string', token {
+            <R=.LANG('Quote-qq',:opener('"'),:closer('"'),:tweaks<curlies>)>
+        }>
     }
+
     token quote:curly-double-quote {
-        $<str>=<.wrap(
-            '“',
-            /<R=.LANG('Quote-qq',:opener('“'),:closer('”'),:tweaks<curlies>)>/,
-            '”', :desc<double-quoted string>)>
+        $<str>=<.wrap: '“','”', 'double-quoted string', token {
+            <R=.LANG('Quote-qq',:opener('“'),:closer('”'),:tweaks<curlies>)>
+        }>
     }
 
     token quote:single-quote {
-        $<str>=<.wrap(
-            "'",
-            /<R=.LANG('Quote-q',:opener("'"),:closer("'"))>/,
-            "'", :desc<quoted string>)>
+        $<str>=<.wrap: "'", "'",'quoted string', token {
+            <R=.LANG('Quote-q',:opener("'"),:closer("'"))>
+        }>
     }
 
     token quote:curly-single-quote {
-        $<str>=<.wrap(
-            "‘",/<R=.LANG('Quote-q',:opener("‘"),:closer("’"))>/,
-            "’",:desc<quoted string>)>
+        $<str>=<.wrap: "‘","’", 'quoted string', token {
+            <R=.LANG('Quote-q',:opener("‘"),:closer("’"))>
+        }>
     }
 
     token quote:half-bracket-quote {
-        $<str>=<.wrap(
-            '｢',
-            /<R=.LANG('Quote-Q', :opener('｢'), :closer('｣'))>/,
-            '｣', :desc<｢..｣ quoted string>)>
+        $<str>=<.wrap: '｢','｣', '｢..｣ quoted string', token {
+            <R=.LANG('Quote-Q', :opener('｢'), :closer('｣'))>
+        }>
     }
 
     token quote:sym<qq> {
@@ -654,11 +662,13 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token quote:sym<eval> {
-        <sym>[$<args>=<.r-wrap:'(', /<R=.args>/,')',:desc<eval arguemnts>>]?<balanced-quote('Quote-q')>
+        <sym>
+        [$<args>=<.r-wrap:'(',')', 'eval arguemnts', token { <R=.args> }>]?
+        <balanced-quote('Quote-q')>
     }
 
     token quote:regex {
-        |$<str>=<.wrap: '/', /<R=.LANG('Regex',:closer</>)>/, '/' , :desc<regex>>
+        |$<str>=<.wrap: '/','/','regex', token { <R=.LANG('Regex',:closer</>)> }>
         |'rx' $<str>=<.balanced-quote('Regex')>
     }
 
@@ -698,13 +708,13 @@ grammar Spit::Grammar is Spit::Lang {
         <?> { if @*PRE-DOC { $*DECL.docs.append(@*PRE-DOC); @*PRE-DOC = (); } }
     }
 
-    token wrap($o,$thing,$c,:$desc) {
-        $<o>=$o [ $<thing>=$thing || <.invalid($desc)> ]
+    token wrap($o,$c,$desc,$wrapped) {
+        $<o>=$o [ $<wrapped>=$wrapped || <.invalid($desc)> ]
         {} <closer($<o>,$c,:$desc)>
     }
 
-    rule r-wrap($o,$thing,$c,:$desc) {
-        $<o>=$o [ $<thing>=$thing || <.invalid($desc)> ]
+    rule r-wrap($o,$c,$desc,$wrapped) {
+        $<o>=$o [ $<wrapped>=$wrapped || <.invalid($desc)> ]
         {} <closer($<o>,$c,:$desc)>
     }
     token closer($opener,$closer,:$desc) {
