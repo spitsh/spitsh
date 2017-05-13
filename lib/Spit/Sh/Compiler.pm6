@@ -462,6 +462,17 @@ multi method cap-stdout(SAST::If:D $_) {
     nextsame when ShellStatus;
     self.node($_);
 }
+
+#!Loop
+multi method node(SAST::Loop:D $_) {
+    |(.init andthen |self.node($_),'; '),
+    'while ', |self.cond(.cond),"; do\n",
+    |self.node(.block, :indent, :no-empty),
+    |(.incr andthen "\n", |self.compile-nodes([$_], :indent)),
+    "\n{$*pad}done";
+}
+multi method cap-stdout(SAST::Loop:D $_) { self.node($_) }
+
 #!While
 multi method node(SAST::While:D $_) {
     .until ?? 'until' !! 'while',' ',

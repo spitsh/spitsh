@@ -129,6 +129,15 @@ grammar Spit::Grammar is Spit::Lang {
         ['else' $<else>=<.block>]?
         <.ENDSTMT>
     }
+    rule statement-control:sym<loop> {
+        <sym> $<loop-spec>=<.wrap: '(', ')', 'loop specification', rule {
+            $<init>=<.EXPR>? ';'
+            $<cond>=<.EXPR>? ';'
+            $<incr>=<.EXPR>?
+         }>?
+        <block>
+        <.ENDSTMT>
+    }
 
     rule statement-control:sym<for> {
         <sym> <list> ['->' <var-and-type>]? <block>

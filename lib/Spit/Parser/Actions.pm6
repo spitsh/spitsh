@@ -161,6 +161,18 @@ method statement-control:sym<if> ($/) {
     make $if;
 }
 
+method statement-control:sym<loop> ($/) {
+    with $<loop-spec><wrapped> {
+        make SAST::Loop.new:
+          init   => .<init>.ast,
+          cond   => .<cond>.ast,
+          incr   => .<incr>.ast,
+          block  => $<block>.ast;
+    } else {
+        make SAST::Loop.new(block => $<block>.ast);
+    }
+}
+
 method statement-control:sym<for> ($/) {
     my $iter-var = do with $<var-and-type> {
         my $var = .ast;

@@ -1439,6 +1439,26 @@ class SAST::Given is SAST::Children is rw {
     method type { $!block.type }
 }
 
+class SAST::Loop is SAST::Children is rw {
+    has SAST::Block $.block;
+    has SAST $.init;
+    has SAST $.cond;
+    has SAST $.incr;
+
+    method stage2($ctx) {
+        $!init  andthen $_ .= do-stage2(tAny);
+        $!cond orelse $_ = SAST::BVal.new(:val, :$.match);
+        $!cond .= do-stage2(tBool);
+        $!block .= do-stage2($ctx, :loop, :!auto-inline);
+        $!incr andthen $_ .= do-stage2(tAny);
+        self;
+    }
+
+    method children { grep *.defined, $!init, $!cond, $!incr, $!block }
+
+    method type { $!block.type }
+}
+
 class SAST::For is SAST::Children {
     has SAST::Block $.block is rw;
     has SAST:D $.list is required;
