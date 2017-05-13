@@ -1,6 +1,6 @@
 use Test;
 
-plan 39;
+plan 43;
 
 {
     is '\'', "'",'single quotes can be escaped';
@@ -25,6 +25,13 @@ plan 39;
     is q{foo \{bar},'foo {bar',"escape opening bracket";
     is q{foo \}bar},'foo }bar',"escape closing bracket";
     is q{\\{}},'\\{}','escape \\ in q{...}';
+    is q{\{ \}},'{ }', 'q{\{ \}}';
+}
+
+{
+    is Q{foo\\bar}, 'foo\\\\bar', 'Q{foo\\\\bar}';
+    is Q{\{ \}},'\{ \}', 'Q{\{ \}}';
+    is ｢foo\\bar｣, 'foo\\\\bar', '｢foo\\\\bar｣';
 }
 
 {

@@ -892,8 +892,10 @@ method quote:double-quote       ($/) { make-quote($/) }
 method quote:curly-double-quote ($/) { make-quote($/) }
 method quote:single-quote       ($/) { make-quote($/) }
 method quote:curly-single-quote ($/) { make-quote($/) }
+method quote:half-bracket-quote    ($/) { make-quote($/) }
 method quote:sym<qq>            ($/) { make-quote($/) }
 method quote:sym<q>             ($/) { make-quote($/) }
+method quote:sym<Q>             ($/) { make-quote($/) }
 method balanced-quote           ($/) { make-quote($/) }
 method quote:regex              ($/) { make-quote($/) }
 

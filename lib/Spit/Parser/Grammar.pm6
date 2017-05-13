@@ -23,6 +23,7 @@ grammar Spit::Grammar is Spit::Lang {
             # Just copied this "define_slang" from what TimToady did with rakudo.
             # It seems to store grammar/action pairs.
             self.define_slang("MAIN",self,$*ACTIONS);
+            self.define_slang("Quote-Q", Spit::Quote, Spit::Quote::Actions);
             for <q qq> {
                 self.define_slang("Quote-$_",Spit::Quote::{$_},Spit::Quote::{$_ ~ '-Actions'});
             }
@@ -601,6 +602,13 @@ grammar Spit::Grammar is Spit::Lang {
             "’",:desc<quoted string>)>
     }
 
+    token quote:half-bracket-quote {
+        $<str>=<.wrap(
+            '｢',
+            /<R=.LANG('Quote-Q', :opener('｢'), :closer('｣'))>/,
+            '｣', :desc<｢..｣ quoted string>)>
+    }
+
     token quote:sym<qq> {
         <sym> » $<str>=<.balanced-quote('Quote-qq',:tweaks<curlies>)>
     }
@@ -608,6 +616,11 @@ grammar Spit::Grammar is Spit::Lang {
     token quote:sym<q> {
         <sym> »
         $<str>=<.balanced-quote('Quote-q')>
+    }
+
+    token quote:sym<Q> {
+        <sym> »
+        $<str>=<.balanced-quote('Quote-Q')>
     }
     # called when you know the next character is some kind of openning quote
     # but you don't know what it is yet.
