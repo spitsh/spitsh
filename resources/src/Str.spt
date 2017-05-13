@@ -232,4 +232,34 @@ constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
 
     #| Returns True if the invocant and argument string are equal.
     method ?ACCEPTS($b) { $b eq $self }
+
+constant $awk-subst-re =
+# has to covert $1 to \1 and \$ to just $
+｢END{
+  R = gensub(/([^\\]|^)((\\\\)*)\$([0-9&])/, "\\1\\2\\\\\\4", "g", ENVIRON["R"]);
+  gsub(/\\\$/,"$",R);
+  printf "%s", gensub(ENVIRON["T"], R, g);
+}｣;
+
+    method ~subst-re(Regex $target, $replacement, Bool :$g, Bool :$i) on {
+        Debian {
+            $self.${
+                perl -pe
+                (
+                    ‘use utf8;BEGIN{$/=undef};($t,$r)=(shift,shift);s/$t/$r/see’ ~
+                    ($g && "g") ~ ($i && "i")
+                )
+                '--' '-' $target "qq\c[GHOST]$replacement\c[GHOST]"
+            }
+        }
+        Any {
+            $self.${
+                awk -v 'RS=^$' -v "g={$g ?? 'g' !! '1'}" -v "IGNORECASE=$i"
+                :T($target)
+                :R($replacement)
+                $awk-subst-re
+            }
+        }
+    }
+
 }
