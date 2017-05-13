@@ -751,6 +751,7 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
     has $.rw is rw;
     has SAST::ClassDeclaration $.invocant-type is rw;
     has SAST::Invocant $.invocant is rw;
+    has $.cast-return is rw;
 
     method static { !$!invocant }
 
@@ -761,6 +762,18 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         $!invocant andthen $_ .= do-stage2(tAny);
         $.signature.invocant = $!invocant;
         $!invocant.piped = False if $.impure;
+        if $!cast-return  {
+            # sometimes force the return type for coercer methods
+            for @.os-candidates -> $, $block {
+                if $block.last-stmt <-> $last-stmt {
+                    $last-stmt = SAST::Cast.new(
+                        to => $.return-type,
+                        $last-stmt,
+                        match => $last-stmt.match
+                    );
+                }
+            }
+        }
         nextsame;
     }
 
