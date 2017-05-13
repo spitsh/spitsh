@@ -1,6 +1,6 @@
 use Test;
 
-plan 28;
+plan 39;
 
 {
     is '\'', "'",'single quotes can be escaped';
@@ -44,6 +44,18 @@ plan 28;
 {
     is "\c[BELL]",'🔔','\c[uniname]';
     is "\c[TWO HEARTS, BUTTERFLY]","💕🦋",'\c[uniname,uniname]';
+    is "\x[1f514]", "\c[BELL]", '\x[1f514]';
+    is "\x[1F514]", "\c[BELL]", '\x[1F514]';
+    is "I really \x[2661,2665,2764,1f495] Perl 6!", "I really ♡♥❤💕 Perl 6!",
+      '\x[2661,2665,2764,1f495]';
+    is "\f", ${printf '\f'}, '\f';
+    is "\x[0c]", "\f", '\x[0c]';
+    is "\r", ${printf '\r'}, '\r';
+    is "\x[0d]", "\r", '\x[0d]';
+    is "\b", ${printf '\b'}, '\b';
+    is "\x[08]", "\b", '\x[08]';
+    is "\a", ${printf '\a'}, '\a';
+    is "\x[07]", "\a", '\x[07]';
 }
 
 {
