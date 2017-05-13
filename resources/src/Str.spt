@@ -236,9 +236,11 @@ constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
 constant $awk-subst-re =
 # has to covert $1 to \1 and \$ to just $
 ｢END{
-  R = gensub(/([^\\]|^)((\\\\)*)\$([0-9&])/, "\\1\\2\\\\\\4", "g", ENVIRON["R"]);
-  gsub(/\\\$/,"$",R);
-  printf "%s", gensub(ENVIRON["T"], R, g);
+
+  R = gensub(/([^\\]|^)((\\{2})*)\$([0-9&])/, "\\1\\2\\\\\\4", "g", ENVIRON["R"]);
+  R = gensub(/((\\*)\\)?\\[$]/,"\\2$","g",R);
+  R = gensub(ENVIRON["T"], R, g);
+  printf "%s", R
 }｣;
 
     method ~subst-re(Regex $target, $replacement, Bool :$g, Bool :$i) on {

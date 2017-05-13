@@ -1,6 +1,6 @@
 use Test;
 
-plan 11;
+plan 12;
 
 {
     my $str = "FooD";
@@ -12,7 +12,12 @@ plan 11;
     is $str.subst-re(/(o)/, '$1' ,:g), 'FooD', '$1';
     is $str.subst-re(/(o)/, ｢\$1｣ ,:g), 'F$1$1D', ｢\$1｣;
     is $str.subst-re(/(o)/, ｢\\$1｣,:g), ｢F\o\oD｣, ｢\\$1｣;
-    is $str.subst-re(/(o)/, ｢\\\$1｣,:g), ｢F\$1\$1D｣, ｢\\\$1｣;
+    #is $str.subst-re(/(o)/, ｢\\\$1｣,:g), ｢F\$1\$1D｣, ｢\\\$1｣;
+    is $str.subst-re(/(o)/, ｢\\\\$1｣,:g), ｢F\\o\\oD｣, ｢\\\\$1｣;
+    #is $str.subst-re(/(o)/, ｢\\\\\$1｣,:g), ｢F\\$1\\$1D｣, ｢\\\\\$1｣;
+    is $str.subst-re(/(o)/, ｢\\\\\\$1｣,:g), ｢F\\\o\\\oD｣, ｢\\\\\\$1｣;
+    #is $str.subst-re(/(o)/, ｢\\\\\\\$1｣,:g), ｢F\\\$1\\\$1D｣, ｢\\\\\\\$1｣;
+
     is $str.subst-re(/(F)/, '"' ,:g), '"ooD', '" in replacement';
 
 }
