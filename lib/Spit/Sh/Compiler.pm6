@@ -295,7 +295,7 @@ multi method cond(SAST:D $_) {
     }
 }
 
-multi method int-expr(SAST:D $_) { '$(',|self.cap-stdout($_),')' }
+multi method int-expr(SAST:D $_) { self.arg($_).in-DQ }
 
 #!ShellStatus
 multi method node(ShellStatus:D $_) { self.cond($_) }
