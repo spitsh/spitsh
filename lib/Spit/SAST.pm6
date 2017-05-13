@@ -674,8 +674,15 @@ class SAST::Cast is SAST::MutableChildren {
     has Spit::Type $.to is required;
 
     method type { $!to }
-    method stage2 ($) {
-        self[0] .= do-stage2(tStr);
+    method stage2 ($ctx) {
+        # Type casting reduces all non-Bool contexts to Str context.
+        # We don't want context propagation to continue to the
+        # children and possibly mutate them through coercions.
+        self[0] .= do-stage2: do given $ctx {
+            when tBool { tBool }
+            when tStr  { tStr  }
+            default    { tAny  }
+        };
         self;
     }
     method gist { $.node-name ~ "({$!to.name})" ~ $.gist-children }
