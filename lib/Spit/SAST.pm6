@@ -675,11 +675,10 @@ class SAST::Cast is SAST::MutableChildren {
 
     method type { $!to }
     method stage2 ($ctx) {
-        # Type casting reduces all non-Bool contexts to Str context.
-        # We don't want context propagation to continue to the
-        # children and possibly mutate them through coercions.
+        # Type casting blocks outer context propagation to avoid
+        # coercions happening to the casted object. The casted to type
+        # will handle how to react in the given context.
         self[0] .= do-stage2: do given $ctx {
-            when tBool { tBool }
             when tStr  { tStr  }
             default    { tAny  }
         };
@@ -758,7 +757,6 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
     has $.rw is rw;
     has SAST::ClassDeclaration $.invocant-type is rw;
     has SAST::Invocant $.invocant is rw;
-    has $.cast-return is rw;
 
     method static { !$!invocant }
 
@@ -769,18 +767,6 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         $!invocant andthen $_ .= do-stage2(tAny);
         $.signature.invocant = $!invocant;
         $!invocant.piped = False if $.impure;
-        if $!cast-return  {
-            # sometimes force the return type for coercer methods
-            for @.os-candidates -> $, $block {
-                if $block.last-stmt <-> $last-stmt {
-                    $last-stmt = SAST::Cast.new(
-                        to => $.return-type,
-                        $last-stmt,
-                        match => $last-stmt.match
-                    );
-                }
-            }
-        }
         nextsame;
     }
 

@@ -358,7 +358,6 @@ method make-routine ($/,$type,:$static) {
             my $r = SAST::MethodDeclare.new(:$name);
             if $*CURPAD.lookup(CLASS,$name) -> $matching-class {
                 $r.return-type = $matching-class.class;
-                $r.cast-return = $matching-class.class.is-primitive;
             }
             unless $static {
                 $r.invocant = $*CURPAD.declare: SAST::Invocant.new(
