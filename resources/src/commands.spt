@@ -27,5 +27,6 @@ constant Cmd $*gcc-make = on {
 
 constant Cmd $*ssh = on {
     Alpine { Pkg<openssh-client>.ensure-install; 'ssh' }
-    Spit-Helper { 'shh' }
+    Spit-Helper { 'ssh' }
+}
 }
