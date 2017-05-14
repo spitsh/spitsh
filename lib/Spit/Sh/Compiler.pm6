@@ -871,8 +871,8 @@ multi method cond(SAST::Cmp:D $cmp) {
         when 'ne' {  '!=' }
         when 'lt' {  '<'  }
         when 'gt' {  '>'  }
-        when 'le' { $negate = True; '>' }
         when 'ge' { $negate = True; '<' }
+        when 'le' { $negate = True; '>' }
         default { "'$_' comparison NYI" }
     }
 
