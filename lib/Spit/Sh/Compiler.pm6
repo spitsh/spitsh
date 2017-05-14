@@ -886,10 +886,24 @@ multi method int-expr(SAST::BVal $ where { .val === False } ) { '0' }
 #!SVal
 multi method arg(SAST::SVal:D $_) {
     if (my $lines := .val.lines) > 2 {
+        my $emoji;
+        my @emojis = qqw:to/END/;
+        \c[GHOST]
+        \c[SPIRAL SHELL]
+        \c[GLOWING STAR]
+        \c[HORSE FACE]
+        \c[POUTING CAT FACE]
+        \c[OCTAGONAL SIGN]
+        \c[SEE-NO-EVIL MONKEY]
+        \c[HOURGLASS]
+        \c[REVERSED HAND WITH MIDDLE FINGER EXTENDED]
+        END
+        repeat { $emoji = @emojis.shift } while $lines.first(*.match(/^"\t"+$emoji/));
+        $emoji or SX::Bug.new(message => "EMOJIS DEPLETED", match => .match).throw;
         cs
-          "cat <<-'\c[GHOST]'\n\t",
+          "cat <<-'$emoji'\n\t",
           $lines.join("\n\t"),
-          "\n\t\c[GHOST]\n$*pad";
+          "\n\t$emoji\n$*pad";
     } else {
         escape .val
     }
