@@ -755,7 +755,8 @@ class SAST::RoutineDeclare is SAST::Children does SAST::Declarable does SAST::OS
 
 class SAST::MethodDeclare is SAST::RoutineDeclare {
     has $.rw is rw;
-    has SAST::ClassDeclaration $.invocant-type is rw;
+    # The type of the class declaration it was declared in
+    has Spit::Type $.class-type is rw;
     has SAST::Invocant $.invocant is rw;
 
     method static { !$!invocant }
@@ -763,7 +764,7 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
     method spit-gist { "method {$.name}\({$.signature.spit-gist})" }
 
     method stage2($) {
-        $.return-type = $.invocant-type.class if $!rw;
+        $.return-type = $.class-type if $!rw;
         $!invocant andthen $_ .= do-stage2(tAny);
         $.signature.invocant = $!invocant;
         $!invocant.piped = False if $.impure;
@@ -780,7 +781,7 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
     }
 
     method block-for-os($os) {
-        $!invocant-type.class.^dispatcher.get(self.name,$os);
+        $!class-type.^dispatcher.get(self.name,$os);
     }
 
     method declarator { 'method' }

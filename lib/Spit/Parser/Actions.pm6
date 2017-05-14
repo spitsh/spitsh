@@ -339,7 +339,7 @@ method declaration:sym<sub> ($/) {
 
 method declaration:sym<method> ($/) {
     my $method := $<routine-declaration>.ast;
-    $method.invocant-type = $*CLASS;
+    $method.class-type = $*CLASS.class;
     make $*CLASS.class.^add-spit-method: $method;
 }
 
