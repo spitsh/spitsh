@@ -129,7 +129,7 @@ multi method gen-name(SAST::EnvDecl:D $_) {
 }
 
 multi method gen-name(SAST::MethodDeclare:D $method) {
-    callwith($method,fallback => $method.invocant-type.name.substr(0,1).lc ~ '_' ~ $method.name);
+    callwith($method,fallback => $method.invocant-type.name.substr(0,1) ~  $method.name);
 }
 
 method !avoid-name-collision($decl,$name is copy,:$fallback) {
