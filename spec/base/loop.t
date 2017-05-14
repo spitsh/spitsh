@@ -1,6 +1,6 @@
 use Test;
 
-plan 3;
+plan 4;
 
 {
     my @a;
@@ -17,4 +17,9 @@ plan 3;
     my Int @b = loop (my $j = 0; $j < 5; $j++) { $j*$j }
 
     is @b, <0 1 4 9 16>, 'loop as a value';
+}
+{
+    ok (~(loop (my $j = 0; $j < 5; $j++) { $j*$j })) ~~ List[Int],
+       'loop return type is the correcy type of List';
+
 }

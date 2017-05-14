@@ -1444,6 +1444,7 @@ class SAST::Loop is SAST::Children is rw {
     has SAST $.init;
     has SAST $.cond;
     has SAST $.incr;
+    has $!type;
 
     method stage2($ctx) {
         $!init  andthen $_ .= do-stage2(tAny);
@@ -1456,7 +1457,7 @@ class SAST::Loop is SAST::Children is rw {
 
     method children { grep *.defined, $!init, $!cond, $!incr, $!block }
 
-    method type { $!block.type }
+    method type { $!type ||= tListp($!block.type) }
 }
 
 class SAST::For is SAST::Children {
