@@ -29,4 +29,21 @@ constant Cmd $*ssh = on {
     Alpine { Pkg<openssh-client>.ensure-install; 'ssh' }
     Spit-Helper { 'ssh' }
 }
+
+constant $*jq-repo = GitHubRepo<stedolan/jq>;
+
+my HTTP $?jq-download-url  = 'https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32-no-oniguruma';
+my $?jq-sha256sum = '264118228c08abf4db8d9e907b9638914f3eadb5cd50dc1471a84463f7991be0';
+
+constant Cmd $*jq = on {
+    Linux {
+        Cmd<jq> or (
+            given $?jq-download-url.get-file(to => File.tmp) {
+                .sha256-ok($?jq-sha256sum, what => $?jq-download-url);
+                .chmod('u+x');
+                $_;
+            }
+        )
+    }
+    Spit-Helper { 'jq' }
 }
