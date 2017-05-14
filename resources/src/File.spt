@@ -286,4 +286,13 @@ augment File {
         ${egrep -m1 $regex $self}
     }
 
+    method ~sha256 ${ sha256sum -b $self | awk '{print $1}' }
+    method sha256-ok($sha256-expected, :$what) {
+        my $sha256-got = $self.sha256;
+        $sha256-got eq $sha256-expected or
+        die "SHAsum didn't match for {$what || $self}\n" ~
+        "Got:      $sha256-got\n" ~
+        "Expected: $sha256-expected";
+    }
+
 }
