@@ -97,7 +97,7 @@ if File( ${ echo "/etc/hosts" } ) {
     is .owner, 'root', '/etc/hosts has correct owner';
 } # NO else because to test (cond && action) if optimization as well
 
-is File</etc/hosts>.group, 'root', '/etc/hosts has corrent group';
+is File</etc/hosts>.group, 'root', '/etc/hosts has correct group';
 
 
 {
