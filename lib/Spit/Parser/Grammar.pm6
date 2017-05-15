@@ -182,12 +182,9 @@ grammar Spit::Grammar is Spit::Lang {
 
     rule new-class {
         <type-name>
-        <class-params>?
-    }
-    rule class-params {
         $<params>=<.r-wrap: '[',']', 'class parameter list', rule {
             <type-name>* % ','
-        }>
+        }>?
     }
     token declare-class-params { <?> }
     rule declaration:sym<class> {
@@ -386,7 +383,7 @@ grammar Spit::Grammar is Spit::Lang {
         [
             <?{ $*CURPAD.lookup(CLASS,$<name>.Str); }>
             $<is-type>=<?>
-            <class-params>?
+            <type-params>?
             $<object>=(
                 |<angle-quote>
                 | $<EXPR>=<.r-wrap: '(',')','object definition', token {
@@ -556,7 +553,19 @@ grammar Spit::Grammar is Spit::Lang {
         <?[{]> <.newpad> <blockoid> <.finishpad>
     }
 
-    token type { <type-name><class-params>? }
+
+    token type { <type-name>[<parameter-index> || <type-params> ]? }
+
+    rule parameter-index {
+        '[' ~ ']' $<index>=\d+
+    }
+
+    token type-params {
+        $<params>=<.r-wrap: '[',']', 'type parameter list', rule {
+            <type>* % ','
+        }>
+    }
+
     token os {
         <identifier>
         <?{ $*CURPAD.lookup(CLASS,$<identifier>.Str,:match($<identifier>)) }>

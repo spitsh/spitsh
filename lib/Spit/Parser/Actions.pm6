@@ -256,16 +256,23 @@ method declaration:sym<class> ($/){
 
 method declare-class-params ($/) {
     my $type := $*CLASS.class;
-    if $type.HOW ~~ Spit::Metamodel::Parameterizable {
-        for $type.^placeholder-params -> $placeholder {
-            $*CURPAD.declare: SAST::ClassDeclaration.new(class => $placeholder);
+    my @params := do given $type.HOW {
+        when Spit::Metamodel::Parameterizable {
+            $type.^placeholder-params
         }
+        when Spit::Metamodel::Parameterized {
+            $type.^derived-from.^placeholder-params;
+        }
+        default { () }
+    };
+    for @params -> $placeholder {
+        $*CURPAD.declare: SAST::ClassDeclaration.new(class => $placeholder);
     }
 }
 
 method new-class ($/) {
     my $class;
-    with $<class-params><params><wrapped> {
+    with $<params><wrapped> {
         $class = self.declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Parameterizable);
         for $_<type-name>.map(*.Str).kv -> $i,$name {
             my $placeholder-type := Spit::Metamodel::Parameter.new_type(:$name);
@@ -278,12 +285,6 @@ method new-class ($/) {
         $class = self.declare-new-type($/,$<type-name>.Str, Spit::Metamodel::Type);
     }
     make $class;
-}
-
-method class-params ($/) {
-    make cache  $<params><wrapped><type-name>.map: {
-        $*CURPAD.lookup(CLASS, .Str, match => $_).class;
-    };
 }
 
 method declaration:sym<augment> ($/) {
@@ -548,7 +549,7 @@ method special-var:sym<?> ($/) { make SAST::LastExitStatus.new }
 method term:name ($/) {
     my $name = $<name>.Str;
     make do if $<is-type> {
-        my @params = $<class-params>.ast || Empty;
+        my @params = $<type-params>.ast || Empty;
         my $class-type := lookup-type($name, :@params, match => $<name>);
         do with $<object> {
             do if $_<angle-quote>
@@ -838,12 +839,26 @@ method block($/)    {
 }
 
 method type ($/) {
-    make lookup-type(
-        $/<type-name>.Str,
-        params => $<class-params>.ast // Empty,
-        match => $/,
-    );
+    make do with $<parameter-index> {
+        my \type = lookup-type($<type-name>.Str, match => $/);
+        if type.HOW ~~ Spit::Metamodel::Parameter {
+            type.^param-at($_<index>.Str.Int);
+        } else {
+            SX.new(message => "Can't index a type unless it's a parameter type").throw;
+        }
+    } else {
+        lookup-type(
+            $/<type-name>.Str,
+            params => ($<type-params>.ast // Empty),
+            match => $/,
+        );
+    }
 }
+
+method type-params ($/) {
+    make ($<params> andthen .<wrapped><type>.map(*.ast));
+}
+
 method os   ($/) { make $*CURPAD.lookup(CLASS,$/.Str,match => $/).class }
 
 method cmd ($/) { make $<cmd-pipe-chain>.ast }

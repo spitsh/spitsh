@@ -23,6 +23,16 @@ class Spit::Metamodel::Parameterized {...}
 # eg class Foo[ParamType ⟵] {...}
 class Spit::Metamodel::Parameter {...}
 
+# Used when a Parameterized with a Parameterizable as its parameter is augmented.
+# 1. class List[Elem-Type] {...}
+# 2. class Pair[Key, Value] {...}
+# 3. augment List[Pair] {
+#        method values (-->List[Elem-Type[1]] ⟵) {...}
+#    }
+# 4. Then when you call .values on something typed as List[Pair[Str,Int]]
+#    you'll get a List[Int]
+class Spit::Metamodel::ParameterAt {...}
+
 # WhateverInvocant is the metaobject type for the Invocant of whatever
 # class you're calling a method on. It's used by the * return type sigil.
 class Spit::Metamodel::WhateverInvocant {...}
@@ -94,7 +104,7 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
         if not type.^is-primitive {
             # check that something contradictory hasn't been declared like:
             # class Foo is Int is Bool { }
-            for type.^parents(:local) {
+            for type.^parents(:local).grep(Spit::Type) {
                 .^primitive ~~ $!primitive or
                   SX.new(
                     message => "{.^name} is incompatible with {type.^name}'s other parents",
@@ -110,10 +120,6 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
         nqp::decont(type);
     }
 
-    method reify(Mu $type, $with) { $type }
-
-    method needs-reification(Mu $) { False }
-
     method whatever-invocant(Mu $type) {
         if nqp::decont($!whatever-invocant) =:= Mu {
             $!whatever-invocant = Spit::Metamodel::WhateverInvocant.new_type();
@@ -121,14 +127,17 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
         $!whatever-invocant;
     }
 
-    method find-parameters-for(Mu \type,Mu \target) {
+    method parent-derived-from(Mu \type, Mu \target) {
         my $parameterized := (type, |type.^parents).first({
             .HOW ~~ Spit::Metamodel::Parameterized
             && (.^derived-from === target)
         });
-        $parameterized.^params if $parameterized;
+        $parameterized || Nil;
     }
 
+    method reify(Mu \type,|) { type }
+
+    method needs-reification(Mu $) { False }
 }
 
 class Spit::Metamodel::Parameterizable is Spit::Metamodel::Type {
@@ -188,14 +197,67 @@ class Spit::Metamodel::Parameterizable is Spit::Metamodel::Type {
 #     method foo(-->PlaceHolderType) {...}
 # }
 class Spit::Metamodel::Parameter is Spit::Metamodel::Type {
-    has $!param-pos;
+    # The thing this is a parameter of.
+    # given List[Elem-type], $!param-of would contain List for Elem-type
     has Spit::Type $!param-of;
+    # The position within the parameter list ie 0 for Elem-type
+    has $!param-pos;
+    # The cache of 'param-at's
+    has @!param-at-cache;
+
     method set-param-of(Mu $,Mu $!param-of,Int:D $!param-pos) { }
+    method param-of(Mu $) { $!param-of }
     method param-pos(Mu $) { $!param-pos }
 
-    method reify(Mu \param, Spit::Type \invocant-type) {
+    method reify(Mu \param, Mu \invocant-type) {
         invocant-type.^reify-parameter(param);
     }
+    method needs-reification(Mu $) { True }
+
+    method param-at(Mu \param, Int $index) {
+        with @!param-at-cache[$index] {
+            $_
+        } else {
+            my \param-at = Spit::Metamodel::ParameterAt.new_type(name => "{param.^name}[$index]");
+            param-at.^set-index($index);
+            param-at.^set-parameter(param);
+            param-at.^add_parent(param.^primitive);
+            param-at.^compose;
+            $_ = param-at;
+            param-at;
+        }
+    }
+}
+
+
+class Spit::Metamodel::ParameterAt is Spit::Metamodel::Type {
+    has Spit::Type $!parameter; # A Parameter
+    has Int $!index;
+
+    method reify(
+        Mu \param-at,
+        Spit::Type $invocant-type
+    ) {
+        # Get the first thing in the type hierarchy derived from
+        # $!parameter.^param-of. e.g if this is a Elem-Type[0], we
+        # need to find the first parent of the invocant that's a parameterized
+        # List, like List[Pair[Str,Int]], so we can figure out that Elem-Type[0]
+        # actually means Str.
+        my $inner := $invocant-type\
+          .^parent-derived-from($!parameter.^param-of)\
+          .^params[$!parameter.^param-pos];
+
+        if $inner.HOW ~~ Spit::Metamodel::Parameterized {
+            $inner.^params[$!index];
+        }
+        else {
+            $inner.^placeholder-params[$!index].primitive;
+        }
+    }
+
+    method set-index(Mu $, Int $index) { $!index = $index }
+    method set-parameter(Mu $, $!parameter) { }
+
     method needs-reification(Mu $) { True }
 }
 
@@ -254,9 +316,6 @@ class Spit::Metamodel::EnumClass is Spit::Metamodel::Type {
 class Spit::Metamodel::WhateverInvocant is Spit::Metamodel::Type {
     method needs-reification(Mu $) { True }
     method reify(Mu $, Mu \invocant-type) { invocant-type }
-    method reify-parameter(Mu \type, Mu \invocant-type) {
-        type.^parents[0].^reify-parameter(invocant-type);
-    }
 
     method name(Mu \type) {
         "WhateverInvocant({type.^parents[0].^name})";

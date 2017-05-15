@@ -217,8 +217,8 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
 # The type of the thing if it were flattened out
 sub flattened-type(Spit::Type $_) {
     when tList {
-        if .^find-parameters-for(tList) -> $params {
-            $params[0]
+        if .^parent-derived-from(tList) -> $parameterized {
+            $parameterized.^params[0];
         } else {
             tStr;
         }
@@ -777,13 +777,17 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         nextsame;
     }
 
-    multi method reified-return-type($call-invocant) {
+    method reified-return-type($invocant-type) {
         my $return-type := self.return-type;
         if $return-type.^needs-reification {
-            $return-type.^reify($call-invocant);
+            $return-type.^reify($invocant-type);
         } else {
             $return-type
         }
+    }
+
+    method reified-signature($invocant-type) {
+        $.signature.reify($invocant-type);
     }
 
     method block-for-os($os) {
@@ -917,7 +921,7 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
         $!type ||= self.declaration.reified-return-type($.invocant.ostensible-type);
     }
     method gen-sig {
-        $!gen-sig //= self.declaration.signature.reify($.invocant.ostensible-type);
+        $!gen-sig //= self.declaration.reified-signature($.invocant.ostensible-type);
     }
 
     method stage2($ctx) {
@@ -1037,14 +1041,14 @@ class SAST::Signature is SAST::Children {
         ~ @.children.map({ "{.type.name} {.spit-gist}" }).join(", ");
     }
 
-    method reify(Spit::Type $call-invocant-type) {
-        if $call-invocant-type.HOW ~~ Spit::Metamodel::Parameterized
+    method reify($invocant-type) {
+        if $invocant-type.HOW ~~ Spit::Metamodel::Parameterized
            and @.children.first(*.type.^needs-reification)
         {
             my $copy = self.clone;
             for $copy.children {
                 $_ .= clone;
-                .type = .type.^reify($call-invocant-type);
+                .type = .type.^reify($invocant-type);
             }
             $copy;
         } else {
