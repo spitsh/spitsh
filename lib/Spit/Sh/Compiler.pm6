@@ -980,6 +980,7 @@ multi method arg(SAST::Range:D $_) {
      )
 }
 #!Blessed
+multi method node(SAST::Blessed:D $_)  { self.node($_[0]) }
 multi method arg(SAST::Blessed:D $_) { self.arg($_[0]) }
 multi method cap-stdout(SAST::Blessed:D $_) { self.cap-stdout($_[0]) }
 

@@ -516,7 +516,7 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
             if $block.one-stmt <-> $last-stmt {
                 if self.inline-call($THIS,$last-stmt) -> $replacement {
                     if $replacement ~~ $accept {
-                        $THIS = $replacement;
+                        $THIS.switch: $replacement;
                     }
                 } else {
                     # If we find we can't inline it leave a marker so others
