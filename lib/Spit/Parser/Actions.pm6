@@ -624,7 +624,28 @@ method term:topic-cast ($/) {
     make SAST::Cast.new(to => $<type>.ast,SAST::Var.new(name => '_',sigil => '$'));
 }
 
-method term:pair ($/) {
+method term:j-object ($/) {
+    my @pos = flat $<pairs><wrapped><pair>.map(*.ast).map: {
+        SAST::Blessed.new(
+            .key,
+            class-type => tStr,
+            match => .key.match,
+        ),
+        .value
+    };
+
+    make SAST::SubCall.new(
+        name => 'j-object',
+        match => $/,
+        :@pos,
+    );
+}
+
+method term:pair ($/) { make $<pair>.ast }
+
+method pair ($/) { make $<pair>.ast }
+
+method colon-pair ($/) {
     my ($key,$value);
     if $<var> {
         $key = $<var><name><identifier>;
@@ -641,7 +662,7 @@ method term:pair ($/) {
     make SAST::Pair.new(:$key,:$value);
 }
 
-method term:fatarrow ($/) {
+method fatarrow-pair ($/) {
     make SAST::Pair.new( key => SAST::SVal.new(val => $<key>.Str), value => $<value>.ast);
 }
 

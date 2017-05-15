@@ -95,6 +95,10 @@ augment List {
     method first(Regex $regex --> Elem-Type) {
         $self.${ egrep -m1 $regex }
     }
+
+    method JSON {
+        ('[' ~ (.JSON for @$self).join(',') ~ ']')-->JSON;
+    }
 }
 
 #| The internal field separator. For Spit it's always `\n`.

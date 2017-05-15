@@ -54,6 +54,7 @@
         "src/Docker.spt",
         "src/HTTP.spt",
         "src/Date.spt",
+        "src/JSON.spt",
         "core-lib/Test.spt",
         "tools/harness.spt",
         "tools/spit-helper.spt"

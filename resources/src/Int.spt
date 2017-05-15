@@ -5,6 +5,9 @@ augment Int {
 
     #| Returns true if the argument is an Int and equal to the invocant.
     method ?ACCEPTS(Int $b) { $b == $self }
+
+    method JSON { $self-->JSON }
+
     method ?valid { $self.matches(/^[0-9]+$/) }
 }
 

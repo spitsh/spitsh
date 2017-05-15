@@ -11,6 +11,7 @@ class FD {} # is Int
 class File {} #
 class PID {} # is Int
 
+class JSON is Str is primitive { }
 class DateTime { }
 class HTTP {}
 enum-class OS { }

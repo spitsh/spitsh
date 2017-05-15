@@ -416,18 +416,25 @@ grammar Spit::Grammar is Spit::Lang {
         }
     }
 
-    token term:pair {
-        ':'
-          [
-              |$<key>=<.identifier> [
-                  | $<value>=<.wrap: '(',')', 'pair value', token {<R=.EXPR>}>
-                  | $<value>=<.angle-quote>
-              ]?
-              |<var>
-          ]
+    token term:pair { <pair> }
+
+    token pair {
+        |$<pair>=<.colon-pair>
+        |$<pair>=<.fatarrow-pair>
     }
 
-    token term:fatarrow {
+    token colon-pair {
+        ':'
+        [
+            |$<key>=<.identifier> [
+                | $<value>=<.wrap: '(',')', 'pair value', token {<R=.EXPR>}>
+                | $<value>=<.angle-quote>
+            ]?
+            |<var>
+        ]
+    }
+
+    token fatarrow-pair {
         $<key>=<.identifier>
         \h*'=>'<.ws>
         $<value>=<.EXPR($lt-comma)>
@@ -447,6 +454,12 @@ grammar Spit::Grammar is Spit::Lang {
     # -->Pkg.install unless Cmd<curl>
     rule term:topic-cast {
         <.longarrow> [ <type> || <.expected('A type to cast $_ to')> ]
+    }
+
+    rule term:j-object {
+        'j' $<pairs>=<.wrap: '{', '}', 'json object', rule {
+             '' <pair>* % ','
+         }>
     }
 
     proto token eq-infix {*}

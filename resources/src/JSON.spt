@@ -1,0 +1,18 @@
+#| The JSON class represents any valid JSON;
+augment JSON {
+    method pretty(-->JSON) { $self.${$*jq} }
+}
+
+sub j-array(JSON *@json){
+    '[' ~ @json.join(',') ~ ']'
+}
+
+sub j-object(JSON *@json --> JSON) {
+    (
+        '{' ~
+        (loop (my $j = 0; $j < @json; $j += 2) {
+            @json[$j] ~ ':' ~ @json[$j+1]
+        }).join(',') ~
+        '}'
+    )-->JSON;
+}
