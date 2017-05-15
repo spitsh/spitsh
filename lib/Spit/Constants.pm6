@@ -9,10 +9,10 @@ enum Spit-Phaser <END EXIT>;
 sub eq-prec ($var) { $var.assign-type == LIST-ASSIGN ?? 'e=' !! 'i=' }
 constant %precedence is export = %(
     |(<and or> X=> $('d=',LEFT)),
-    '=' => $(&eq-prec,LEFT),
+    '=' => $(&eq-prec,RIGHT),
     ',' => $('g=',LEFT),
-    '.=' => $('i=',LEFT),
-    '=>' => $('i=',LEFT),
+    '.=' => $('i=',RIGHT),
+    '=>' => $('i=',RIGHT),
     '??' => $('j=',RIGHT),
     '~~' => $('m=',LEFT),
     '=~' => $('m=',LEFT),

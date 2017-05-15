@@ -10,7 +10,8 @@ constant @brackets := "<>[]()\{}\x[0028]\x[0029]\x[003C]\x[003E]\x[005B]\x[005D]
 
 constant @openers = eager @brackets.map: -> $o,$ { $o };
 
-constant $lt-comma = «i<»;
+constant $gt-comma = «g>»; #greater than , precedence
+constant $gt-fatarrow = «i>»;
 
 grammar Spit::Grammar is Spit::Lang {
     token TOP {
@@ -322,25 +323,30 @@ grammar Spit::Grammar is Spit::Lang {
         $<named>=[<type>? ':'<var>]
     }
 
-    rule check-prec($preclim,$term) {
+    rule check-prec($min-precedence,$term) {
         <?before
             $<check>=<.infix>
             {}
-            <?{ not $<check> or $<check>.&derive-precedence($term)[0] ge $preclim }>
+            <?{ not $<check> # ie no infix was found
+                or $<check>.&derive-precedence($term)[0] ge $min-precedence }>
         >
     }
-    # preclim is a word stolen from rakudo. It means precedence limit :^).
-    rule EXPR($preclim?) {
+
+    rule EXPR($min-precedence?) {
         <termish>
         [
-            [ <!{ $preclim }> || {} <.check-prec($preclim,$<termish>[*-1].ast)> ]
+            [ <!{ $min-precedence }> || {} <.check-prec($min-precedence,$<termish>[*-1].ast)> ]
             <infix>
             [ <termish>  || {}<.expected("term after infix {$<infix>[*-1]<sym>.Str}")>  ]
         ]*
     }
 
-    rule list { <EXPR($lt-comma)>* % ',' }
-    rule args { <list> }
+    rule list {
+        <EXPR($gt-comma)>* % ','
+    }
+    rule args {
+        [$<named>=<.pair> || $<pos>=<.EXPR($gt-comma)> ]* % ','
+    }
 
     token termish {
         || <term> [<.ws><postfix>]*
@@ -434,7 +440,7 @@ grammar Spit::Grammar is Spit::Lang {
     token fatarrow-pair {
         $<key>=<.identifier>
         \h*'=>'<.ws>
-        $<value>=<.EXPR($lt-comma)>
+        $<value>=<.EXPR($gt-fatarrow)>
     }
 
     token term:parens {
@@ -488,8 +494,10 @@ grammar Spit::Grammar is Spit::Lang {
     token infix:sym<..>  { [$<exclude-start>='^']? <sym> [$<exclude-end>='^']? }
 
     rule  infix:sym<?? !!> {
-        $<sym>='??' <EXPR($lt-comma)> ['!!' || <.expected('!! to finish ternary')> ]
+        $<sym>='??' <EXPR('j=')> ['!!' || <.expected('!! to finish ternary')> ]
     }
+
+    token infix:sym«=>» { <sym> }
 
     proto token postfix {*}
 

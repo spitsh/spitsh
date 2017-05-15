@@ -1024,6 +1024,11 @@ multi method loop-return(SAST::List:D $_) {
         self.loop-return(.children[0]);
     }
 }
+
+#!Pair
+multi method arg(SAST::Pair:D $_) {
+    self.concat-into-DQ([self.arg(.key),"\t",self.arg(.value)])
+}
 #!Doom
 # If we try and compile Doom we're doomed
 multi method arg(SAST::Doom:D $_)  { .exception.throw }

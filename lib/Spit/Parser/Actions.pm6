@@ -642,7 +642,7 @@ method term:j-object ($/) {
     );
 }
 
-method term:pair ($/) { make $<pair>.ast }
+method term:pair ($/) { make SAST::Pair.new(|$<pair>.ast) }
 
 method pair ($/) { make $<pair>.ast }
 
@@ -660,11 +660,11 @@ method colon-pair ($/) {
         }
     }
     $key = SAST::SVal.new(val => $key.Str,match => $key);
-    make SAST::Pair.new(:$key,:$value);
+    make ($key,$value);
 }
 
 method fatarrow-pair ($/) {
-    make SAST::Pair.new( key => SAST::SVal.new(val => $<key>.Str), value => $<value>.ast);
+    make (SAST::SVal.new(val => $<key>.Str, match => $<key>), $<value>.ast);
 }
 
 method eq-infix:sym<&&> ($/)  { make SAST::Junction.new }
@@ -745,6 +745,8 @@ method infix:sym<?? !!> ($/) {
     }
 }
 
+method infix:sym«=>» ($/) { make SAST::Pair.new }
+
 method method-call ($/) {
     my (:@pos,:%named) := $<args>.ast;
     my $name = $<name>.Str;
@@ -766,10 +768,9 @@ method method-call ($/) {
 method postfix:method-call ($/) { make $<method-call>.ast }
 
 method args ($/,|) {
-    my $list = $<list>.ast;
     make {
-        pos => $list.children.grep({ $_ !~~ SAST::Pair}).list,
-        named => $list.children.grep(SAST::Pair).map({.key.val => .value}).Hash;
+        pos => $<pos>.map(*.ast),
+        named => $<named>.map({ my ($k,$v) := .ast; ($k.val, $v) }).flat.Hash,
     }
 }
 

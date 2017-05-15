@@ -1252,16 +1252,16 @@ class SAST::Ternary is SAST::Children {
     method children { $!cond,$!on-true,$!on-false }
 }
 
-class SAST::Pair is SAST::Children {
-    has SAST:D $.key is required;
-    has SAST:D $.value is required;
+class SAST::Pair is SAST::MutableChildren {
+    has $.type;
 
-    method type { tAny }
+    method type { $!type ||= tPairp(|@.children.map(*.type)) }
     method stage2($) {
-        self.make-new(SX::NYI, feature => "Pairs as values").throw;
+        $_ .= do-stage2(tStr) for @.children;
+        self;
     }
-
-    method children { $!key,$!value }
+    method key { self[0] }
+    method value { self[1] }
 }
 
 sub derive-common-parent(*@types) {
