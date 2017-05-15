@@ -1,6 +1,6 @@
 use Test;
 
-plan 37;
+plan 38;
 
 for <one two three> {
 
@@ -157,6 +157,7 @@ for 4,5 {
     is BadPipe<123>.bad-pipe-for, <123 123 123>, 'invocant pipe in for block';
 }
 
-
+is ${ printf '%s-%s-%s' ($_ for <one two three>) }, 'one-two-three',
+  'for flattens in slurpy context';
 
 pass "statement-mod for $_" for ^3;

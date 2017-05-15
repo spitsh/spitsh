@@ -1,6 +1,6 @@
 use Test;
 
-plan 26;
+plan 27;
 
 {
     my $i = 0;
@@ -122,4 +122,17 @@ class Foo is Int {
 
     is BadPipe<123>.bad-pipe-cond, 4, ‘invocant pipe in while condition’;
     is BadPipe<123>.bad-pipe-loop, <123 123 123>, 'invocant pipe in while block';
+}
+
+{
+
+    is ${ printf '%s-%s-%s' (
+             my @a = <one two three>;
+             while @a {
+                 my $item = @a[0];
+                 @a.shift;
+                 $item;
+             }
+         )
+     }, 'one-two-three', 'while flattens in slurpy context';
 }

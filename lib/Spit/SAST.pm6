@@ -523,6 +523,8 @@ class SAST::Stmts is SAST::MutableChildren {
             tAny;
         }
     }
+
+    method itemize { self.last-stmt  andthen .itemize or False }
 }
 
 class SAST::Block is SAST::Stmts does SAST::Dependable {
@@ -596,6 +598,7 @@ class SAST::Return is SAST::Children {
     }
     method type { $!val.type }
     method children { $!val, }
+    method itemize { $!val.itemize }
 }
 
 # Array element
@@ -1420,6 +1423,7 @@ class SAST::While is SAST::Children {
     }
     method children { $!cond,$!block,($!topic-var // Empty) }
     method type { $!type ||= tListp($!block.type) }
+    method itemize { False }
 }
 
 class SAST::Given is SAST::Children is rw {
@@ -1459,6 +1463,7 @@ class SAST::Loop is SAST::Children is rw {
     method children { grep *.defined, $!init, $!cond, $!incr, $!block }
 
     method type { $!type ||= tListp($!block.type) }
+    method itemize { False }
 }
 
 class SAST::For is SAST::Children {
@@ -1488,6 +1493,7 @@ class SAST::For is SAST::Children {
 
     method children { $!list,$!block,$!iter-var }
     method type { $!type ||= tListp($!block.type) }
+    method itemize { False }
 }
 
 class SAST::Empty does SAST {

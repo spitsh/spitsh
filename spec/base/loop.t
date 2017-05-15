@@ -1,6 +1,6 @@
 use Test;
 
-plan 4;
+plan 5;
 
 {
     my @a;
@@ -21,5 +21,9 @@ plan 4;
 {
     ok (~(loop (my $j = 0; $j < 5; $j++) { $j*$j })) ~~ List[Int],
        'loop return type is the correcy type of List';
+}
 
+{
+    is ${printf '%s-%s-%s' (loop (my $k = 0; $k < 3; $k++) { $k*$k }) },
+      '0-1-4', 'loop falttens in slurpy context';
 }
