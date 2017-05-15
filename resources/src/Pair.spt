@@ -1,0 +1,4 @@
+augment Pair {
+    method value (-->Value) { $self.${cut -f2-} }
+    method key (-->Key)     { $self.${cut -f1} }
+}

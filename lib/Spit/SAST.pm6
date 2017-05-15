@@ -18,8 +18,11 @@ sub class-by-name($name) {
 # A pair where the value has container we can mess with
 sub cont-pair($a,$b is copy) { $a => $b }
 
-sub tListp(Spit::Type \param) {
-    param ~~ tList ?? param !! tList.^parameterize(param);
+sub tListp(Spit::Type \elem-type) {
+    elem-type ~~ tList ?? elem-type !! tList.^parameterize(elem-type);
+}
+sub tPairp(Spit::Type \key, \value) {
+    tPair.^parameterize(key,value);
 }
 
 sub lookup-type($name,:@params, Match :$match) is export {

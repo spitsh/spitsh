@@ -282,19 +282,26 @@ constant tFile is export  = gen-type('File', tStr);
 constant tOS is export  = gen-type('OS', tEnumClass, metatype => Spit::Metamodel::EnumClass);
 constant tPID is export = gen-type('PID', tInt);
 
-constant tList is export = do {
-    my $list := Spit::Metamodel::Parameterizable.new_type(:name<List>);
-    $list.^set-primitive($list);
-    $list.^add_parent(tStr);
-    my $elem-type := Spit::Metamodel::Parameter.new_type(:name<Elem-Type>);
-    $elem-type.^add_parent(tStr);
-    $elem-type.^set-param-of($list,0);
-    $elem-type.^compose;
-    $list.^placeholder-params.push($elem-type);
-    $list.^compose;
+sub gen-param-type($name, @param-names, :$primitive) {
+    my $param-type := Spit::Metamodel::Parameterizable.new_type(:$name);
+    $param-type.^set-primitive($param-type) if $primitive;
+    $param-type.^add_parent(tStr);
+
+    for @param-names.kv -> $i, $name {
+        my $param := Spit::Metamodel::Parameter.new_type(:$name);
+        $param.^add_parent(tStr);
+        $param.^set-param-of($param-type, $i);
+        $param.^compose;
+        $param-type.^placeholder-params.push($param);
+    }
+
+    $param-type.^compose;
 }
 
+constant tList is export = gen-param-type('List', ['Elem-Type'], :primitive);
+constant tPair is export = gen-param-type('Pair', ['Key', 'Value'], :primitive);
+
 constant %bootstrapped-types is export  = %(
-    (tAny,tStr,tInt,tBool,tList,tRegex,tPattern,tEnumClass,tFD,tOS, tPID)\
+    (tAny,tStr,tInt,tBool,tList,tRegex,tPattern,tEnumClass,tFD,tOS, tPID, tPair)\
       .map({ .^name => $_ }).eager.Slip;
 );

@@ -10,6 +10,7 @@ class Pattern {} # is Str
 class FD {} # is Int
 class File {} #
 class PID {} # is Int
+class Pair {} # is Str is primitive
 
 class JSON is Str is primitive { }
 class DateTime { }
