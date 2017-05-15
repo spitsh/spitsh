@@ -520,11 +520,19 @@ grammar Spit::Grammar is Spit::Lang {
     token postfix:sym<++>  { <sym> }
     token postfix:sym<-->  { <sym> <!before \>> }
     token postfix:sym<⟶> { <.longarrow> [<type> || <.expected("A type to cast to.")>] }
-    token postfix:sym<[ ]> {  <index-accessor> }
+    token postfix:sym<[ ]> { <!after \s> <index-accessor> }
 
     token index-accessor {
-        $<EXPR>=<.wrap: '[',']','positional accessor', token { <R=.EXPR> }>
+        $<EXPR>=<.wrap: '[',']','index accessor', token { <R=.EXPR> }>
     }
+
+    token postfix:sym<{ }> { <!after \s> <key-accessor> }
+
+    token key-accessor {
+        $<EXPR>=<.wrap: '{','}', 'key accessor', token { <R=.EXPR> }>
+    }
+    token postfix:sym«< >» { <!after \s> <angle-key-accessor> }
+    token angle-key-accessor { <angle-quote> }
 
     proto token prefix {*}
     token prefix:sym<++> { <sym> }

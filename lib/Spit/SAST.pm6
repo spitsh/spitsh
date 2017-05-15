@@ -607,21 +607,34 @@ class SAST::Return is SAST::Children {
 # Array element
 class SAST::Elem is SAST::MutableChildren does SAST::Assignable {
     has SAST $.index is required;
+    has Spit::Type $.index-type is required;
 
     method assign-type { SCALAR-ASSIGN }
 
     method stage2($ctx) {
         SX::NYI.new(feature => 'element assignment modifiers',node => $_).throw with $.assign-mod;
-        $!index .= do-stage2(tInt);
-        $.elem-of .= do-stage2(tStr);
-        with $.assign {
-            $_ .= do-stage2($.type, :desc("assigning to element of {$.elem-of.gist}"));
+        my $method-end = $!index-type ~~ tInt ?? 'pos' !! 'key';
+        my $method = do if $.assign {
+            SAST::MethodCall.new(
+                name => "set-$method-end",
+                pos => ($!index,$.assign),
+                $.elem-of,
+                :$.match
+            )
+        } else {
+            SAST::MethodCall.new(
+                name => "at-$method-end",
+                pos => ($!index),
+                $.elem-of,
+                :$.match
+            )
         }
-        self;
+
+        $method .= do-stage2($ctx);
     }
 
     method gist { $.elem-of.gist ~ '[' ~ $!index.gist ~ ']' }
-    method type { flattened-type($.elem-of.type) }
+    method stage2-done { False } # This should be gone after stage2
     method elem-of is rw { @.nodes[0] }
     method children { $.elem-of,$!index, ($.assign // Empty) }
     method spit-gist { $.elem-of.spit-gist ~ '[' ~ $!index.spit-gist ~ ']' }

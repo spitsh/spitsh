@@ -787,10 +787,18 @@ method postfix:cmd-call ($/) {
 method postfix:sym<++> ($/)  { make SAST::Increment.new }
 method postfix:sym<--> ($/)  { make SAST::Increment.new(:decrement) }
 method postfix:sym<[ ]> ($/) { make $<index-accessor>.ast }
+method index-accessor($/) {
+    make SAST::Elem.new(index => $<EXPR>.ast, index-type => tInt);
+}
+method postfix:sym<{ }>($/) { make $<key-accessor>.ast }
+method key-accessor($/) { make SAST::Elem.new(index => $<EXPR>.ast, index-type => tStr) }
+
+method postfix:sym«< >»($/) { make $<angle-key-accessor>.ast }
+method angle-key-accessor($/) {
+    make SAST::Elem.new(index => $<angle-quote>.ast, index-type => tStr)
+}
+
 method postfix:sym<⟶> ($/) { make SAST::Cast.new(to => $<type>.ast) }
-
-method index-accessor($/) { make SAST::Elem.new(index => $<EXPR>.ast) }
-
 method prefix:sym<~> ($/) { make SAST::Coerce.new(to => tStr) }
 method prefix:sym<+> ($/) { make SAST::Coerce.new(to => tInt) }
 method prefix:sym<-> ($/) { make SAST::Negative.new() }

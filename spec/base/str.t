@@ -1,6 +1,6 @@
 use Test;
 
-plan 44;
+plan 46;
 
 {
     ok "0","'0' is true";
@@ -128,4 +128,10 @@ plan 44;
     $archive.remove;
     ok $extracted.d, 'Str.extract result is a directory';
     ok $extracted.add('foo.txt'), 'foo.txt exists inside';
+}
+
+{
+    my $to-chomp = "foo\n";
+    is $to-chomp.bytes, 4, 'right bytes before .chomp';
+    is $to-chomp.chomp.bytes, 3, 'right bytes after .chomp';
 }
