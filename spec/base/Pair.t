@@ -1,6 +1,6 @@
 use Test;
 
-plan 38;
+plan 39;
 
 {
     my $a = one => "two";
@@ -68,12 +68,18 @@ plan 38;
 }
 
 {
+    given one => "two" {
+        is .JSON, '{"one":"two"}', 'Pair.JSON';
+    }
+}
+
+{
     my @b = Australia => 'Canberra',
             France    => 'Paris',
             Uganda  => 'Kampala';
 
     is @b.JSON, '{"Australia":"Canberra","France":"Paris","Uganda":"Kampala"}',
-      '.JSON';
+      'List[Pair].JSON';
 }
 
 {

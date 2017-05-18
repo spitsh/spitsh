@@ -1,6 +1,7 @@
 augment Pair {
     method value (-->Value) { $self.${cut -f2- | tr -d '\n'} }
     method key (-->Key)     { $self.${cut -f1 | tr -d '\n'} }
+    method JSON { $self-->List[Pair].JSON }
 }
 
 augment List[Pair] {
