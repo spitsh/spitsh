@@ -117,9 +117,8 @@ grammar Spit::Regex is Spit::Lang {
 
     token backslash:sym<A> { <sym> }
     token backslash:sym<b> { $<sym>=[<[bB]>] }
-    token backslash:sym<r> { <sym> }
     token backslash:sym<R> { <sym> }
-    token backslash:sym<s> { $<sym>=[<[dDnNsSwW]>] }
+    token backslash:sym<s> { $<sym>=[<[dDnNsSwWr]>] }
     token backslash:sym<t> { <sym> }
     token backslash:sym<x> {
         <sym>
