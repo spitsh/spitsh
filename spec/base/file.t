@@ -1,6 +1,6 @@
 use Test;
 
-plan 58;
+plan 60;
 
 {
     my File $file .= tmp;
@@ -206,6 +206,12 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has correct group';
     }
 }
 
+
+given File.tmp {
+    .write: <X.one two X.three four>;
+    is .remove-lines(/^X\./), <X.one X.three>, '.remove-lines returns right value';
+    is .slurp, <two four>, '.remove lines removed the right lines';
+}
 
 # {
 #     my $file = File.tmp;

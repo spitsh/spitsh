@@ -286,6 +286,9 @@ augment File {
         ${egrep -m1 $regex $self}
     }
 
+    method @remove-lines(Regex $regex) {
+        ${sed -rni "\\%$regex%!p;\\%$regex%w/dev/stdout" $self}
+    }
     method ~sha256 ${ sha256sum -b $self | awk '{print $1}' }
     method sha256-ok($sha256-expected, :$what) {
         my $sha256-got = $self.sha256;
