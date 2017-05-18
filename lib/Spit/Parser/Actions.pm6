@@ -626,13 +626,13 @@ method term:topic-cast ($/) {
 }
 
 method term:j-object ($/) {
-    my @pos = flat $<pairs><wrapped><pair>.map(*.ast).map: {
+    my @pos = flat $<pairs><wrapped><pair>.map(*.ast).map: -> @pair {
         SAST::Blessed.new(
-            .key,
+            @pair[0],
             class-type => tStr,
-            match => .key.match,
+            match => @pair[0].match,
         ),
-        .value
+        @pair[1]
     };
 
     make SAST::SubCall.new(
