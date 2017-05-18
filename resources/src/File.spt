@@ -298,7 +298,11 @@ augment File {
     }
 
     method @remove-lines(Regex $regex) {
-        ${sed -rni "\\%$regex%!p;\\%$regex%w/dev/stdout" $self}
+        on {
+            GNU ${sed -rni "\\§$regex§!\{p;b;\};w/dev/stdout" $self}
+            # BB sed doesn't likebranch inside {} without \n following
+            BusyBox ${sed -rni "\\§$regex§!\{p;b\n\};w/dev/stdout" $self}
+        }
     }
     method ~sha256 ${ sha256sum -b $self | awk '{print $1}' }
     method sha256-ok($sha256-expected, :$what) {

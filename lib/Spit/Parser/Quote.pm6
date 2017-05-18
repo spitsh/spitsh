@@ -116,6 +116,7 @@ grammar Spit::Quote::qq is Spit::Quote {
     token elem:escaped {
         '\\' [<backslash> || <.panic(qq|backslash escape sequence|)>]
     }
+    token elem:sym<§> { <.sym> }
     token elem:sigily { <spit-sigily> }
 }
 
@@ -133,5 +134,8 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
     method backslash:sym<x> ($/) { make ($<hex>.map({ "0x$_".chr}).join) }
     method backslash:literal ($/) { make $/.Str }
     method elem:escaped ($/) { make $<backslash>.ast }
+    method elem:sym<§> ($/) {
+        make SAST::Var.new(name => '*sed-delimiter', sigil => '$');
+    }
     method elem:sigily ($/)  { make $<spit-sigily>.ast }
 }

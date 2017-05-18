@@ -1,3 +1,5 @@
+constant $*sed-delimiter = "\x[1e]";
+
 #| The match list variable. Like `$/` in Perl 6 it stores the what was
 #| match after a something is matched against a regex.
 #|{
