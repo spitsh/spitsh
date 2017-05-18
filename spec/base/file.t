@@ -1,6 +1,6 @@
 use Test;
 
-plan 60;
+plan 66;
 
 {
     my File $file .= tmp;
@@ -206,6 +206,23 @@ is File</etc/hosts>.group, 'root', '/etc/hosts has correct group';
     }
 }
 
+given File.tmp {
+    .write: <one two three>;
+    is .shift, 'one', '.shift return value';
+    is .slurp, <two three>, '.shift modified file';
+}
+
+given File.tmp {
+    .write: <one two three>;
+    is .pop, 'three', '.pop return value';
+    is .slurp, <one two>, '.pop modified file';
+}
+
+given File.tmp {
+    .write: <one two three>;
+    is .unshift("zero"), 'zero', '.unshift return value';
+    is .slurp, <zero one two three>, '.unshift modified file';
+}
 
 given File.tmp {
     .write: <X.one two X.three four>;

@@ -110,6 +110,17 @@ augment File {
              '{print>f}END{l=ENVIRON["l"];print l>f; printf "%s", l}'
         }
     }
+
+    method ~unshift($str) {
+        $self.slurp.${
+            awk :l($str) -v "f=$self" -v 'RS=^$'
+              'END{l=ENVIRON["l"];printf "%s",l;print l>f;printf "%s",$0>f}'
+        }
+    }
+
+    method ~shift   ${sed -nri -e '1!p;1w/dev/stdout' $self}
+    method ~pop     ${sed -nri -e '$!p;$w/dev/stdout' $self}
+
     #| Calls `touch(1)` on the file.
     #|{ .touch unless File<foo.txt> }
     method ?touch {
