@@ -165,7 +165,7 @@ class Spit::Metamodel::Parameterizable is Spit::Metamodel::Type {
         my $name := "{type.^name}[{@params.map(*.^name).join(", ")}]";
 
         # Foo[Int,Bool] has to be a child of Foo[Int,Str],
-        # Foo[Str,Int], Foo[Str,Str] etc. So we recursively find
+        # Foo[Str,Bool], Foo[Str,Str] etc. So we recursively find
         # and create the permuations and add them as parents.
         my @permutations = [X] @params.map: *.^parents(:local).grep(Spit::Type);
         my $what := Spit::Metamodel::Parameterized.new_type(:$name);
