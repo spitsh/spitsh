@@ -175,7 +175,7 @@ augment File {
         my $content = File</etc/hosts>.slurp
         say $content[2]; # print the 3rd line
     }
-    method slurp(-->List) { ${cat $self} }
+    method @slurp ${cat $self}
 
     #| Opens the file and returns a FD that can be written to.
     #|{
