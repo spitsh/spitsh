@@ -1,6 +1,6 @@
 use Test;
 
-plan 24;
+plan 25;
 
 {
     class Foo {
@@ -103,4 +103,19 @@ plan 24;
 
     is HasSlurpy<one>.slurpy2("two", "three"), <$self=one $a=two @a=three>,
       'non-static method ($a, *@a) 2 args';
+}
+
+{
+    class Piping-Methods {
+
+        method ~one is no-inline{
+            $self.${cat}
+        }
+        method ~two is no-inline {
+            $self.one;
+        }
+
+    }
+
+    is Piping-Methods("foo\n").two.bytes, 4, ‘piping methods shouldn't lose newlnie’;
 }

@@ -89,7 +89,10 @@ multi method walk(SAST::Cmd $THIS is rw) {
         }
     }
 
-    self.walk($_, :should-pipe) with $THIS.pipe-in;
+    if ($THIS.pipe-in andthen .is-invocant) -> $invocant {
+        # vote to pipe the invocant
+        $invocant.pipe-vote++;
+    }
 }
 
 multi method walk(SAST::While:D $THIS is rw) {
@@ -244,10 +247,7 @@ multi method walk(SAST::Junction:D $THIS is rw) {
     }
 }
 
-multi method walk(
-    SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl },
-    :$should-pipe = False,
-) {
+multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
     my $decl := $THIS.declaration;
 
     if $decl ~~ SAST::ConstantDecl {
@@ -277,8 +277,20 @@ multi method walk(
         }
     }
 
-    elsif $decl ~~ SAST::Invocant and not $should-pipe {
-        $decl.piped = False;
+    elsif $decl ~~ SAST::Invocant  {
+        # Pipe voting:
+        # -------------
+        # Make sure the MethodDeclaration.invocant is cloned so we can start
+        # counting on its $.piped attribute.
+        self.walk($decl);
+        # $.piped > 0 means it will get piped.
+        without $decl.pipe-vote {
+            $decl.pipe-vote = 1;
+        }
+        # So if every piped-- here is balanced by a ++ somewhere else
+        # then it will get piped.
+        $decl.pipe-vote--;
+
     }
 
 }
@@ -484,6 +496,19 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
     else {
         callsame;
     }
+}
+
+multi method walk(SAST::MethodCall:D $THIS is rw) is default {
+    self.walk($THIS.declaration);
+    # Is the call's invocant the $self of the method body we're in?
+    if (my $invocant = ($THIS.invocant andthen.is-invocant))
+       # AND should the method we're calling be piped to?
+       and ($THIS.declaration.invocant andthen .piped)
+       {
+           # If so, vote for piping the method we're in's $self
+           $invocant.pipe-vote++;
+       }
+    callsame;
 }
 
 multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {

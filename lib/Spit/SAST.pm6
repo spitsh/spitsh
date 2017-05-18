@@ -136,6 +136,12 @@ role SAST is rw {
             |args,
         )
     }
+    method is-invocant {
+        self ~~ SAST::Var
+        && (my $d := self.declaration) ~~ SAST::Invocant
+        && $d
+        || Nil;
+    }
     method uses-Str-Bool {
         self.type.^find-spit-method('Bool') === tStr.^find-spit-method('Bool');
     }
@@ -404,10 +410,6 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 
     method desc { "Assignment to $.spit-gist" }
 
-    method is-piped {
-        ($_ = $.declaration) ~~ SAST::Invocant and .piped;
-    }
-
     method itemize { itemize-from-sigil($!sigil) }
 }
 
@@ -659,19 +661,14 @@ class SAST::Cmd is SAST::MutableChildren is rw {
             self.make-new(SX,message => ‘command can't be empty’).throw;
         }
 
-        if ($!pipe-in ~~ SAST::Var and $!pipe-in.is-piped) and $*no-pipe {
-            $!pipe-in.declaration.piped = False;
+        if (my $invocant = ($!pipe-in andthen .is-invocant)) and $*no-pipe {
+            $invocant.pipe-vote = 0; # should mean it won't be piped
         }
         self;
     }
 
     method children {
         grep *.defined, $!pipe-in, |@.nodes, |@!in, |@!write, |@!append, |%!set-env.values;
-    }
-
-    method auto-compose-children {
-        # pipe-in gets special treatment in composition stage
-        grep *.defined, |@.nodes, |@!in, |@!write, |@!append, |%!set-env.values;
     }
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
@@ -786,7 +783,7 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         $.return-type = $.class-type if $!rw;
         $!invocant andthen $_ .= do-stage2(tAny);
         $.signature.invocant = $!invocant;
-        $!invocant.piped = False if $.impure;
+        $!invocant.pipe-vote = 0 if $.impure; # 0 should mean it won't be piped
         nextsame;
     }
 
@@ -983,8 +980,10 @@ role SAST::ShellPositional {
 
 class SAST::Invocant does SAST does SAST::Declarable does SAST::ShellPositional {
     has $.class-type is required;
-    has $.piped is rw = True; # Whether the invocant should be piped in
+    # if pipe-vote ends up > 0 at compilation $self gets piped
+    has Int $.pipe-vote is rw;
     has $.signature is rw;
+    method piped { $!pipe-vote andthen $_ > 0 }
     method name { 'self' }
     method symbol-type { SCALAR }
     method gist { $.node-name ~ "($.spit-gist)" }
@@ -1043,11 +1042,14 @@ class SAST::Signature is SAST::Children {
         self;
     }
 
-    method children { |@!pos,|%.named.values }
+    method children { ($!invocant // Empty), |@.params }
+    method params { |@!pos, |%!named.values}
     method gist { $.node-name ~ '(' ~ $.spit-gist ~ ')' }
     method type { tAny }
     method clone(|c) {
-        callwith(|c,:@!pos,:%!named);
+        my \cloned = callwith(|c, :@!pos, :%!named);
+        .signature = cloned for cloned.children;
+        cloned;
     }
 
     method spit-gist {
@@ -1059,7 +1061,7 @@ class SAST::Signature is SAST::Children {
            and @.children.first(*.type.^needs-reification)
         {
             my $copy = self.clone;
-            for $copy.children {
+            for $copy.params {
                 $_ .= clone;
                 .type = .type.^reify($invocant-type);
             }

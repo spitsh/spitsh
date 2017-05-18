@@ -108,7 +108,7 @@ multi method gen-name(SAST::PosParam:D $_) {
 }
 
 multi method gen-name(SAST::Invocant:D $_) {
-    SX::Bug.new(desc => 'Tried to compile a piped parameter', match => .match).throw if .piped;
+    SX::Bug.new(desc => 'Tried to compile a piped invocant', match => .match).throw if .piped;
     if .signature.slurpy-param {
         callsame;
     } else {
@@ -299,7 +299,7 @@ multi method int-expr(SAST:D $_) { self.arg($_).in-DQ }
 
 #!ShellStatus
 multi method node(ShellStatus:D $_) { self.cond($_) }
-multi method cond(ShellStatus:D $_) { self.node($_) }
+multi method cond(ShellStatus:D $_,|c) { self.node($_,|c) }
 multi method cap-stdout(ShellStatus $_) {
     |self.cond($_),' && ',self.scaf('e'),' 1';
 }
@@ -717,13 +717,14 @@ multi method node(SAST::Call:D $_)  {
       match => .match;
 }
 
-multi method node(SAST::MethodCall:D $_) {
+multi method node(SAST::MethodCall:D $_, :$tight) {
     my $call;
     my $slurpy-start = (.declaration.signature.slurpy-param andthen .ord);
-
+    my $pipe;
     if .declaration.invocant andthen .piped {
-        $call := |self.cap-stdout(.invocant), '|',
-                 |self.call:
+        $pipe := |(|self.cap-stdout(.invocant), '|' unless .invocant.is-invocant andthen .piped);
+        $call :=   |$pipe,
+                   |self.call:
                    self.gen-name(.declaration),
                    .param-arg-pairs,
                    .pos,
@@ -741,7 +742,9 @@ multi method node(SAST::MethodCall:D $_) {
     if .declaration.rw and .invocant.assignable {
         |self.gen-name(.invocant),'=$(',|$call,')';
     } else {
-        self.maybe-quietly: $call, .type, .ctx, match => .match;
+        ('{ ' if $pipe and $tight),
+        |self.maybe-quietly( $call, .type, .ctx, match => .match),
+        (';}' if $pipe and $tight)
     }
 }
 
@@ -751,13 +754,13 @@ multi method arg(SAST::Call:D $_) is default {
     nextsame;
 }
 
-multi method cap-stdout(SAST::Call:D $_) is default {
+multi method cap-stdout(SAST::Call:D $_,|c) is default {
     nextsame when ShellStatus;
-    self.node($_)
+    self.node($_,|c)
 }
-#!Cmd
-multi method node(SAST::Cmd:D $cmd) {
 
+#!Cmd
+multi method node(SAST::Cmd:D $cmd, :$tight) {
     if $cmd.nodes == 0 {
         my @cmd-body = self.cap-stdout($cmd.pipe-in);
         self.compile-redirection(@cmd-body,$cmd);
@@ -770,7 +773,7 @@ multi method node(SAST::Cmd:D $cmd) {
 
         my $full-cmd := |self.compile-redirection(@cmd-body,$cmd);
 
-        my $pipe := do if $cmd.pipe-in andthen not .?is-piped {
+        my $pipe := do if $cmd.pipe-in andthen !.is-invocant.piped {
             |(|self.cap-stdout($cmd.pipe-in),'|');
         };
         |$pipe,
