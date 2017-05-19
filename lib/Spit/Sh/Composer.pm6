@@ -613,7 +613,7 @@ method inline-value($inner,$outer,$_ is raw) {
     }
 }
 
-subset ChildSwapInline of SAST:D
+subset ChildSwapInline of SAST::Children:D
        where SAST::Call|SAST::Cmd|SAST::Increment|SAST::Neg|SAST::Cmp|SAST::Concat;
 
 # CONSIDER:
