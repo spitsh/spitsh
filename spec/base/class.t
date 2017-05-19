@@ -117,5 +117,5 @@ plan 25;
 
     }
 
-    is Piping-Methods("foo\n").two.bytes, 4, ‘piping methods shouldn't lose newlnie’;
+    is Piping-Methods("foo\n").two.bytes, 4, ‘piping methods shouldn't lose newline’;
 }
