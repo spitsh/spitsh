@@ -48,7 +48,8 @@ augment DateTime {
     method +posix  ${@date $self '+%s'}
 
     method ?valid {
-        $self.matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/);
+                      # XXX: \n? at the end is undesirable but necessary atm
+        $self.matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\n?$/);
     }
 
     method Bool { $self.valid }
