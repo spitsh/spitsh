@@ -354,6 +354,7 @@ sub compile-or-eval($command, @pos, %named) {
         }
     }
     orwith %named<in-helper> {
+        %named<opts><os> = Spit::LateParse.new(val => 'OS<spit-helper>');
         start-docker $helper-image, :mount-docker-socket, |%named;
     }
 
