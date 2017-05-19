@@ -123,9 +123,6 @@ augment DockerImg {
     method ?exists { ${ $*docker image inspect $self *>X } }
     method ?remove { ${ $*docker rmi $self >X} }
     method Bool { $self.exists }
-    method once-off($code) {
-        $code.${ $*docker run -i --rm --entrypoint sh };
-    }
     method *tag ($tag) {
         ?${$*docker tag $self $tag} && $tag;
     }
