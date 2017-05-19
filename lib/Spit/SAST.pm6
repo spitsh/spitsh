@@ -55,6 +55,8 @@ class SAST::Cmd {...}
 class SAST::ACCEPTS {...}
 class SAST::Itemize {...}
 
+role SAST::Force {...}
+
 sub sastify($_, :$match!) is export {
     when Associative { .map: { .key => sastify(.value) } }
     when Positional  { .map: &sastify }
@@ -110,7 +112,14 @@ role SAST is rw {
     method compile-time { Nil }
     method gist { self.node-name }
     method spit-gist { self.gist }
-    method node-name { self.^name.subst(/^'SAST::'/,'') }
+    method node-name {
+        if self ~~ SAST::Force {
+            self.^name.subst(/^'SAST::'/,'')\
+                .subst(/'SAST::Force'/,"Force({$.type.^name},{$.itemize})")
+        } else {
+            self.^name.subst(/^'SAST::'/,'')
+        }
+    }
     method itemize { True }
     method depends { Empty }
     method child-deps { self.depends }
@@ -153,17 +162,28 @@ role SAST is rw {
         );
     }
 
-    # used in stage3 to replace one node with another in the AST
-    method switch(SAST:D $self is rw: $b is copy) {
-        if $b.type !=== $self.type {
-            $b = $self.stage3-node(SAST::Blessed,class-type => $self.type,$b);
-        }
-        if $b.itemize !=== $self.itemize {
-            $b = $self.stage3-node(SAST::Itemize, itemize => $self.itemize, $b);
+    # used in stage3 to replace one node with another in the AST. When
+    # replacing one node for another you want preserve the type and
+    # itemization of the node being replaced (and usually its context)
+    method switch(SAST:D $self is rw: $b is copy, :$force-ctx = True) {
+        if $b.type !=== $self.type or $b.itemize !=== $self.itemize {
+            $b .= force($self.type, $self.itemize);
         }
         $b.extra-depends.append($self.extra-depends);
-        $b.ctx = $self.ctx;
+        $b.ctx = $self.ctx if $force-ctx;
         $self = $b;
+    }
+
+    my role SAST::Force {
+        has $.type is rw;
+        has $.itemize is rw;
+    }
+
+    method force($type, $itemize) {
+        self does SAST::Force unless self ~~ SAST::Force;
+        self.type = $type;
+        self.itemize = $itemize;
+        self;
     }
 }
 role SAST::Assignable {
@@ -274,9 +294,8 @@ class SAST::Children does SAST {
 
     method children { Empty }
     method auto-compose-children { @.children }
-    method gist(Mu:D:){
-        my $name = self.^name.subst(/^'SAST::'/,'');
-        $name ~ "$.gist-children";
+    method gist {
+        "$.node-name$.gist-children";
     }
 
     method gist-children {
@@ -1680,19 +1699,25 @@ class SAST::Eval is SAST::Children   {
 class SAST::Regex is SAST::Children is rw {
     has Str:D %.patterns;
     has SAST:D @.placeholders;
+    has $.regex-type;
 
     method type {
-        given $.ctx {
-            when tBool { $.ctx }
-            when tPattern {
-                %!patterns<case>:exists
-                    ?? tPattern
-                    !! self.make-new(SX, message => "Unable to convert this regex to pattern").throw;
-            }
+        return tBool if $.ctx ~~ tBool;
+        given $!regex-type {
+            when  'case' { tPattern }
             default { tRegex }
         }
     }
+
     method stage2($ctx){
+        $!regex-type = do given $ctx {
+            when tPattern {
+                %!patterns<case>:exists
+                  or self.make-new(SX, message => "Unable to convert this regex to pattern").throw;
+                'case'
+            }
+            default { 'ere'  }
+        };
         if $ctx ~~ tBool {
             self.make-new(
                 SAST::ACCEPTS,

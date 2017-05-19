@@ -92,11 +92,11 @@ multi method walk(SAST::ClassDeclaration:D $THIS is rw) {
     $THIS .= stage3-node(SAST::Empty);
 }
 
-multi method walk(SAST::Cmd $THIS is rw) {
+multi method walk(SAST::Cmd:D $THIS is rw) {
     my @nodes := $THIS.nodes;
     for @nodes.kv -> $i, $_ {
         when SAST::List {
-            @nodes.splice($i,1,.children);
+            @nodes.splice($i,1,.children) unless .itemize;
         }
     }
 
@@ -455,6 +455,9 @@ multi method walk(SAST::OnBlock:D $THIS is rw) {
     }
 }
 
+multi method walk(SAST::Blessed:D $THIS is rw) {
+    $THIS.switch: $THIS[0], :!force-ctx;
+}
 
 multi method walk(SAST::Stmts:D $THIS is rw) {
     if $THIS.returns -> $top-ret is raw {
@@ -573,7 +576,7 @@ method inline-value($inner,$outer,$_ is raw) {
         }
     }
     # if arg inside inner is a blessed value, try inlining the value
-    when SAST::Blessed|SAST::Neg {
+    when SAST::Neg {
         if self.inline-value($inner,$outer,.children[0]) -> $val {
             # clone because we don't want to mutate a node from the inner call
             my $clone = .clone;

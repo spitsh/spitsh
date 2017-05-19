@@ -432,7 +432,7 @@ sub search-and-replace($target, $replacement, @places-to-look) {
 multi method arg(SAST::If:D $_) {
     nextsame when ShellStatus;
     if not .else
-       and .then.one-stmt
+       and (my $stmt = .then.one-stmt)
        and not (.topic-var andthen .depended) {
         # in some limited circumstances we can simplify
         # if cond { action } to cond && action
@@ -447,7 +447,7 @@ multi method arg(SAST::If:D $_) {
            && ($var = $cond[1])
         {
             dq '${',self.gen-name($var), ($neg ?? ':-' !! ':+'),
-                    |self.arg(.then.one-stmt),'}';
+                    |self.arg($stmt).itemize($stmt.itemize),'}';
         } else {
             cs |self.cond($cond),
                ($neg ?? ' || ' !! ' && '),
@@ -773,7 +773,7 @@ multi method node(SAST::Cmd:D $cmd, :$tight) {
 
         my $full-cmd := |self.compile-redirection(@cmd-body,$cmd);
 
-        my $pipe := do if $cmd.pipe-in andthen !.is-invocant.piped {
+        my $pipe := do if $cmd.pipe-in andthen !($cmd.pipe-in.is-invocant andthen .piped) {
             |(|self.cap-stdout($cmd.pipe-in),'|');
         };
         |$pipe,
@@ -962,11 +962,7 @@ method compile-pattern($pattern is copy,@placeholders) {
 
 }
 multi method arg(SAST::Regex:D $_) {
-    if .ctx ~~ tPattern {
-        self.compile-pattern(.patterns<case>,.placeholders);
-    } else {
-        self.compile-pattern(.patterns<ere>,.placeholders);
-    }
+    self.compile-pattern(.patterns{.regex-type}, .placeholders);
 }
 
 #!Range
@@ -982,10 +978,6 @@ multi method arg(SAST::Range:D $_) {
       !! |self.arg($_[1])
      )
 }
-#!Blessed
-multi method node(SAST::Blessed:D $_)  { self.node($_[0]) }
-multi method arg(SAST::Blessed:D $_) { self.arg($_[0]) }
-multi method cap-stdout(SAST::Blessed:D $_) { self.cap-stdout($_[0]) }
 
 method concat-into-DQ(@elements) {
     my $str = dq();
