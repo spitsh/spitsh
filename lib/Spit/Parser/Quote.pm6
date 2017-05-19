@@ -93,11 +93,16 @@ grammar Spit::Quote::q is Spit::Quote {
     token elem:escaped {
         '\\'$<escaped>=($<special>=[$*opener|$*closer|'\\'] || .)
     }
+    token elem:sym<§> { <.sym> }
 }
 
 class Spit::Quote::q-Actions is Spit::Quote::Actions {
     method elem:escaped ($/){
         make ($<escaped><special> andthen .Str) || $/.Str;
+    }
+
+    method elem:sym<§> ($/) {
+        make SAST::Var.new(name => '*sed-delimiter', sigil => '$');
     }
 }
 
