@@ -5,6 +5,8 @@ constant $build = eval(os => $*build-os){
     say ${ $*curl --version };
     say ${ $*docker --version };
     say ${ $*git --version };
+    Pkg<jq>.install;
+    say ${ $*jq --version };
     $*pkglist-path.remove;
 };
 
