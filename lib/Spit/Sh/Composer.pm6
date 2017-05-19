@@ -25,6 +25,17 @@ has $!os;
 has %.clone-cache;
 has $.no-inline;
 
+# cache for method declarations
+has $!ENUMC-ACCEPTS;
+has $!ENUMC-NAME;
+has $!STR-BOOL;
+has $!STR-MATCH;
+
+method ENUMC-ACCEPTS { $!ENUMC-ACCEPTS //= tEnumClass.^find-spit-method: 'ACCEPTS' }
+method ENUMC-NAME    { $!ENUMC-NAME //= tEnumClass.^find-spit-method: 'name' }
+method STR-MATCHES   { $!STR-MATCH //= tStr.^find-spit-method: 'match' }
+method STR-BOOL      { $!STR-BOOL //= tBool.^find-spit-method: 'Bool' }
+
 method os {
     $!os ||= do {
         my $os-var = $*SETTING.lookup(SCALAR,'*os');
@@ -109,9 +120,6 @@ multi method walk(SAST::While:D $THIS is rw) {
 method try-case($if) {
     my $can = True;
     my $common-topic;
-    my \ENUM-HAS-MEMBER = (once tEnumClass.^find-spit-method('ACCEPTS'));
-    my \ENUM-NAME       = (once tEnumClass.^find-spit-method: 'name');
-    my \STR-MATCHES =     (once tStr.^find-spit-method: 'matches'|'match');
     my SAST::Regex:D @patterns;
     my SAST::Block:D @blocks;
     my SAST::Block   $default;
@@ -137,18 +145,18 @@ method try-case($if) {
                 );
             )
             or
-            cond ~~ SAST::MethodCall && cond.declaration.identity === STR-MATCHES
+            cond ~~ SAST::MethodCall && cond.declaration.identity === self.STR-MATCHES()
             && (my $re = cond.pos[0]) ~~ SAST::Regex && $re.patterns<case>.defined
             && ($topic = cond[0]; $pattern = $re)
             or
 
-            cond ~~ SAST::MethodCall && cond.declaration.identity === ENUM-HAS-MEMBER
+            cond ~~ SAST::MethodCall && cond.declaration.identity === self.ENUMC-ACCEPTS()
             && (my $enum = cond[0].compile-time) ~~ Spit::Type
             && (
                 $topic = cond.pos[0].stage3-node(
                     SAST::MethodCall,
                     name => 'name',
-                    declaration => ENUM-NAME,
+                    declaration => self.ENUMC-NAME,
                     cond.pos[0],
                 );
                 $pattern = SAST::Regex.new(
@@ -163,7 +171,7 @@ method try-case($if) {
                    when SAST::CompileTimeVal { $topic.val ===  .val }
                    when SAST::Var { $topic.declaration === .declaration }
                    when SAST::MethodCall {
-                       $topic.declaration === .declaration === ENUM-NAME
+                       $topic.declaration === .declaration === self.ENUMC-NAME
                    }
                }) {
                 @patterns.push($pattern);
@@ -463,23 +471,23 @@ multi method walk(SAST::Stmts:D $THIS is rw) {
 }
 
 multi method walk(SAST::MethodCall:D $THIS is rw) {
-    my \ENUMC_NAME = once tEnumClass.^find-spit-method('name');
-    my \STR_BOOL = once tStr.^find-spit-method('Bool');
-    my \ENUM_ACCEPTS = once tEnumClass.^find-spit-method('ACCEPTS');
+    self.walk($THIS.declaration);
 
-    if $THIS.declaration === STR_BOOL
+    my \ident = $THIS.declaration.identity;
+
+    if ident === self.STR-BOOL
         and (my $ct = $THIS.invocant.compile-time).defined
     {
         $THIS .= stage3-node(SAST::BVal, val => ?$ct);
     }
 
-    elsif $THIS.declaration === ENUMC_NAME
+    elsif ident === self.ENUMC-NAME
         and $THIS.invocant.compile-time -> $ct
     {
         $THIS .= stage3-node(SAST::SVal,val => $ct.name);
     }
 
-    elsif $THIS.declaration === ENUM_ACCEPTS {
+    elsif ident === self.ENUMC-ACCEPTS {
         my $enum := $THIS[0];
         my $candidate := $THIS.pos[0];
 
@@ -494,21 +502,16 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
         }
     }
     else {
+        # Is the call's invocant the $self of the method body we're in?
+        if (my $invocant = ($THIS.invocant andthen.is-invocant))
+        # AND should the method we're calling be piped to?
+        and ($THIS.declaration.invocant andthen .piped)
+        {
+            # If so, vote for piping the method we're in's $self
+            $invocant.pipe-vote++;
+        }
         callsame;
     }
-}
-
-multi method walk(SAST::MethodCall:D $THIS is rw) is default {
-    self.walk($THIS.declaration);
-    # Is the call's invocant the $self of the method body we're in?
-    if (my $invocant = ($THIS.invocant andthen.is-invocant))
-       # AND should the method we're calling be piped to?
-       and ($THIS.declaration.invocant andthen .piped)
-       {
-           # If so, vote for piping the method we're in's $self
-           $invocant.pipe-vote++;
-       }
-    callsame;
 }
 
 multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
