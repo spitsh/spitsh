@@ -62,7 +62,7 @@ augment Docker {
             $*docker create -i
             ("--name=$_" if $name)
             ("-v=$*docker-socket:$*docker-socket" if $mount-socket)
-            @args $from sh
+            @args $from sh -c ':;sh'
         };
     }
 
