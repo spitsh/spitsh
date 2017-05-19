@@ -174,11 +174,6 @@ role SAST is rw {
         $self = $b;
     }
 
-    my role SAST::Force {
-        has $.type is rw;
-        has $.itemize is rw;
-    }
-
     method force($type, $itemize) {
         self does SAST::Force unless self ~~ SAST::Force;
         self.type = $type;
@@ -186,6 +181,12 @@ role SAST is rw {
         self;
     }
 }
+
+my role SAST::Force {
+    has $.type is rw;
+    has $.itemize is rw;
+}
+
 role SAST::Assignable {
     has SAST $.assign is rw;
     has SAST $.assign-mod is rw;
