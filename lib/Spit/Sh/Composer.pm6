@@ -404,20 +404,23 @@ multi method walk(SAST::Cmp:D $THIS is rw) {
     compile-time-infix($THIS,SAST::BVal);
 }
 
-# The things we can inline in CondReturns is limited. We can't have
-# any ol shell command expresssion. The ones we can inline depend
-# on whether their last value as it appears in the shell is the same
-# as their original. See 'ef' and 'et' for why.
-sub acceptable-in-cond-return($_,$original) {
+# Checks that the thing the that the .Bool call was inlined to has the
+# invocant as the last argument (and no weird stuff that shouldn't
+# exist in a shell call). This is so:
+# et Bool "thing"
+# doesn't inline to:
+# et other_method | something
+# A rather complex solution, but necessary for now.
+sub acceptable-in-cond-return($_,$orig-invocant) {
     when SAST::Cmd {
         (not .write || .append || .pipe-in || .in) and
-        (.nodes[*-1] andthen .identity === $original);
+        (.nodes[*-1] andthen .identity === $orig-invocant);
     }
     when SAST::MethodCall {
-        (.pos[*-1] || .invocant) andthen .identity === $original;
+        (.pos[*-1] || .invocant) andthen .identity === $orig-invocant;
     }
     when SAST::Call {
-        .pos[*-1] andthen .identity === $original;
+        .pos[*-1] andthen .identity === $orig-invocant;
     }
     default { False }
 }
@@ -426,8 +429,8 @@ sub acceptable-in-cond-return($_,$original) {
 multi method walk(SAST::CondReturn:D $THIS is rw) {
 
     with $THIS.Bool-call {
-        my $orig = .invocant;
-        self.walk($_, { acceptable-in-cond-return($_,$orig) } );
+        self.walk(my $orig-invocant := .invocant);
+        self.walk($_, { acceptable-in-cond-return($_, $orig-invocant.identity) } );
     }
     with ($THIS.Bool-call andthen .compile-time) {
         # We know the result of .Bool at compile time.
