@@ -1323,8 +1323,8 @@ class SAST::List is SAST::MutableChildren {
     }
     method elem-type { flattened-type(self.type) }
 
-    method stage2($) {
-        $_ .= do-stage2(tStr) for @.children;
+    method stage2($ctx) {
+        $_ .= do-stage2($ctx ~~ tList ?? $ctx !! tStr) for @.children;
         self;
     }
 
