@@ -683,7 +683,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
         }
 
         if (my $invocant = ($!pipe-in andthen .is-invocant)) and $*no-pipe {
-            $invocant.pipe-vote = 0; # should mean it won't be piped
+            $invocant.cancel-pipe-vote;
         }
         self;
     }
@@ -804,7 +804,7 @@ class SAST::MethodDeclare is SAST::RoutineDeclare {
         $.return-type = $.class-type if $!rw;
         $!invocant andthen $_ .= do-stage2(tAny);
         $.signature.invocant = $!invocant;
-        $!invocant.pipe-vote = 0 if $.impure; # 0 should mean it won't be piped
+        $!invocant.cancel-pipe-vote if $.impure;
         nextsame;
     }
 
@@ -1004,6 +1004,13 @@ class SAST::Invocant does SAST does SAST::Declarable does SAST::ShellPositional 
     # if pipe-vote ends up > 0 at compilation $self gets piped
     has Int $.pipe-vote is rw;
     has $.signature is rw;
+    has Int $!yes-voted;
+    has $!vote-canceled;
+    # You can only have one yes vote
+    method vote-pipe-yes { $!pipe-vote++ unless $!vote-canceled or $!yes-voted++ }
+    method vote-pipe-no  { $!pipe-vote-- unless $!vote-canceled }
+    method start-pipe-vote    { $!pipe-vote = 1 }
+    method cancel-pipe-vote   { $!pipe-vote = 0; $!vote-canceled = True; }
     method piped { $!pipe-vote andthen $_ > 0 }
     method name { 'self' }
     method symbol-type { SCALAR }
@@ -1458,6 +1465,8 @@ class SAST::While is SAST::Children {
     has $!type;
 
     method stage2($ctx) {
+        # Because loops are re-entrant you can't pipe to the method if its
+        # invocant is inside one of them.
         my $*no-pipe = True;
         $!cond .= do-stage2(tBool,:desc<while conditional>);
         generate-topic-var(var => $!topic-var,:$!cond,blocks => ($!block,));

@@ -102,7 +102,7 @@ multi method walk(SAST::Cmd:D $THIS is rw) {
 
     if ($THIS.pipe-in andthen .is-invocant) -> $invocant {
         # vote to pipe the invocant
-        $invocant.pipe-vote++;
+        $invocant.vote-pipe-yes;
     }
 }
 
@@ -289,16 +289,16 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
         # Pipe voting:
         # -------------
         # Make sure the MethodDeclaration.invocant is cloned so we can start
-        # counting on its $.piped attribute.
+        # counting on its $.pipe-vote attribute.
         self.walk($decl);
-        # $.piped > 0 means it will get piped.
+        # $.pipe-vote > 0 means it will get piped.
         without $decl.pipe-vote {
-            $decl.pipe-vote = 1;
+            $decl.start-pipe-vote;
         }
-        # So if every piped-- here is balanced by a ++ somewhere else
-        # then it will get piped.
-        $decl.pipe-vote--;
-
+        # If the the no vote here is balanced by a yes vote
+        # then it will get piped. Any further no votes will mean
+        # no piping (only the first yes vote is counted).
+        $decl.vote-pipe-no;
     }
 
 }
@@ -508,14 +508,6 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
         }
     }
     else {
-        # Is the call's invocant the $self of the method body we're in?
-        if (my $invocant = ($THIS.invocant andthen.is-invocant))
-        # AND should the method we're calling be piped to?
-        and ($THIS.declaration.invocant andthen .piped)
-        {
-            # If so, vote for piping the method we're in's $self
-            $invocant.pipe-vote++;
-        }
         callsame;
     }
 }
@@ -551,6 +543,19 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
                 :$.os,
             )
         );
+    }
+
+    # When we get here all inlining and replacement is done.
+    # There's no chance of it disappearing anymore so time to vote.
+    if $THIS ~~ SAST::MethodCall {
+        # Is the call's invocant the $self of the method block we're in?
+        if (my $invocant = ($THIS.invocant andthen .is-invocant))
+           # AND should the method we're calling be piped to?
+           and ($THIS.declaration.invocant andthen .piped)
+        {
+            # If so, vote for piping the method we're in's $self
+            $invocant.vote-pipe-yes;
+        }
     }
 }
 
