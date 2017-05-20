@@ -108,7 +108,8 @@ multi method gen-name(SAST::PosParam:D $_) {
 }
 
 multi method gen-name(SAST::Invocant:D $_) {
-    SX::Bug.new(desc => 'Tried to compile a piped invocant', match => .match).throw if .piped;
+    .piped and
+      SX::Bug.new(desc => "Tried to compile a piped invocant ({.WHICH}, votes: {.pipe-vote})", match => .match).throw;
     if .signature.slurpy-param {
         callsame;
     } else {
