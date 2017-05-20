@@ -1,3 +1,38 @@
+## 0.0.28
+
+- Add `$*set-delimiter` and `§` quote metachar to refer to it (works
+  in '' and "")
+- Add `Pair` type
+- Add `List[Pair]` as our de-facto dictionary like object. It has:
+  - at-key
+  - set-key
+  - delete-key
+  - exists-key
+- Add `<...>` and `{...}` postcircumfixes as shortcuts for at-key/set-key
+- Add `JSON` class (WIP)
+- Add `j{...}` JSON quoting used like `j{ one => 1, two => 2, three => 3}`
+- Add `File.sha256`
+- Add `$*jq` for getting jq (currently pulls a binary from github)
+- Add `Str.substr-re` (WIP leading up to ~~ s/foo/bar/g etc)
+- New Feature: Perl 6 style C-style for `loop`
+``` perl6
+# e.g two at a time iteration
+my @a = <one two three four>;
+loop (my $i = 0; $i < @a; $i += 2) {
+    say @a[$i], @a[$i+1];
+}
+```
+- New Feature: Perl 6 Q{...} and ｢...｣ quotes
+- New Feature: Perl 6 "\x[...]" quotes and \a \b \f \r escape
+  sequences
+- New Feature: Slurpy positional parameters:
+``` perl6
+sub foo($a, $b, *@c) {
+    say "$a, $b, @c";
+}
+```
+
+
 ## 0.0.27
 
 - Add `DateTime.Bool` (which calls .valid)
