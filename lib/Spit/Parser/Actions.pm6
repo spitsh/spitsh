@@ -959,7 +959,7 @@ method quote:regex              ($/) { make-quote($/) }
 
 method angle-quote ($/) {
     my $val = $<str>.Str;
-    my SAST::CompileTimeVal @parts = $val.split(" ").map: {
+    my SAST::CompileTimeVal @parts = $val.split(" ").grep(?*).map: {
         do if try .Int ~~ Int {
             SAST::IVal.new(val => .Int);
         } else {
@@ -968,8 +968,10 @@ method angle-quote ($/) {
     };
     make do if @parts > 1 {
         SAST::List.new(|@parts);
-    } else {
+    } elsif @parts == 1 {
         @parts[0];
+    } else {
+        SAST::Empty.new;
     }
 }
 method quote:sym<eval> ($/) {
