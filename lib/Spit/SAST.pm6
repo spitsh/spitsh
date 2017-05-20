@@ -1547,9 +1547,10 @@ class SAST::For is SAST::Children {
 }
 
 class SAST::Empty does SAST {
-    method type { tAny }
+    method type { tListp($.ctx) }
     method stage2 ($) { self }
     method itemize { False }
+    method compile-time { () }
 }
 
 class SAST::Type does SAST {

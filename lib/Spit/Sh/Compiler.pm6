@@ -285,7 +285,7 @@ multi method cap-stdout(SAST:D $_) {
 }
 
 multi method loop-return(SAST:D $_) {
-    self.scaf('list'),' ',|self.arg($_);
+    self.scaf('list'),' ',|self.arg($_).itemize(.itemize);
 }
 
 multi method cond(SAST:D $_) {
@@ -586,7 +586,9 @@ multi method cond(SAST::CondReturn:D $_,|c) { self.cond(.val,|c) }
 multi method node(SAST::Ternary:D $_,:$tight) {
     # shouldn't this also be checking for Boo
     ('{ ' if $tight),
-    |self.cond(.cond),' && ',|self.compile-in-ctx(.on-true,:tight),' || ',|self.compile-in-ctx(.on-false,:tight),
+    |self.cond(.cond),
+    |(' && ',|self.compile-in-ctx(.on-true,:tight) unless .on-true.compile-time ~~ ()),
+    |(' || ',|self.compile-in-ctx(.on-false,:tight) unless .on-false.compile-time ~~ ()),
     ('; }' if $tight);
 }
 
@@ -852,6 +854,7 @@ method compile-in-ctx($node,*%_) {
 #!Empty
 multi method node(SAST::Empty:D $_) { Empty }
 multi method  arg(SAST::Empty:D $_) { dq '' }
+multi method cap-stdout(SAST::Empty:D $_) { ':' }
 
 #!Quietly
 multi method node(SAST::Quietly:D $_) {
@@ -1007,7 +1010,7 @@ multi method cap-stdout(SAST::Itemize:D $_) { self.cap-stdout($_[0]) }
 #!List
 multi method cap-stdout(SAST::List:D $_) {
     if .children > 1 {
-        self.scaf('list'),|.children.map({ ' ', |self.arg($_) }).flat;
+        self.scaf('list'),|.children.map({ self.space-then-arg($_) }).flat;
     } else {
         self.cap-stdout(.children[0]);
     }
