@@ -222,10 +222,9 @@ sub coerce(SAST:D $node, Spit::Type $target, :$desc) {
             # element type we can just bless this node into a List[of-the-appropriate type]
             if $target ~~ tList and $node.type !~~ tList {
                 my $elem-type := flattened-type($target);
-                my $list-type = $target === tList ?? tListp($elem-type) !! $target;
                 $node.stage2-node(
                     SAST::Blessed,
-                    class-type => $list-type,
+                    class-type => tListp($node.type),
                     coerce($node,$elem-type,:desc<list coercion>),
                 );
             }
