@@ -27,6 +27,6 @@ if $*run.contains('docker') {
 }
 
 if $*run.contains('helper') {
-    ok ${$*spit helper build}, 'helper build';
+    ok ${$*spit helper build >$*OUT}, 'helper build';
     ok DockerImg("spit-helper:$?spit-version"), 'helper exists';
 }
