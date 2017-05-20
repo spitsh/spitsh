@@ -1,6 +1,6 @@
 use Test;
 
-plan 38;
+plan 39;
 
 for <one two three> {
 
@@ -161,3 +161,5 @@ is ${ printf '%s-%s-%s' ($_ for <one two three>) }, 'one-two-three',
   'for flattens in slurpy context';
 
 pass "statement-mod for $_" for ^3;
+
+is ($_ * 2 if $_ > 2 for 1..5), <6 8 10>, 'grep-like for loop';
