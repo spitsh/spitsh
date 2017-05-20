@@ -374,7 +374,7 @@ sub compile-or-eval($command, @pos, %named) {
     }
 
     if $docker {
-        write-docker $docker,$promise,$res;
+        exit (write-docker $docker,$promise,$res).exitcode;
     } elsif %named<RUN> {
         exit (run 'sh','-c', $res).exitcode;
     } else {
@@ -431,6 +431,7 @@ sub write-docker($docker,$p,$shell) {
     $docker.write($shell.encode('utf8'));
     sleep 0.1; # RT#122722
     $docker.close-stdin;
-    await $p;
+    my $proc = await $p;
     note("writing output to docker ✔ {now - before}") if $*debug;
+    $proc;
 }
