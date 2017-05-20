@@ -195,8 +195,8 @@ role SAST::Assignable {
 }
 
 # makes sure $node is ~~ $type.primative or coerces it to it OR throws a type exception
-sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
-    my $target-prim = $type.primitive;
+sub coerce(SAST:D $node, Spit::Type $target, :$desc) {
+    my $target-prim = $target.primitive;
     X::AdHoc.new( payload => "{$node.^name} {try $node.gist} gave a literal Spit::Type type object").throw
         if $node.type === Spit::Type;
     X::AdHoc.new( payload => "{$node.^name} returned it's type as something that isn't a Spit::Type ({$node.type.^name}) ").throw
@@ -206,7 +206,8 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
         # all good
         $node;
     } else {
-        if $node.type.^find-spit-method($target-prim.^name) -> $meth {
+        if $node.type.^find-spit-method($target.^name) ||
+           $node.type.^find-spit-method($target-prim.^name) -> $meth {
             # We got a coercer method, wrap this node in it and call it
             my $call = SAST::MethodCall.new(
                 match => $node.match,
@@ -219,9 +220,9 @@ sub coerce(SAST:D $node,Spit::Type $type,:$desc) {
         else {
             # We need node to become a list. As long as the node matches the List's
             # element type we can just bless this node into a List[of-the-appropriate type]
-            if $type ~~ tList and $node.type !~~ tList {
-                my $elem-type := flattened-type($type);
-                my $list-type = $type === tList ?? tListp($elem-type) !! $type;
+            if $target ~~ tList and $node.type !~~ tList {
+                my $elem-type := flattened-type($target);
+                my $list-type = $target === tList ?? tListp($elem-type) !! $target;
                 $node.stage2-node(
                     SAST::Blessed,
                     class-type => $list-type,

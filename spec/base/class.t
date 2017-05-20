@@ -1,6 +1,6 @@
 use Test;
 
-plan 25;
+plan 27;
 
 {
     class Foo {
@@ -118,4 +118,14 @@ plan 25;
     }
 
     is Piping-Methods("foo\n").two.bytes, 4, ‘piping methods shouldn't lose newline’;
+}
+
+{
+    class Coercion-Priority is Any {
+        method File { "file" }
+        method Str  { "str"  }
+    }
+
+    is Coercion-Priority<foo>, "str", '.Str in Str context';
+    is File(Coercion-Priority<foo>), "file", '.File in File context';
 }
