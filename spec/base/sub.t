@@ -1,6 +1,6 @@
 use Test;
 
-plan 42;
+plan 43;
 
 {
     sub foo() {
@@ -185,4 +185,10 @@ plan 42;
     sub typed-slurpy(File *@a) { ${ printf @a >X } }
     typed-slurpy("one", "two", "three");
     pass 'typed slurpy call in Any context';
+}
+
+{
+    sub +primitive-typed-slurpy(Int *@a) { +@a }
+    is primitive-typed-slurpy(1,2,<3 4 5>,6), 6,
+      'primitive typed slurpy with list in arguments';
 }

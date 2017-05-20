@@ -859,10 +859,9 @@ class SAST::Call  is SAST::Children {
         my $last-valid;
         for @pos-params.kv -> $i,$param {
             if $param.slurpy {
-                my $elem-type = flattened-type($param.type);
                 until (my $arg := $pos-args.pull-one) =:= IterationEnd {
                     $arg .= do-stage2(
-                        $elem-type,
+                        $param.type,
                         :desc("argument slurped by {$param.spit-gist} " ~
                               "in {$.declaration.spit-gist} doesn't match its type")
                     );
