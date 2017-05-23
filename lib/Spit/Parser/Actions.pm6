@@ -111,12 +111,13 @@ method pragma:sym<use>($/) {
     make SAST::Empty.new;
 }
 
-method statement-prefix:sym<END> ($/) {
-    make SAST::PhaserBlock.new(block => $<block>.ast,stage => Spit-Phaser::END );
+
+method statement-prefix:phaser ($/) {
+    make SAST::PhaserBlock.new(block => $<blorst>.ast, stage => Spit-Phaser::{$<sym>.Str});
 }
 
 method statement-prefix:sym<quietly> ($/) {
-    make SAST::Quietly.new(block => $<block>.ast);
+    make SAST::Quietly.new(block => $<blorst>.ast);
 }
 
 method statement-mod-cond:sym<if> ($/) {
@@ -845,6 +846,17 @@ method cmd-block($/)    {
 
 method block($/)    {
     make $<blockoid>.ast
+}
+
+method blorst($/) {
+    make do with $<block> {
+        .ast
+    } else {
+        given $<statement>.ast {
+            when SAST::Stmts { $_ }
+            default { SAST::Stmts.new($_) }
+        }
+    }
 }
 
 method type ($/) {

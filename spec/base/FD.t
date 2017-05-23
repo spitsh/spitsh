@@ -15,7 +15,7 @@ plan 18;
 
     $fd.close;
     nok $fd.is-open,"closed after .close";
-    quietly { $fd.write("more text") }
+    quietly $fd.write("more text");
     is $tmp.slurp,"hello world","write after .close";
 }
 

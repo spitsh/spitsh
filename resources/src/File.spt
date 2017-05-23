@@ -234,7 +234,7 @@ augment File {
 
     method *cleanup {
         $?file-cleanup.push($self);
-        END { ${rm -rf @($?file-cleanup.slurp) $?file-cleanup } }
+        FILE-CLEAN ${rm -rf @($?file-cleanup.slurp) $?file-cleanup }
     }
 
     #| Returns a list of children that match the criteria.

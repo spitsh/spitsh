@@ -115,11 +115,13 @@ grammar Spit::Grammar is Spit::Lang {
 
     proto token statement-prefix {*}
 
-    rule statement-prefix:sym<END> {
-        <sym> [ <block> || <.expected("block after END")> ]
+    constant @phaser-names = eager Spit-Phaser::.keys;
+    rule statement-prefix:phaser {
+        $<sym>=@phaser-names <blorst>
     }
+
     rule statement-prefix:sym<quietly> {
-        <sym> [ <block> || <.expected("block after quietly")> ]
+        <.sym> <blorst>
     }
 
     proto token statement-mod-cond {*}
@@ -564,6 +566,9 @@ grammar Spit::Grammar is Spit::Lang {
         <?[{]> <.newpad> <blockoid> <.finishpad>
     }
 
+    token blorst {
+        [ <?[{]> <block> | <![;]> <statement> || <.expected: 'block or statement'> ]
+    }
 
     token type { <type-name>[<parameter-index> || <type-params> ]? }
 

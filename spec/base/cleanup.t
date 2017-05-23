@@ -7,7 +7,5 @@ plan 2;
     my $cleanup2 = File<spit-cleanup-test2.txt>.cleanup;
     .touch for $cleanup1, $cleanup2;
     ok $cleanup1 && $cleanup2, '.cleanup exists before';
-    END {
-        nok $cleanup1 && $cleanup2, '.cleanup was removed'
-    };
+    CHECK-CLEAN nok $cleanup1 && $cleanup2, '.cleanup was removed';
 }

@@ -32,5 +32,5 @@ use Test; plan 10;
     is $child2.find(name => /[ghi]$/).elems, 3*3*3,
     '.find(/../) found only those matching';
 
-    END { nok $child2.exists, 'tmp(:dir) was cleaned up' }
+    CHECK-CLEAN nok $child2.exists, 'tmp(:dir) was cleaned up';
 }

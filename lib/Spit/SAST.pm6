@@ -605,7 +605,7 @@ class SAST::Block is SAST::Stmts {
 }
 
 class SAST::PhaserBlock is SAST::Children {
-    has $.block is required;
+    has SAST::Stmts:D $.block is required;
     has Spit-Phaser $.stage is required;
 
     method stage2 ($) { $!block .= do-stage2(tAny,:!auto-inline); self }
@@ -1768,7 +1768,7 @@ class SAST::Case is SAST::Children is rw {
 }
 
 class SAST::Quietly is SAST::Children {
-    has SAST::Block:D $.block is required;
+    has SAST::Stmts:D $.block is required;
 
     method stage2($ctx) {
         $!block .= do-stage2($ctx,:!auto-inline);

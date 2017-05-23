@@ -2,7 +2,7 @@ enum AssignType <IMMUTABLE SCALAR-ASSIGN LIST-ASSIGN>;
 
 enum ASSOC <LEFT RIGHT>;
 
-enum Spit-Phaser <END EXIT>;
+enum Spit-Phaser <END FILE-CLEAN CHECK-CLEAN>;
 
 # Can't put this directly in intializer because of
 # "Cannot invoke this object (REPR: Null; VMNull)"

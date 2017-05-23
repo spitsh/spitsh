@@ -11,7 +11,7 @@ plan 18;
     nok $file,'File.Bool = File.exists (false)';
     $file.touch;
     ok $file.exists,'.touch creates the file';
-    END { nok $file.exists,"tempfiles should be rm by END" }
+    CHECK-CLEAN nok $file.exists,"tempfiles should be rm by END";
 }
 
 {
@@ -37,7 +37,7 @@ plan 18;
     $file.push('%s');
     is $file.slurp, "foobar\nbaz\n%s", ‘.push('%s')’;
 
-    END { nok $file.exists,"tempfiles should be rm by END" }
+    CHECK-CLEAN nok $file.exists,"tempfiles should be rm by END";
 }
 
 {
