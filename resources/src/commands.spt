@@ -59,3 +59,8 @@ constant Cmd $*jq = on {
     }
     Spit-Helper { 'jq' }
 }
+
+constant Cmd $*socat = on {
+    Any { Cmd<socat>.ensure-install }
+    Spit-Helper { 'socat' }
+}
