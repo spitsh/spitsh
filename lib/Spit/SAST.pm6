@@ -860,7 +860,9 @@ class SAST::Call  is SAST::Children {
             if $param.slurpy {
                 until (my $arg := $pos-args.pull-one) =:= IterationEnd {
                     $arg .= do-stage2(
-                        $param.type,
+                        # Str *$foo: puts arguments in Str context
+                        # Str *@foo: puts arguments in List[Str] context
+                        ($param.sigil eq '$' ?? $param.type.^params[0] !! $param.type),
                         :desc("argument slurped by {$param.spit-gist} " ~
                               "in {$.declaration.spit-gist} doesn't match its type")
                     );
@@ -1027,7 +1029,11 @@ class SAST::Param does SAST does SAST::Declarable {
     has $.signature is rw;
     has $.decl-type;
     has $.type is rw;
-    method TWEAK(|) { figure-out-var-type($!sigil, $!type, $!decl-type) }
+    has $.slurpy;
+    method TWEAK(|) {
+        # $ slurpies are still lists so pretend it's @ for type determination
+        figure-out-var-type(($!slurpy ?? '@' !! $!sigil), $!type, $!decl-type)
+    }
     method stage2 ($) { self }
     method symbol-type { symbol-type-from-sigil($!sigil) }
     method dont-depend { True }
@@ -1038,10 +1044,9 @@ class SAST::Param does SAST does SAST::Declarable {
 
 
 class SAST::PosParam is SAST::Param does SAST::ShellPositional {
-    has $.slurpy;
     has Int $.ord is rw;
 
-    method spit-gist { ('*' if $!slurpy) ~ "$.sigil$.name" }
+    method spit-gist { ('*' if $.slurpy) ~ "$.sigil$.name" }
     method shell-position {
         ~($.ord + (($.signature.invocant andthen !.piped) ?? 1 !! 0 ) + 1);
     }

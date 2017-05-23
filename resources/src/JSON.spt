@@ -20,11 +20,11 @@ sub j-array(JSON *@json){
     '[' ~ @json.join(',') ~ ']'
 }
 
-sub j-object(JSON *@json --> JSON) {
+sub j-object(JSON *$json --> JSON) {
     (
         '{' ~
-        (loop (my $j = 0; $j < @json; $j += 2) {
-            @json[$j] ~ ':' ~ @json[$j+1]
+        (loop (my $j = 0; $j < $json; $j += 2) {
+            $json[$j] ~ ':' ~ $json[$j+1]
         }).join(',') ~
         '}'
     )-->JSON;

@@ -1,6 +1,6 @@
 use Test;
 
-plan 8;
+plan 9;
 
 {
     is 'foo'.JSON, '"foo"', '"foo".json';
@@ -13,4 +13,13 @@ plan 8;
 
     is True.JSON, 'true', 'True';
     is False.JSON, 'false', 'False';
+}
+
+{
+    my $a = "foo";
+    my @b = <one two three>;
+
+    my $json = j{ :$a, :@b };
+    is $json, '{"a":"foo","b":["one","two","three"]}',
+      'j{ $a, @b }';
 }
