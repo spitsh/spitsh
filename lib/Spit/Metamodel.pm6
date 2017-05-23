@@ -136,7 +136,10 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
     }
 
     method reify(Mu \type,|) { type }
-
+    method reify-parameter(Mu \type, Mu \param) {
+        type.^parent-derived-from(param.^param-of)\
+            .^params[param.^param-pos];
+    }
     method needs-reification(Mu $) { False }
 }
 

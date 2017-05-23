@@ -1,6 +1,6 @@
 use Test;
 
-plan 27;
+plan 28;
 
 {
     class Foo[Type] {
@@ -64,12 +64,16 @@ plan 27;
 {
     class Parent[Param] {
         method *return-self { $self.chars }
+        method return-param(-->Param) { $self.bytes }
     }
 
-    class Child is Parent[Int] { }
+    class Child is Parent[Int] {
+        method call-parent(-->Int){ $self.return-param }
+    }
 
     is Parent[Int]<one>.return-self.WHAT, 'Parent[Int]', '* return .WHAT is parent';
     ok Parent[Int]<one>.return-self ~~ Parent[Int], '* return ~~ parent type';
     is Child<two>.return-self.WHAT, 'Child', '* return .WHAT on child is child';
     ok Child<two>.return-self ~~ Child, '* return ~~ child type';
+    is Child<three>.call-parent, 5, 'calling Parent which returns Parameter';
 }
