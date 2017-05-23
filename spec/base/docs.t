@@ -1,6 +1,6 @@
 use Test;
 
-plan 4;
+plan 6;
 
     #|{
     foo
@@ -27,7 +27,15 @@ if File</etc/foo.conf>.contains($outdated) {
 }
 class four{}
 
+#| one line
+class five {}
+
+# no doc comment
+class six {}
+
 ok one.WHY.contains("\nfoo"),'heredoc indenting alignment';
 ok two.WHY.ends-with('bar'),'ws removed from the end of #|{}';
 ok three.WHY.starts-with(qq{\nif True {\n    foo\n}}),'curlies inside block';
 ok four.WHY.contains("\{\n    note"),'non indented finishing curly';
+is five.WHY, 'one line', '#| comment';
+is six.WHY, "", '.WHY on something with no docs';

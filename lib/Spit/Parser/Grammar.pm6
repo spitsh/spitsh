@@ -59,7 +59,15 @@ grammar Spit::Grammar is Spit::Lang {
         | <.ws> <?before '}'|')'>
     }
 
-    token ENDSTMT { [<.ws> <?after \v\h*> { $*ENDSTMT = True }]? }
+    token ENDSTMT {
+        [
+            [
+                | \h* $$
+                | \h* <.comment> $$
+            ]
+            <.ws> { $*ENDSTMT = True }
+        ]?
+    }
 
     token statement {
         <!before <[\])}]> | $ >
@@ -109,11 +117,9 @@ grammar Spit::Grammar is Spit::Lang {
 
     rule statement-prefix:sym<END> {
         <sym> [ <block> || <.expected("block after END")> ]
-        <.ENDSTMT>
     }
     rule statement-prefix:sym<quietly> {
         <sym> [ <block> || <.expected("block after quietly")> ]
-        <.ENDSTMT>
     }
 
     proto token statement-mod-cond {*}
@@ -128,7 +134,6 @@ grammar Spit::Grammar is Spit::Lang {
         $<sym>=['if'|'unless'] <EXPR> ['->' <var-and-type('topic')>]? <block>
         ['' 'elsif' $<elsif>=( <EXPR> <block>)]*
         ['else' $<else>=<.block>]?
-        <.ENDSTMT>
     }
     rule statement-control:sym<loop> {
         <sym> $<loop-spec>=<.wrap: '(', ')', 'loop specification', rule {
@@ -137,22 +142,18 @@ grammar Spit::Grammar is Spit::Lang {
             $<incr>=<.EXPR>?
          }>?
         <block>
-        <.ENDSTMT>
     }
 
     rule statement-control:sym<for> {
         <sym> <list> ['->' <var-and-type>]? <block>
-        <.ENDSTMT>
     }
 
     rule statement-control:sym<while> {
         $<sym>=['while'|'until'] <EXPR> ['->' <var-and-type('topic')>]? <block>
-        <.ENDSTMT>
     }
 
     rule statement-control:sym<given> {
         <sym> <EXPR> <block>
-        <.ENDSTMT>
     }
 
     rule statement-control:sym<when> {
@@ -162,21 +163,18 @@ grammar Spit::Grammar is Spit::Lang {
             <.sym>
             [
                 <EXPR> <block>
-                <.ENDSTMT>
                 <.eat-terminator>
                 ||
                 <.invalid('when statement')>
             ]
             |
             'default' <block>
-            <.ENDSTMT>
             <.eat-terminator>
         )+
     }
 
     rule statement-control:sym<on> {
         <on-switch>
-        <.ENDSTMT>
     }
 
     proto token declaration {*}
@@ -198,7 +196,6 @@ grammar Spit::Grammar is Spit::Lang {
         <.declare-class-params>
         <blockoid>
         <.finishpad>
-        <.ENDSTMT>
     }
 
     token old-class { <type> }
@@ -211,7 +208,6 @@ grammar Spit::Grammar is Spit::Lang {
         <.declare-class-params>
         <blockoid>
         <.finishpad>
-        <.ENDSTMT>
     }
 
     rule new-enum-class { <type-name> }
@@ -221,7 +217,6 @@ grammar Spit::Grammar is Spit::Lang {
         :my $*DECL = $*CLASS;
         <.attach-pre-doc>
         <trait>* <block>
-        <.ENDSTMT>
     }
 
     proto token trait {*}
@@ -260,7 +255,6 @@ grammar Spit::Grammar is Spit::Lang {
         <trait>*
         [ <on-switch> || <cmd-blockoid> || <.expected("on switch or block to define routine")>]
         <.finishpad>
-        <.ENDSTMT>
     }
 
     token longarrow {['-->'| '⟶']}
@@ -379,7 +373,7 @@ grammar Spit::Grammar is Spit::Lang {
     proto token twigil {*}
     token twigil:sym<*> { <sym> }
     token twigil:sym<?> { <sym> }
-    token term:block { <block> <.ENDSTMT> }
+    token term:block { <block>  }
     token term:sym<self>  {
         <sym>
         { SX.new(message => 'Use of Perl 6 sytle invocant. In Spit use ‘$self’').throw }
@@ -554,10 +548,11 @@ grammar Spit::Grammar is Spit::Lang {
     # and a <.finishpad> after
     token blockoid {
         $<statementlist>=<.wrap: '{','}','block', token { <R=.statementlist> }>
+        <.ENDSTMT>
     }
 
     token cmd-blockoid {
-        | <cmd>
+        | <cmd> <.ENDSTMT>
         | <blockoid>
     }
 
@@ -722,12 +717,18 @@ grammar Spit::Grammar is Spit::Lang {
     token ws {
         [
             | \s+
-            | '#'[<doc-comment>|| \N* ]
+            | <comment>
         ]*
     }
 
-    token doc-comment {
-        '|' [
+    proto token comment {*}
+
+    token comment:sym<#> {
+        '#' {} \N*
+    }
+
+    token comment:sym<#|> {
+        '#|' [
               || $<doc>=<.doc-bracket>
               || ' '? $<doc>=(\N* { $/.make(SpitDoc.new()) })
             ]
