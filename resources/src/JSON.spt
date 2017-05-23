@@ -29,3 +29,9 @@ sub j-object(JSON *$json --> JSON) {
         '}'
     )-->JSON;
 }
+
+augment List[JSON] {
+    method *sort($key) {
+        $self.${$*jq -rcs "sort_by(.$key)|.[]"}
+    }
+}
