@@ -1333,6 +1333,7 @@ class SAST::List is SAST::MutableChildren {
     method elem-type { flattened-type(self.type) }
 
     method stage2($ctx) {
+        return self.make-new(SAST::Empty).do-stage2($ctx) unless @.children;
         $_ .= do-stage2($ctx ~~ tList ?? $ctx !! tStr) for @.children;
         self;
     }
