@@ -355,7 +355,11 @@ sub compile-or-eval($command, @pos, %named) {
     }
     orwith %named<in-helper> {
         %named<opts><os> = Spit::LateParse.new(val => 'OS<spit-helper>');
-        start-docker $helper-image, :mount-docker-socket, |%named;
+        if docker-image-exists($helper-image) {
+            start-docker $helper-image, :mount-docker-socket, |%named;
+        } else {
+            die "$helper-image doesn't exist. Run `spit helper build` to create it";
+        }
     }
 
     my $res = try given $command {
@@ -394,6 +398,10 @@ sub cleanup-containers {
             exit(0);
         }
     }
+}
+
+sub docker-image-exists($name) {
+    run('docker', 'image', 'inspect', $name,:!out).exitcode == 0;
 }
 
 sub start-docker($image is copy, :$mount-docker-socket, *%) {
