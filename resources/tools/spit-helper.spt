@@ -7,12 +7,13 @@ constant $build = eval(os => $*build-os){
     say ${ $*git --version };
     Pkg<jq>.install;
     say ${ $*jq --version };
-    $*pkglist-path.remove;
+    say ${ $*ssh -V };
+    say ${ $*socat -V };
 };
 
 given Docker.tmp('alpine', :mount-socket) {
     .copy($*docker.path, $*docker.path);
-    note "running build script";
+    note "exec()ing helper build script in container";
     ok .exec($build), 'build script ran successfully';
     if .commit("spit-helper", :$*tag) {
         say "built $_";
