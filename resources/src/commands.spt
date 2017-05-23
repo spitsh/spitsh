@@ -25,10 +25,22 @@ constant Cmd $*gcc-make = on {
     Alpine { Pkg<gcc make libc-dev>.install;    'make' }
 }
 
+
+constant Pkg $*Pkg-openssh-client = on {
+    Alpine { 'openssh-client'  }
+    Debian { 'openssh-client'  }
+    RHEL   { 'openssh-clients' }
+}
+
 constant Cmd $*ssh = on {
-    Alpine { Pkg<openssh-client>.ensure-install; 'ssh' }
+    Any {
+        Cmd<ssh> or
+          $*Pkg-openssh-client.install && 'ssh';
+    }
     Spit-Helper { 'ssh' }
 }
+
+constant Cmd $*ssh-keygen = ($*ssh; 'ssh-keygen');
 
 constant $*jq-repo = GitHubRepo<stedolan/jq>;
 
