@@ -963,6 +963,10 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
         if not $.declaration.static and $is-type and not $.invocant.ostensible-type.enum-type {
             SX.new(message => q|Instance method called on a type.|,:$.match).throw;
         }
+
+        if not $is-type and $*no-pipe and (my $outer-invocant = $.invocant.is-invocant) {
+            $outer-invocant.cancel-pipe-vote;
+        }
         callsame;
     }
 

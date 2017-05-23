@@ -1,6 +1,6 @@
 use Test;
 
-plan 39;
+plan 40;
 
 for <one two three> {
 
@@ -145,16 +145,21 @@ for 4,5 {
 }
 
 {
-    # Testing that this method don't turn into a piped command
+    # Testing that these method don't get piped
     class BadPipe {
         method ~bad-pipe-for {
             for <1 2 3> {
                 $self.${grep $_};
             }
         }
-        "";
+        method ~bad-pipe-method-for {
+            for <1 2 3> {
+                $self.uc;
+            }
+        }
     }
     is BadPipe<123>.bad-pipe-for, <123 123 123>, 'invocant pipe in for block';
+    is BadPipe<foo>.bad-pipe-method-for, <FOO FOO FOO>, 'pipeable method in for block';
 }
 
 is ${ printf '%s-%s-%s' ($_ for <one two three>) }, 'one-two-three',
