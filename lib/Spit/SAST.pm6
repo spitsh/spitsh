@@ -502,7 +502,7 @@ class SAST::ConstantDecl is SAST::VarDecl {
     method assign-type { IMMUTABLE }
 }
 
-class SAST::Stmts is SAST::MutableChildren {
+class SAST::Stmts is SAST::MutableChildren does SAST::Dependable {
     has Bool:D $.auto-inline is rw = True;
 
     method stage2($ctx,:$desc,:$loop,:$!auto-inline = True) is default {
@@ -552,7 +552,7 @@ class SAST::Stmts is SAST::MutableChildren {
     method itemize { self.last-stmt  andthen .itemize or False }
 }
 
-class SAST::Block is SAST::Stmts does SAST::Dependable {
+class SAST::Block is SAST::Stmts {
     has @.symbols;
     has $.outer is rw;
 

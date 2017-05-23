@@ -1,4 +1,4 @@
-plan 6;
+plan 8;
 
 use file<spec/base/lib/SomeModule.spit>;
 use Test;
@@ -10,3 +10,6 @@ is $assign-to-block,'assign to block','export a constant assigned to a block';
 
 is $assign-to-block-inlineable,'inlineable assignment','exported constant assigned to inlineable block';
 is $inline-canary,'win','side effects of inlined block still happened';
+
+is $assign-to-parens, 'parens assignment',' = (...;...)';
+ok $parens-canary, '($canary=True;...)';

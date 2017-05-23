@@ -17,3 +17,9 @@ constant $assign-to-block-inlineable is export  = {
     $inline-canary = "win";
     "inlineable assignment";
 }
+
+my $parens-canary is export = False;
+constant $assign-to-parens is export = (
+    $parens-canary = True;
+    "parens assignment";
+);
