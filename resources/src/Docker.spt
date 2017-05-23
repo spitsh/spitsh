@@ -27,9 +27,9 @@ augment Docker {
     }
     static method install-cli(-->File) {
         my $url = Docker.latest-build-tgz-url;
-        note "getting latest build from $url";
+        note "Getting latest docker build from $url";
         my $docker-dir = $url.get.extract.cleanup;
-        note "installing to $*docker-install-cli-path";
+        note "Installing to $*docker-install-cli-path";
         $docker-dir.add('docker').move-to($*docker-install-cli-path);
         $*docker-install-cli-path;
     }
