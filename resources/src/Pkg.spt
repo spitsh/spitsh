@@ -44,10 +44,10 @@ class Pkg {
     static method ?check-update {
         my $last-updated = Pkg.last-updated;
         if !$last-updated || now().posix - $last-updated.posix > $*pkglist-stale {
-            note "Updating pkglist because it " ~ (
+            note "Updating package list because it " ~ (
                 $last-updated
                   ?? "was last updated at $last-updated"
-                  !! ‘doesn't exist’
+                  !! "doesn't exist at $*pkglist-path"
             );
             Pkg.update-pkglist;
         }
