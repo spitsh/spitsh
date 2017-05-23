@@ -18,10 +18,14 @@ my @/;
    say <one two three> ~~ Str; #true
 }
 augment Str {
-    #| Prints the string to stdout
-    method say { say $self }
-    #| Prints the string to stderr
-    method note { note $self }
+    #| Writes string to `$*OUT` followed by a newline if it doesn't
+    #| end in one already.
+    method say { $self.${awk '{print}' >$*OUT} }
+    #| Writes string to $*ERR followed by a newline if it doesn't end
+    #| in one already.
+    method note { $self.${awk '{print}' >$*ERR} }
+    #| Writes string to `$*OUT`.
+    method print { $self.${ >$*OUT } }
     #| Returns an uppercase version of the string
     method ~uc    { $self.${tr '[:lower:]' '[:upper:]'} }
     #| Returns an lowercase version of the string
