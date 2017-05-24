@@ -124,6 +124,10 @@ grammar Spit::Grammar is Spit::Lang {
         <.sym> <blorst>
     }
 
+    rule statement-prefix:sym<start> {
+        <.sym> <blorst>
+    }
+
     proto token statement-mod-cond {*}
     rule statement-mod-cond:sym<if> { $<sym>=['if'|'unless'] <EXPR> }
 

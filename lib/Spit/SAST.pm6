@@ -1780,6 +1780,19 @@ class SAST::Quietly is SAST::Children {
     method children { $!block, }
 }
 
+class SAST::Start is SAST::Children {
+    has SAST::Stmts:D $.block is required;
+
+    method stage2($ctx) {
+        $!block .= do-stage2(tAny,:!auto-inline);
+        self;
+    }
+
+    method type { tPID }
+
+    method children { $!block, }
+}
+
 class SAST::Doom does SAST {
     has SX $.exception is required;
 

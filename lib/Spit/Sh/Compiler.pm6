@@ -216,13 +216,12 @@ method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
 }
 
 method maybe-oneline-block(@compiled) {
-    if @compiled.first(/\n/) {
-        "\{\n",|@compiled,"\n$*pad\}";
+    my $compiled = @compiled.join;
+    if $compiled.contains("\n") {
+        "\{\n", $compiled,"\n$*pad\}";
     } else {
-        while @compiled and @compiled[0] ~~ /^\s*$/ {
-            @compiled.shift;
-        }
-        '{ ', |@compiled,'; }';
+        $compiled ~~ s/^\s+//;
+        '{ ', $compiled, (';' unless $compiled.ends-with('&')),' }';
     }
 }
 
@@ -368,6 +367,10 @@ multi method compile-assign($var,SAST::Call:D $call) {
     } else {
         nextsame;
     }
+}
+
+multi method compile-assign($var, SAST::Start:D $start) {
+    |self.node($start),' ',self.gen-name($var),'=$!';
 }
 
 multi method int-expr(SAST::Var:D $_) {
@@ -861,6 +864,15 @@ multi method cap-stdout(SAST::Empty:D $_) { ':' }
 #!Quietly
 multi method node(SAST::Quietly:D $_) {
     |self.node(.block,:curlies),' 2>', self.null;
+}
+
+#!Start
+multi method node(SAST::Start:D $_) {
+    |self.node(.block, :curlies), ' &'
+}
+
+multi method cap-stdout(SAST::Start:D $_) {
+    |self.node($_), ' ', self.scaf('e'),' $!';
 }
 
 #!Neg

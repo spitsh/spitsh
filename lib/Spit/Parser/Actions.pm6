@@ -120,6 +120,10 @@ method statement-prefix:sym<quietly> ($/) {
     make SAST::Quietly.new(block => $<blorst>.ast);
 }
 
+method statement-prefix:sym<start> ($/) {
+    make SAST::Start.new(block => $<blorst>.ast);
+}
+
 method statement-mod-cond:sym<if> ($/) {
     my $expr = $<EXPR>.ast;
     $expr = SAST::Neg.new($expr) if $<sym>.Str eq 'unless';
