@@ -12,4 +12,16 @@ augment PID {
     method ?kill($signal) {
         ${kill "-$signal" $self};
     }
+
+    method ?term { $self.kill('TERM') }
+
+    method wait { $self-->List[PID].wait }
+}
+
+sub wait(PID *@pids) {
+    ${wait @pids}
+}
+
+augment List[PID] {
+    method wait { wait @$self }
 }
