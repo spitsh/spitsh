@@ -1,6 +1,6 @@
 use Test;
 
-plan 44;
+plan 38;
 
 {
     ok "0","'0' is true";
@@ -47,25 +47,6 @@ plan 44;
     my $str = "abc";
     my @str = <a b c>;
     is $str.split(""),@str,"split on ''";
-}
-
-{
-    my $str = "food";
-    is $str.subst('o','e'),"feod",".subst replaces first occurrence";
-    is $str.subst('o','e',:g),"feed",'.subst(:g), replaces all ocurrences';
-}
-
-{
-    # use a carat because we use RS=^$ which won't work everywhere.
-    my $nl-str = "foo\n^bar\nbaz";
-    is $nl-str.subst("oo\n^ba","ood\n\nca"),"food\n\ncar\nbaz",'.subst with \\n';
-}
-
-{
-    my $a = "aaZaa";
-    is $a.subst("a","aa"), 'aaaZaa', 'relpace a with aa';
-    is $a.subst("a", "aa", :g), 'aaaaZaaaa', 'replace a with aa :g';
-    is $a.subst("aa", "a", :g), 'aZa', 'replace aa with a :g';
 }
 
 {
