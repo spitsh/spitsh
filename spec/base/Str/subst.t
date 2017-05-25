@@ -1,5 +1,5 @@
 use Test;
-plan 9;
+plan 10;
 
 {
     my $str = "food";
@@ -25,4 +25,5 @@ plan 9;
     is $b.subst('12','', :g), '3434', 'replace 2 chars with 0';
     is $b.subst('123','', :g), '44', 'replace 3 chars with 0';
     is $b.subst('123','6', :g), '6464','replace 3 chars with 1';
+    is $b.subst('34','', :g), '1212', 'replace 2 chars with "" not at the start';
 }
