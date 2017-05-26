@@ -192,11 +192,12 @@ method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
     my @run;
 
     if $one-block and not @END {
-        @compiled.append: self.maybe-oneline-block:
+        @compiled.append: |self.maybe-oneline-block(
             [
                 |(|@BEGIN,"\n" if @BEGIN)
                 ,|@MAIN
-            ];
+            ]
+        ), "\n";
     } else {
         for :@BEGIN,:@MAIN {
             if .value {
