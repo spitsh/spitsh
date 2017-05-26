@@ -1,3 +1,11 @@
+sub kill($signal, PID *@pids) {
+    ${kill "-$signal" @pids}
+}
+
+sub wait(PID *@pids) {
+    ${wait @pids}
+}
+
 #| The PID class represents an integer process ID.
 augment PID {
     #| In Bool context the PID returns the result of `.exists`
