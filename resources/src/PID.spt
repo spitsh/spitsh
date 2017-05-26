@@ -40,4 +40,5 @@ augment PID {
 
 augment List[PID] {
     method wait { wait @$self }
+    method kill($signal) { kill $signal, @$self }
 }
