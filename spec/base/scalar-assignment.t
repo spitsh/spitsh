@@ -1,6 +1,6 @@
 use Test;
 
-plan 10;
+plan 11;
 my $a;
 $a = "init";
 {
@@ -43,4 +43,15 @@ is $a,"init","lexical scope works";
 
     $str .= ${sed 's/e/E/g' };
     is $str, 'fEE', '.= ${ ... }';
+}
+
+{
+    my $long = "
+foo
+bar
+baz
+";
+
+
+    ok $long.ends-with("\n"),‘heredocable assignment doesn't lose \n’;
 }

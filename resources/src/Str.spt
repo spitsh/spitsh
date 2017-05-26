@@ -120,10 +120,18 @@ constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
         }
     }
     method ?ends-with(#|[True if the string ends-with this]$ends-with) {
-        $self.${
-            awk :T($ends-with) -v 'RS=^$'
-           '{T=ENVIRON["T"];exit(index($0,T)!=length($0)-length(T)+1)}'
-        }
+constant $awk-ends-with =
+Q{END {
+  T=ENVIRON["T"]
+  while (i = index(substr($0,w + 1),T)){
+    if(i = length($0)-length(T)+1)
+      exit 0
+    w = i
+  }
+  exit 1
+}};
+
+        $self.${ awk :T($ends-with) -v 'RS=^$' $awk-ends-with }
     }
 
     #| Returns true if the the string matches the regex and sets the

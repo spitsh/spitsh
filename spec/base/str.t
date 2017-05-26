@@ -1,6 +1,6 @@
 use Test;
 
-plan 38;
+plan 34;
 
 {
     ok "0","'0' is true";
@@ -80,14 +80,6 @@ plan 38;
 {
     nok "".contains("a"), '"".contains("a")';
     ok "".contains(""), '"".contains("")';
-}
-
-{
-    my $str = "f.oo*b?ar";
-    ok $str.starts-with("f.oo"),'starts-with';
-    nok $str.starts-with("*f.oo"),'!starts-with';
-    ok $str.ends-with("b?ar"),'ends-with';
-    nok $str.ends-with("oar"),'!ends-with';
 }
 
 {
