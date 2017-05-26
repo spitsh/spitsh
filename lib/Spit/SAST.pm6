@@ -1547,7 +1547,7 @@ class SAST::For is SAST::Children {
         $!iter-var.do-stage2(tAny);
         $!block.declare: $!iter-var;
         my $*no-pipe = True;
-        $!block .= do-stage2($ctx.&flattened-type, :loop, :!auto-inline);
+        $!block .= do-stage2($ctx, :loop, :!auto-inline);
         self;
     }
 

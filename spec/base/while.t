@@ -1,6 +1,6 @@
 use Test;
 
-plan 27;
+plan 28;
 
 {
     my $i = 0;
@@ -135,4 +135,11 @@ class Foo is Int {
              }
          )
      }, 'one-two-three', 'while flattens in slurpy context';
+}
+
+{
+    my @c = <1 2 3>;
+    my $l = -1;
+    my Int @d = while ++$l < 3 { $l,@c };
+    is @d, <0 1 2 3 1 1 2 3 2 1 2 3>, 'while in List[Int] context';
 }

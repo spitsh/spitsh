@@ -1,6 +1,6 @@
 use Test;
 
-plan 5;
+plan 6;
 
 {
     my @a;
@@ -26,4 +26,12 @@ plan 5;
 {
     is ${printf '%s-%s-%s' (loop (my $k = 0; $k < 3; $k++) { $k*$k }) },
       '0-1-4', 'loop falttens in slurpy context';
+}
+
+{
+    my @c = <1 2 3>;
+    my Int @d = loop (my $l = 0; $l < 3; $l++) {
+        $l, @c;
+    }
+    is @d, <0 1 2 3 1 1 2 3 2 1 2 3>, 'loop in List[Int] context';
 }

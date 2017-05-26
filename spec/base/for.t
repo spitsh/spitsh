@@ -1,6 +1,6 @@
 use Test;
 
-plan 40;
+plan 41;
 
 for <one two three> {
 
@@ -168,3 +168,11 @@ is ${ printf '%s-%s-%s' ($_ for <one two three>) }, 'one-two-three',
 pass "statement-mod for $_" for ^3;
 
 is ($_ * 2 if $_ > 2 for 1..5), <6 8 10>, 'grep-like for loop';
+
+{
+    my @a = <1 2 3>;
+    my Int @b = for ^3 { $_, @a }
+    # This checks that a List[Int] doesn't get coerced to an Int
+    # in List[Int] context
+    is @b, <0 1 2 3 1 1 2 3 2 1 2 3>, 'for in List[Int] context';
+}
