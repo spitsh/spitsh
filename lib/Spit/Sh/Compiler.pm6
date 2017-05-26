@@ -1043,6 +1043,11 @@ multi method loop-return(SAST::List:D $_) {
 multi method arg(SAST::Pair:D $_) {
     self.concat-into-DQ([self.arg(.key),"\t",self.arg(.value)])
 }
+
+#!EvalArg
+multi method arg(SAST::EvalArg:D $_) {
+    "'{.placeholder}'"
+}
 #!Doom
 # If we try and compile Doom we're doomed
 multi method arg(SAST::Doom:D $_)  { .exception.throw }

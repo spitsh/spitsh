@@ -1700,6 +1700,13 @@ class SAST::NAME is SAST::MutableChildren {
     }
 }
 
+# For runtime args to eval
+class SAST::EvalArg does SAST {
+    has $.type is required;
+    has Str $.placeholder is required;
+    has SAST:D $.value is required;
+}
+
 class SAST::Eval is SAST::Children   {
     has %.opts;
     has SAST:D $.src is required;

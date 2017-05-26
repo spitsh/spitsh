@@ -30,11 +30,13 @@ has $!ENUMC-ACCEPTS;
 has $!ENUMC-NAME;
 has $!STR-BOOL;
 has $!STR-MATCH;
+has $!STR-SUBST-EVAL;
 
 method ENUMC-ACCEPTS { $!ENUMC-ACCEPTS //= tEnumClass.^find-spit-method: 'ACCEPTS' }
 method ENUMC-NAME    { $!ENUMC-NAME //= tEnumClass.^find-spit-method: 'name' }
 method STR-MATCHES   { $!STR-MATCH //= tStr.^find-spit-method: 'match' }
 method STR-BOOL      { $!STR-BOOL //= tBool.^find-spit-method: 'Bool' }
+method STR-SUBST-EVAL     { $!STR-SUBST-EVAL //= tStr.^find-spit-method: 'subst-eval' }
 
 method os {
     $!os ||= do {
@@ -347,33 +349,69 @@ multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
     callsame;
 }
 
+constant @eval-placeholders =
+"\c[
+bouquet, cherry blossom, white flower, rosette, rose, wilted flower, hibiscus,
+sunflower, blossom, tulip, kiss mark, heart with arrow, beating heart,
+broken heart, two hearts, sparkling heart, growing heart, blue heart, green heart ,
+yellow heart, purple heart, black heart, heart with ribbon, revolving hearts,
+heart decoration, love letter
+]".comb;
+
+
 multi method walk(SAST::Eval:D $THIS is rw) {
     my %opts = $THIS.opts;
     %opts<os> //= SAST::Type.new(class-type => $.os,match => $THIS.match);
 
+    my @placeholders = @eval-placeholders.pick(*);
 
-    # copy the old constant values into fresh SAST objects for use in the new
-    # compilation
-    for %opts.values <-> $opt {
+    for %opts.kv -> $name, $opt is rw {
         my $ct = $opt.compile-time;
         if  $ct or $ct.defined {
+            # copy the old constant values into fresh SAST objects for use in the new
+            # compilation with sastify
             $opt = sastify($ct, match => $opt.match);
         } else {
-            SX.new( match => $opt.match,
-                    message => "can't use non-compile time value as arg to eval").throw;
+            # Runtime value. We we compile an emoji placeholder characer which will
+            # be replaced with the runtime value later.
+            $opt = SAST::EvalArg.new(
+                type => $opt.type,
+                match => $opt.match,
+                placeholder => @placeholders.shift,
+                value => $opt,
+            )
         }
     }
 
     $ = (require Spit::Compile <&compile>);
-    $THIS .= stage3-node(
+    my $compiled = $THIS.stage3-node(
         SAST::SVal,
         val => compile(
             name => "eval_{$++}",
-            $THIS.src.val,:%opts,
+            $THIS.src.val,
+            :%opts,
             outer => $THIS.outer,
             :one-block,
         ),
     );
+
+    if list %opts.values.grep(SAST::EvalArg) -> @runtime-args {
+        for @runtime-args -> $rt-arg {
+           $compiled = $rt-arg.stage2-node(
+                SAST::MethodCall,
+                name => 'subst-eval',
+                declaration => self.STR-SUBST-EVAL,
+                match => $rt-arg.match,
+                $compiled,
+                pos => (
+                    $rt-arg.stage2-node(SAST::SVal, val => $rt-arg.placeholder),
+                    $rt-arg.value,
+                )
+            );
+        }
+        self.walk($compiled);
+    }
+    $THIS = $compiled;
 }
 
 multi method walk(SAST::Concat:D $THIS is rw) {

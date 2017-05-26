@@ -72,6 +72,10 @@ constant $subst-awk = 'BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
                   #|[Turns on global matching]Bool :$g){
         $self.${awk -v "g=$g" $subst-awk :T($target) :R($replacement)};
     }
+
+    method ~subst-eval($placeholder,$value) {
+        $self.subst($placeholder,$value.subst("'","'\\''"));
+    }
     #| Returns true if the string contains `$needle`.
     #|{
        say "Hello, World".contains('Wo'); #-> True
