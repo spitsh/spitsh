@@ -16,17 +16,27 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
             start {
                 start {
                     sleep 100;
+                    # ${true} are just here to be NOPs to force dash
+                    # busybox not to optimize away 'sh' processes by
+                    # exec(3)ing into the last command.
+                    ${true};
                 }
                 sleep 200;
+                ${true};
             }
             sleep 300;
+            ${true};
         }
-        start { sleep 400 }
+        start {
+            sleep 400;
+            ${true};
+        }
         sleep 500;
+        ${true};
     }
 
-    ok $pid.children == 2, '.children';
-    ok $pid.descendants == 4, '.descendants';
+    ok $pid.children == 3, '.children';
+    ok $pid.descendants == 9, '.descendants';
 
     # If you don't kill $pid as well you get zombies
     kill "TERM", $pid, $pid.descendants;
