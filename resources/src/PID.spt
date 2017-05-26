@@ -27,11 +27,8 @@ augment PID {
 
     method ?term { $self.kill('TERM') }
 
-    method wait { $self-->List[PID].wait }
-}
 
-sub wait(PID *@pids) {
-    ${wait @pids}
+    method wait { wait $self }
 }
 
 augment List[PID] {
