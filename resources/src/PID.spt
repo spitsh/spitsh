@@ -1,5 +1,5 @@
 sub kill($signal, PID *@pids) {
-    ${kill "-$signal" @pids}
+    ${kill "-$signal" @pids} if @pids;
 }
 
 sub wait(PID *@pids) {

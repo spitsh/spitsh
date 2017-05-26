@@ -1,6 +1,6 @@
 use Test;
 
-plan 10;
+plan 11;
 
 ok $?PID ~~ Int, 'PIDs are Ints';
 ok $?PID > 0, 'PID is greater than 0';
@@ -35,3 +35,6 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
     ok $pid.descendants == 0, '.descendants after killing';
 }
 
+{
+    is eval{ kill 'TERM' }.${sh *>~}, '', 'no error message when called with no arguments';
+}
