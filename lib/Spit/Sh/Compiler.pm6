@@ -1051,7 +1051,7 @@ multi method arg(SAST::NAME:D $_) {
     if try self.gen-name($_[0]) -> $name {
         escape $name;
     } else {
-        SX.new(message => ‘value doesn't have name’, node => $_[0]).throw;
+        SX.new(message => 'value doesn\'t have name', node => $_[0]).throw;
 
     }
 }
