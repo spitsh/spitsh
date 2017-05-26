@@ -606,8 +606,11 @@ method inline-value($inner,$outer,$_ is raw) {
         return Nil if $_ === $decl; # don't wanna inline a variable declaration
         if $decl ~~ SAST::PosParam {
             if $decl.slurpy {
-                my $reference-node = $outer.pos[$decl.ord] || $outer;
-                $reference-node.stage3-node: SAST::List, |$outer.pos[$decl.ord..*];
+                with $outer.pos[$decl.ord] {
+                    .stage3-node: SAST::List, |$outer.pos[$decl.ord..*];
+                } else {
+                    $outer.stage3-node: SAST::Empty;
+                }
             } else {
                 $outer.pos[$decl.ord];
             }
