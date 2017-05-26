@@ -21,6 +21,10 @@ augment PID {
         ${kill "-$signal" $self};
     }
 
+    method ?kill-group($signal){
+        ${kill $signal "-$self"}
+    }
+
     method ?term { $self.kill('TERM') }
 
     method wait { $self-->List[PID].wait }
