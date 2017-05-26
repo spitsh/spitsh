@@ -20,9 +20,9 @@ is eval{
         say "three";
     }
     sleep 1;
-    $pid.term;
+    $pid.kill('TERM');
     say "two";
-}.${sh}, <one two>, ‘kill on start's pid cancels it’;
+}.${sh}, <one two>, ‘.kill on start's pid cancels it’;
 
 
 is eval{
