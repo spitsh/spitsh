@@ -417,10 +417,10 @@ sub start-docker($image is copy, :$mount-docker-socket, *%) {
         ('-v', "$docker-socket:$docker-socket");
     };
 
-    # XXX: Docker runs things as PID 1. This is bad for shell scripts because
-    # you can't TERM signals to PID 1. So we do 'sh -c sh' to get a child PID.
-    # :;sh is a trick to get bash to start a new process.
-    my @args = 'docker','run',|$mount,'-i','--rm',$image,'sh', '-c', ':;sh';
+    # SEE: https://gist.github.com/LLFourn/70b70b7e26b5e57de7894eefee3c97e1
+    # For an explanation of this:
+    my @args = 'docker','run',|$mount,'-i','--rm',$image,'sh', '-c',
+      ‘mkfifo stdin; trap 'kill $!' TERM; trap 'rm stdin' EXIT; sh<stdin & cat>stdin; wait $!’;
     note "starting docker with {@args[1..*].gist}" if $*debug;
     my $docker = Proc::Async.new(|@args, :w);
     cleanup-containers();
@@ -431,7 +431,7 @@ sub start-docker($image is copy, :$mount-docker-socket, *%) {
 }
 
 sub exec-docker($container, *%) {
-    my @args = 'docker', 'exec', '-i', $container, 'sh', '-c', ':;sh';
+    my @args = 'docker', 'exec', '-i', $container, 'sh';
     note "starting docker with {@args[1..*].gist}" if $*debug;
     my $docker = Proc::Async.new(|@args, :w);
     my $p := $docker.start;
