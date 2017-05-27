@@ -1,6 +1,6 @@
 use Test;
 
-plan 18;
+plan 19;
 
 {
     my File $file .= tmp;
@@ -19,7 +19,7 @@ plan 18;
     ok $file.writable,'.writable';
     ok $file.w, '.w';
 
-    $file.write("foo");
+    is $file, $file.write("foo"), '.write returns $self';
 
     is $file.slurp,"foo",".slurp .write";
     is $file.size,3,'.size';

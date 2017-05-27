@@ -82,8 +82,8 @@ augment File {
     }
     #| Calls chmod(1) with the file as the last argument.
     #|{ .chmod(400) if File<foo.txt>.writeable }
-    method chmod(#|[The argument passed to chmod(1)]$mode) {
-        ${chmod $mode $self}
+    method *chmod(#|[The argument passed to chmod(1)]$mode) {
+        ${chmod $mode $self} ?? $self !! ()
     }
     #| Returns the name of the user that owns the file.
     method ~owner on {
@@ -136,14 +136,14 @@ augment File {
     #| Moves the file to another location. Overwrites pre-existing
     #| files at the destination location. Returns whether the move
     #| was completed successfully.
-    method ?move-to(#|[The path to move the file to] $destination) {
-        ${mv $self $destination}
+    method *move-to(#|[The path to move the file to] $destination) {
+        ${mv $self $destination} ?? $destination !! ()
     }
 
     #| Sets the file's contents to `$data`. If the file doesn't exist
     #| it will be created.
-    method write(#|[The string to write to the file] $data)  {
-        $data.${ > $self  }
+    method *write(#|[The string to write to the file] $data)  {
+        $data.${ > $self  } ?? $self !! ()
     }
 
     #| Returns true if the file contains the string
@@ -304,6 +304,15 @@ augment File {
             BusyBox ${sed -rni "\\§$regex§!\{p;b\n\};w/dev/stdout" $self}
         }
     }
+
+    method @filter(Regex $regex, $replacement, :$g) {
+        ${sed -rni "s§$regex§$replacement§{$g && 'g'}p" $self}
+    }
+
+    method @line-subst(Regex $regex, $replacement, :$g) {
+        ${sed -ri "s§$regex§$replacement§{$g && 'g'}" $self}
+    }
+
     method ~sha256 ${ sha256sum -b $self | awk '{print $1}' }
     method sha256-ok($sha256-expected, :$what) {
         my $sha256-got = $self.sha256;
