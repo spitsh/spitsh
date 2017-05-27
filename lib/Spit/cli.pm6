@@ -139,6 +139,9 @@ Options:
     Multiple container ids must be comma separated. The containers must
     already be running.
 
+  -h --in-helper
+    Run the tests in the spit-helper Docker image.
+
   -j --jobs=<number>
     The number of jobs that prove should run.
 
@@ -218,13 +221,14 @@ my class commands {
         compile($src, :$debug, :$target, :$opts, :$no-inline, name => "eval").gist;
     }
 
-    method prove(Str:D $path, :$in-docker, :$in-container,
+    method prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
                  :$mount-docker-socket, :$jobs, :$os, :$opts,
                  :$verbose
                 ) {
 
         my @runs = |($in-docker andthen .split(',').map: { "-d=$_" }),
-                   |($in-container andthen .split(',').map({"-D=$_"}));
+                   |($in-container andthen .split(',').map({"-D=$_"})),
+                   |($in-helper andthen '-h');
 
         for @runs {
             my @run =
@@ -288,8 +292,9 @@ sub do-main() is export {
                 %named<verbose> //= %named<v>;
                 my $in-docker = %named<in-docker> // %named<d>;
                 my $in-container = %named<in-container> // %named<D>;
-                $in-docker =  'debian' unless ($in-docker|$in-container) ~~ Str:D;
-                commands.prove(@pos[1], :$in-docker, :$in-container, |%named);
+                my $in-helper    = %named<in-helper> // %named<h>;
+                $in-docker =  'debian' unless ($in-docker|$in-container) ~~ Str:D or $in-helper;
+                commands.prove(@pos[1], :$in-docker, :$in-container, :$in-helper, |%named);
             }
             when 'helper' {
                 commands.helper(@pos[1]);
