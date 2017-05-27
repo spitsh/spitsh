@@ -1,0 +1,29 @@
+class Host is Str {
+
+    method ?connectable(Port $port, Int :$timeout) on {
+        Alpine {
+            ${nc $self $port -w $timeout -z >X}
+        }
+        GNU {
+            ${timeout $timeout bash -c "true >/dev/tcp/$self/$port" !>X}
+        }
+    }
+
+    static method *local { 'localhost' }
+
+    method ?wait-connectable(Port $port, Int :$timeout) {
+        my $total = 0;
+        while $total < $timeout and !$self.connectable($port, :timeout(1)) {
+            $total += 1;
+        }
+        $total < $timeout;
+    }
+
+    method ~read-port(Int $port) {
+        ${ $*socat -u "TCP:$self:$port" -}
+    }
+
+    method ~write-port(Int $port, $message) {
+        $message.${ $*socat - "TCP:$self:$port"};
+    }
+}

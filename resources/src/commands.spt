@@ -64,3 +64,12 @@ constant Cmd $*socat = on {
     Any { Cmd<socat>.ensure-install }
     Spit-Helper { 'socat' }
 }
+
+constant $*ss = on {
+    Debian { 'ss' }
+}
+
+constant $*netstat = on {
+    RHEL { Pkg<net-tools>.ensure-install; 'netstat' }
+    Alpine { 'netstat' }
+}

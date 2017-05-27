@@ -56,6 +56,8 @@
         "src/Date.spt",
         "src/JSON.spt",
         "src/Pair.spt",
+        "src/Host.spt",
+        "src/Port.spt",
         "core-lib/Test.spt",
         "tools/harness.spt",
         "tools/spit-helper.spt"
