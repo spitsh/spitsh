@@ -1,6 +1,6 @@
 class Host is Str {
 
-    method ?connectable(Port $port, Int :$timeout) on {
+    method ?connectable(Port $port, Int :$timeout = 1) on {
         Alpine {
             ${nc $self $port -w $timeout -z >X}
         }
@@ -11,9 +11,9 @@ class Host is Str {
 
     static method *local { 'localhost' }
 
-    method ?wait-connectable(Port $port, Int :$timeout) {
+    method ?wait-connectable(Port $port, Int :$timeout = 60) {
         my $total = 0;
-        while $total < $timeout and !$self.connectable($port, :timeout(1)) {
+        while $total < $timeout and !$self.connectable($port) {
             $total += 1;
         }
         $total < $timeout;
