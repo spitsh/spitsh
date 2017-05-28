@@ -315,12 +315,12 @@ grammar Spit::Grammar is Spit::Lang {
         )* % ','
     }
 
-    rule param {
-        $<pos>=[
-            <type>? $<slurpy>='*'?<var>
-            ]
-        ||
-        $<named>=[<type>? ':'<var>]
+    token param {
+        [
+            | $<pos>=[ <type>? <.ws> $<slurpy>='*'?<var> ]
+            | $<named>=[ <type>? <.ws> ':'<var> ]
+        ]
+        [$<optional>='?'| <.ws> '=' <.ws> $<default>=<.EXPR($gt-comma)>]?
     }
 
     rule check-prec($min-precedence,$term) {

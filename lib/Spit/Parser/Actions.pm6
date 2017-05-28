@@ -427,6 +427,8 @@ method param ($/) {
             name => $<var><name>.Str,
             sigil => $<var><sigil>.Str,
             |(decl-type => .ast with $<type>),
+            |(default => .ast with $<default>),
+            optional => ?$<optional>,
             slurpy => ?$<slurpy>.Str
         )
     } else {
@@ -434,6 +436,8 @@ method param ($/) {
             name => $<var><name>.Str,
             sigil => $<var><sigil>.Str,
             |(decl-type => .ast with $<type>),
+            |(default => .ast with $<default>),
+            optional => $<optional>,
         )
     }
 }

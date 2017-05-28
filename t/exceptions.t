@@ -2,7 +2,7 @@ use Spit::Compile;
 use Test;
 use Spit::Exceptions;
 use Terminal::ANSIColor;
-plan 12;
+plan 13;
 
 my $name = 'syntax-tests';
 throws-like { compile( '"', :$name) },
@@ -45,6 +45,9 @@ throws-like { compile('sub foo($a,*@b) { }; foo()',:$name)},
               SX::BadCall::WrongNumber, "too few arguments with slurpy",
               gist => *.&colorstrip.contains('foo($a↩)'),
               message => *.contains('at least 1');
+
+throws-like { compile('sub foo(Int $a = "foo"){ }', :$name) },
+              SX::TypeCheck, "default value incompatible with parameter default type";
 
 throws-like { compile('sub foo($a,$b) { }; foo("foo","bar","baz")',:$name) },
               SX::BadCall,"too many arguments",

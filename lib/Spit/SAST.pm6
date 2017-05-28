@@ -4,32 +4,9 @@ need Spit::Exceptions;
 use Spit::Constants;
 need DispatchMap;
 need Spit::SpitDoc;
+use Spit::Stage2-Util;
 
 use Spit::Metamodel;
-
-sub class-by-name($name) {
-    with $*SETTING.lookup(CLASS,$name) {
-        .class
-    } else {
-        die "internal error: class $name used before it's declared";
-    }
-}
-
-# A pair where the value has container we can mess with
-sub cont-pair($a,$b is copy) { $a => $b }
-
-sub tListp(Spit::Type \elem-type) {
-    elem-type ~~ tList ?? elem-type !! tList.^parameterize(elem-type);
-}
-sub tPairp(Spit::Type \key, \value) {
-    tPair.^parameterize(key,value);
-}
-
-sub lookup-type($name,:@params, Match :$match) is export {
-    my $type := $*CURPAD.lookup(CLASS,$name, :$match).class;
-    $type := $type.^parameterize(|@params) if @params;
-    $type;
-}
 
 class SAST::IntExpr   {...}
 class SAST::Var       {...}
@@ -56,6 +33,12 @@ class SAST::ACCEPTS {...}
 class SAST::Itemize {...}
 
 role SAST::Force {...}
+
+sub lookup-type($name,:@params, Match :$match) is export {
+    my $type := $*CURPAD.lookup(CLASS,$name, :$match).class;
+    $type := $type.^parameterize(|@params) if @params;
+    $type;
+}
 
 sub sastify($_, :$match!) is export {
     when Associative { .map: { .key => sastify(.value) } }
@@ -241,37 +224,6 @@ sub coerce(SAST:D $node, Spit::Type $target, :$desc) {
     }
 }
 
-# The type of the thing if it were flattened out
-sub flattened-type(Spit::Type $_) {
-    when tList {
-        if .^parent-derived-from(tList) -> $parameterized {
-            $parameterized.^params[0];
-        } else {
-            tStr;
-        }
-    }
-    default { $_ }
-}
-
-sub type-from-sigil(Str:D $sigil --> Spit::Type) {
-    do given $sigil {
-        when '$' { tStr }
-        when '@' { tList }
-        default { die "got bogus sigil '$sigil'" }
-    };
-}
-
-sub symbol-type-from-sigil(Str:D $_ --> SymbolType) {
-    when '$' { SCALAR }
-    when '@' { ARRAY  }
-    default { die "got boigus sigil '$_'" }
-}
-
-sub itemize-from-sigil(Str:D $_ --> Bool:D) {
-    when '@' { False }
-    default { True }
-}
-
 # XXX: why are there two? This can be done better.
 role SAST::Dependable {
     has $.referenced is rw;
@@ -431,30 +383,6 @@ class SAST::Var is SAST::Children does SAST::Assignable {
     method desc { "Assignment to $.spit-gist" }
 
     method itemize { itemize-from-sigil($!sigil) }
-}
-
-sub figure-out-var-type($sigil, $type is rw, \decl-type, :$assign is raw, :$desc) {
-    my $sigil-type := type-from-sigil($sigil);
-    if decl-type {
-        $type = do if $sigil-type === tList {
-            tListp(decl-type);
-        } else {
-             decl-type;
-        };
-
-        $assign .= do-stage2($type,:$desc) if $assign;
-    } else {
-        $type = do if $assign {
-            $assign .= do-stage2($sigil-type, :$desc);
-            $assign.type;
-        } else {
-            if $sigil-type === tList {
-                tListp(tStr);
-            } else {
-                $sigil-type;
-            }
-        }
-    }
 }
 
 class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
@@ -850,67 +778,8 @@ class SAST::Call  is SAST::Children {
     has Str:D $.name is required;
 
     method stage2($ctx) is default {
-        my $signature := self.gen-sig;
-        my (@pos-params,%named-params) := ($signature.pos,$signature.named);
-        my $slurpy = @pos-params ?? @pos-params[*-1].slurpy !! False;
-
-        my $pos-args := @!pos.iterator;
-        my $last-valid;
-        for @pos-params.kv -> $i,$param {
-            if $param.slurpy {
-                until (my $arg := $pos-args.pull-one) =:= IterationEnd {
-                    $arg .= do-stage2(
-                        # Str *$foo: puts arguments in Str context
-                        # Str *@foo: puts arguments in List[Str] context
-                        ($param.sigil eq '$' ?? $param.type.^params[0] !! $param.type),
-                        :desc("argument slurped by {$param.spit-gist} " ~
-                              "in {$.declaration.spit-gist} doesn't match its type")
-                    );
-                }
-            } else {
-                if (my $arg := $pos-args.pull-one) !=:= IterationEnd {
-                    $arg .= do-stage2(
-                        $param.type,
-                        :desc("argument {$i + 1} to {$.declaration.spit-gist} doesn't match its type")
-                    );
-                    $last-valid := $arg;
-                } else {
-                    my @non-slurpy = @pos-params.grep(!*.slurpy);
-                    SX::BadCall::WrongNumber.new(
-                        :$.declaration,
-                        expected => +@non-slurpy,
-                        got => +@!pos,
-                        match => ($last-valid andthen .match or $.match),
-                        at-least => ?$signature.slurpy-param,
-                        arg-hints => @non-slurpy[+@!pos..*]».spit-gist,
-                    ).throw;
-                }
-            }
-        }
-
-        if (my $extra-arg := $pos-args.pull-one) !=:= IterationEnd {
-            SX::BadCall::WrongNumber.new(
-                :$.declaration,
-                expected => +@pos-params,
-                got => +@!pos,
-                match => $extra-arg.match,
-            ).throw;
-        }
-
-        for %!named.kv -> $name,$arg is rw {
-            if %named-params{$name} -> $param {
-                $arg .= do-stage2(
-                    $param.type,
-                    :desc("named argument {$param.spit-gist} to $!name doesn't match its type")
-                );
-            } else {
-                SX::BadCall.new(
-                    :$.declaration,
-                    reason => "Unexpected named argument '$name'.",
-                    match => $arg.match,
-                ).throw;
-            }
-        }
+        # defined in Spit::Stage2-Util
+        do-stage2-call(self, $.declaration);
         self;
     }
 
@@ -935,15 +804,28 @@ class SAST::Call  is SAST::Children {
 
     method depends { $.declaration, }
 
-    method gen-sig { self.declaration.signature }
+    method signature { self.declaration.signature }
 
     method itemize { $.type !~~ tList }
 
     method gist { $.node-name ~ "($!name)" ~ $.gist-children }
+
+    method fill-in-defaults {
+        |(self.signature.pos-with-defaults.map: -> $pos {
+            without @!pos[$pos.ord] {
+                $_ = $pos.default.deep-clone;
+            }
+        }),
+        |(self.signature.named-with-defaults.map: -> $named {
+            without %!named{$named.name} {
+                $_ = $named.default.deep-clone;
+            }
+        });
+    }
 }
 
 class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
-    has $!gen-sig;
+    has $!signature;
     has $!type;
     has $.topic;
 
@@ -951,8 +833,8 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     method type {
         $!type ||= self.declaration.reified-return-type($.invocant.ostensible-type);
     }
-    method gen-sig {
-        $!gen-sig //= self.declaration.reified-signature($.invocant.ostensible-type);
+    method signature {
+        $!signature //= self.declaration.reified-signature($.invocant.ostensible-type);
     }
 
     method stage2($ctx) {
@@ -1033,15 +915,23 @@ class SAST::Param does SAST does SAST::Declarable {
     has $.signature is rw;
     has $.decl-type;
     has $.type is rw;
+    has SAST $.default;
+    has $.optional is rw;
     has $.slurpy;
-    method TWEAK(|) {
+
+    method TWEAK(|){
         # $ slurpies are still lists so pretend it's @ for type determination
-        figure-out-var-type(($!slurpy ?? '@' !! $!sigil), $!type, $!decl-type)
+        figure-out-var-type(($!slurpy ?? '@' !! $!sigil),
+                            $!type, $!decl-type);
     }
-    method stage2 ($) { self }
+
+    method stage2 ($) {
+        $_ .= do-stage2($!type, :desc("parameter {$.spit-gist}'s default")) with $!default;
+        self
+    }
     method symbol-type { symbol-type-from-sigil($!sigil) }
     method dont-depend { True }
-
+    method optional { $!optional or ?$!default }
     method gist { $.node-name ~ "($.spit-gist)" }
     method itemize { itemize-from-sigil($!sigil) }
 }
@@ -1057,23 +947,37 @@ class SAST::PosParam is SAST::Param does SAST::ShellPositional {
 }
 
 class SAST::NamedParam is SAST::Param {
-
     method spit-gist {  ":$.sigil$.name" }
 }
 
 class SAST::Signature is SAST::Children {
-    has SAST::PosParam @.pos;
-    has SAST::NamedParam %.named;
+    has SAST::PosParam:D @.pos;
+    has SAST::NamedParam:D %.named;
     has SAST::Invocant $.invocant is rw;
+    has SAST::PosParam:D @.pos-with-defaults;
+    has SAST::NamedParam:D @.named-with-defaults;
 
     method stage2 ($) {
+        my $optional-found;
         for @!pos.kv -> $i,$p is rw {
+            if $optional-found and not $p.optional {
+                SX.new(message =>
+                  “Can't put required parameter {$p.spit-gist} after optional parameters”
+                ).throw;
+            }
+            if $p.optional {
+                $optional-found = True;
+                @!pos-with-defaults.push($p) if $p.default;
+            }
             $p.ord = $i;
             $p.signature = self;
             $p .= do-stage2(tAny);
         }
         $!invocant andthen .signature = self;
-        $_ .= do-stage2(tAny) for %!named.values;
+        for %!named.values {
+            $_ .= do-stage2(tAny);
+            @!named-with-defaults.push($_) if .default;
+        }
         self;
     }
 
@@ -1312,14 +1216,6 @@ class SAST::Pair is SAST::MutableChildren {
     }
     method key { self[0] }
     method value { self[1] }
-}
-
-sub derive-common-parent(*@types) {
-    my $cmp-to = @types.shift;
-    for @types {
-        $cmp-to = .^mro.first: { $cmp-to ~~ $_ }
-    }
-    return $cmp-to;
 }
 
 class SAST::List is SAST::MutableChildren {

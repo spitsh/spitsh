@@ -551,9 +551,13 @@ multi method walk(SAST::MethodCall:D $THIS is rw) {
 }
 
 multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
-    return if $.no-inline;
     my $decl := $THIS.declaration;
     self.walk($decl);
+
+    # Add defaults to the call for missing args and then walk them
+    self.walk($_) for $THIS.fill-in-defaults;
+
+    return if $.no-inline;
 
     if $decl.chosen-block -> $block {
         if $block ~~ SAST::Block and not $block.ann<cant-inline> and not $decl.no-inline {
