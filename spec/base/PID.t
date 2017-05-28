@@ -1,6 +1,6 @@
 use Test;
 
-plan 13;
+plan 15;
 
 ok $?PID ~~ Int, 'PIDs are Ints';
 ok $?PID > 0, 'PID is greater than 0';
@@ -35,12 +35,14 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
         ${true};
     }
 
+    ok $pid, '.Bool is .exists (True)';
     ok $pid.children == 3, '.children';
     ok $pid.descendants == 9, '.descendants';
 
     # If you don't kill $pid as well you get zombies
     kill $pid, $pid.descendants;
 
+    nok $pid, '.Bool is .exists (False)';
     ok $pid.children    == 0, '.children after killing';
     ok $pid.descendants == 0, '.descendants after killing';
 }
