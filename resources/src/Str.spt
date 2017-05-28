@@ -304,7 +304,7 @@ constant $awk-subst-re =
         }
     }
 
-    static method ~random($n) {
+    static method ~random($n = 10) {
         ${ tr -dc 'a-zA-Z0-9' < '/dev/urandom' | head -c $n }
     }
 
