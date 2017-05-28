@@ -53,9 +53,21 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
 }
 
 {
-    my $pid = start { start { start { sleep 100; ${true} }; sleep 100; ${true} }; sleep 100; ${true} };
+    my $pid =
+    start {
+        start {
+            start {
+                sleep 100; ${true}
+            };
+            sleep 100; ${true}
+        };
+        # exec at the end because dash/BB sh do this anyway but bash doesn't
+        sleep 100;
+        ${exec sleep 100};
+    };
 
     $pid.descendants.kill;
+    sleep 1;
     ok $pid, 'pid still exists after .descendants.kill';
     nok $pid.descendants, '.descendants is false after .descendants.kill';
 }
