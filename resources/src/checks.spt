@@ -9,8 +9,10 @@
    ok True,"";
 }
 sub ok (#|[The success condition] Bool $cond,
-        #|[The associated message] $msg) {
-    $cond ?? say '✔' ~ " - $msg" !! die '✘' ~ " - $msg";
+        #|[The associated message] $msg?) {
+    $cond
+        ?? say '✔' ~ " - $msg"
+        !! die '✘' ~ " - $msg"
 }
 
 #|If the two strings are equal, prints the message with a friendly
@@ -21,17 +23,15 @@ sub ok (#|[The success condition] Bool $cond,
 sub is (
     #|[The string to check]$a,
     #|[The expected string]$b,
-    #|[The associated message]$msg) {
-    if $a eq $b {
-        say '✔' ~ " - $msg";
-    } else {
-        die '✘' ~ " - $msg. Expected '$b' but got '$a'";
-    }
+    #|[The associated message]$msg?) {
+    $a eq $b
+        ?? say '✔' ~ " - $msg"
+        !! die '✘' ~ " - $msg. Expected '$b' but got '$a'";
 }
-#| The negated form of `ok`. Succeeds when the $cond is false.
-sub nok(Bool $cond,$msg)  { ok !$cond,$msg }
 
+#| The negated form of `ok`. Succeeds when the $cond is false.
+sub nok(Bool $cond,$msg?)  { ok !$cond,$msg }
 #| Prints a message with a friendly ✔.
-sub pass ($msg) { ok True, $msg }
+sub pass ($msg?) { ok True, $msg }
 #| Prints a message and dies angrily ✘.
-sub flunk ($msg) { ok False,$msg }
+sub flunk ($msg?) { ok False,$msg }

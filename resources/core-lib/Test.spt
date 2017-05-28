@@ -5,27 +5,23 @@ sub plan(Int $n) is export  {
     say "1..$n";
 }
 
-sub ok (Bool $res,$msg) is export {
-    if $res {
-        say "ok {++$TEST_COUNT} - $msg";
-    } else {
-        say "not ok {++$TEST_COUNT} - $msg";
-    }
+sub ok (Bool $res,$msg?) is export {
+    $res
+        ?? say "ok {++$TEST_COUNT} - $msg"
+        !! say "not ok {++$TEST_COUNT} - $msg";
 }
 
-sub is  ($a,$b,$msg) is export {
-    if $a eq $b {
-        say "ok {++$TEST_COUNT} - $msg";
-    } else {
-        say "not ok {++$TEST_COUNT} - $msg. Expected '$b' but got '$a'";
-    }
+sub is  ($a,$b,$msg?) is export {
+    $a eq $b
+        ?? say "ok {++$TEST_COUNT} - $msg"
+        !! say "not ok {++$TEST_COUNT} - $msg. Expected '$b' but got '$a'";
 }
 
-sub nok (Bool $res,$msg) is export { ok !$res,$msg }
-sub pass ($msg) is export { ok True,$msg  }
-sub flunk ($msg) is export   { ok False,$msg }
+sub nok (Bool $res,$msg?) is export { ok !$res,$msg }
+sub pass ($msg?) is export          { ok True,$msg  }
+sub flunk ($msg?) is export         { ok False,$msg }
 
-sub skip-rest($reason) is export {
+sub skip-rest($reason?) is export {
     while ++$TEST_COUNT <= $TEST_PLAN  {
         say "ok $TEST_COUNT - # SKIP $reason";
     }
