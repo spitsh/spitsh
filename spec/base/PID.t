@@ -42,6 +42,7 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
     # If you don't kill $pid as well you get zombies
     kill $pid, $pid.descendants;
 
+    sleep 1;
     nok $pid, '.Bool is .exists (False)';
     ok $pid.children    == 0, '.children after killing';
     ok $pid.descendants == 0, '.descendants after killing';
