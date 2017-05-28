@@ -163,19 +163,15 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     rule statement-control:sym<when> {
-        <.ws>
-        <?before <.sym>\s>
         (
             <.sym>
             [
                 <EXPR> <block>
-                <.eat-terminator>
                 ||
                 <.invalid('when statement')>
             ]
             |
             'default' <block>
-            <.eat-terminator>
         )+
     }
 
