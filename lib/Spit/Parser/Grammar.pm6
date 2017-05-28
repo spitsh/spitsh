@@ -264,14 +264,22 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token longarrow {['-->'| '⟶']}
-    rule new-routine(|c){
-        <return-type-sigil>?$<name>=<.identifier>
+    token new-routine(|c){
+        <return-type-sigil>?$<name>=<.identifier><.ws>
         { $*DECL = $*ACTIONS.make-routine($/,|c) }
         <.attach-pre-doc>
         [
             $<param-def>=<.r-wrap:'(',')', 'parameter list', rule {
-                <paramlist> [<.longarrow> [$<return-type>=<.type> || <.invalid("return type")> ] ]?
+                <paramlist>
+                [<.longarrow> <.panic("Return type inside signature. Put it outside (...)⟶Type.")>]?
             }>
+        ]?
+        <.ws>
+        [<.longarrow> [
+             || $<return-type>=<.type>
+             || \s <.panic("No whitespace allowed after ⟶")>
+             || <.invalid("return type")>
+         ]
         ]?
     }
 

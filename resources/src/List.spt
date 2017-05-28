@@ -19,7 +19,7 @@ augment List {
         say @list.at-pos(1); #-> two
         say @list[1]; #-> two
     }
-    method at-pos(#|[the index to return the line at]Int $i --> Elem-Type) {
+    method at-pos(#|[the index to return the line at]Int $i)-->Elem-Type {
         $self.${sed -n ($i+1 ~ 'p') | tr -d '\n'} # this should be awk
     }
     #| `set-pos` is the internal method called which you set a list
@@ -92,7 +92,7 @@ augment List {
         $self.${ egrep $regex }
     }
 
-    method first(Regex $regex --> Elem-Type) {
+    method first(Regex $regex)-->Elem-Type {
         $self.${ egrep -m1 $regex }
     }
 
@@ -100,7 +100,7 @@ augment List {
         ('[' ~ (.JSON for @$self).join(',') ~ ']')-->JSON;
     }
 
-    method pick(-->Elem-Type) {
+    method pick-->Elem-Type {
         $self.${ shuf -n 1 }
     }
 }

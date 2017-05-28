@@ -135,7 +135,7 @@ plan 54;
 {
     {
         class IntList is List[Int] {
-            method plus(Int $a -->IntList) {
+            method plus(Int $a )-->IntList {
                 $_ + $a for @$self;
             }
         }

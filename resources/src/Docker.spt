@@ -21,11 +21,11 @@ augment Docker {
         $gh-release-url.${sed 's/.*\/v//'};
     }
 
-    static method latest-build-tgz-url(-->HTTP) {
+    static method latest-build-tgz-url-->HTTP {
         my $latest-v = Docker.latest-build-ver;
         "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
     }
-    static method install-cli(-->File) {
+    static method install-cli-->File {
         my $url = Docker.latest-build-tgz-url;
         note "Getting latest docker build from $url";
         my $docker-dir = $url.get.extract.cleanup;
@@ -42,7 +42,7 @@ augment Docker {
         ${ $*docker run -i --rm hello-world >X };
     }
 
-    static method tmp($from, :@args, :$mount-socket --> Docker) {
+    static method tmp($from, :@args, :$mount-socket)-->Docker {
         Docker.create($from, :@args, :$mount-socket)
               .append-to($?docker-cleanup);
         END {
@@ -56,8 +56,7 @@ augment Docker {
         :$name,
         :@args,
         :$mount-socket
-        -->Docker
-    ) {
+    )-->Docker {
         ${
             $*docker create -i
             ("--name=$_" if $name)
@@ -103,7 +102,7 @@ augment Docker {
         :$user,
         :$volume,
         :$workdir
-        -->DockerImg) {
+    )-->DockerImg {
         my DockerImg $img-name = $name ~ (":$_" if $tag);
         ${$*docker commit
           ("-c=CMD $_" if $cmd )

@@ -58,12 +58,12 @@ augment File {
     #| Alias for .size
     method +s      { $self.size }
 
-    method mtime(-->DateTime) on {
+    method mtime-->DateTime on {
         GNU     ${ date -u -r $self '+%FT%T.%3N' !>X}
         BusyBox ${ stat -c '%y' $self !>X| sed -r 's/ /T/;s/0{6}$//' }
     }
 
-    method ctime(-->DateTime) on {
+    method ctime-->DateTime on {
         #TODO: roll these into one
         GNU     ${ stat -c '%z' $self !>X | sed -r 's/ /T/;s/[0-9]{6} \S*$//' }
         BusyBox ${ stat -c '%z' $self !>X | sed -r 's/ /T/;s/0{6}$//' }
@@ -184,7 +184,7 @@ augment File {
         $fd.write("written to via file descriptor");
         say $file.slurp; #-> written to via file descriptor!
     }
-    method open-w(--> FD) is return-by-var {
+    method open-w-->FD is return-by-var {
         my $fd = FD.next-free;
         $fd.open-w($self);
         $fd;
@@ -198,7 +198,7 @@ augment File {
         $fd.get() && say $~; #-> The
         $fd.get() && say $~; #-> quick
     }
-    method open-r(--> FD) is return-by-var {
+    method open-r-->FD is return-by-var {
         my $fd = FD.next-free;
         $fd.open-r($self);
         $fd;
@@ -217,18 +217,18 @@ augment File {
     method ~name { ${basename $self} }
     #| Returns the parent directory of the file.
     #|{ say File</etc/foo/foo.cfg>.name #->/etc/foo }
-    method ~parent(--> File){ ${dirname $self} }
+    method ~parent-->File{ ${dirname $self} }
     #| Adds an element to the path. This is the same as concatinating
     #| the path with a '/' and the argument.
     #|{ say File</etc/foo>.add('foo.cfg') #->/etc/foo/foo.cfg }
-    method ~add($name --> File) { $self.path ~ '/' ~ $name }
+    method ~add($name)-->File { $self.path ~ '/' ~ $name }
 
     #| Creates a tempfile via mktemp(1) and adds it to a list of
     #| files which will be removed at the END.
     #|{
       my $tmpfile = File.tmp; # Will be removed at the end
     }
-    static method tmp(Bool :$dir -->File) {
+    static method tmp(Bool :$dir)-->File {
         ${mktemp ('-d' if $dir)}-->File.cleanup
     }
 
@@ -247,15 +247,15 @@ augment File {
             say "$loc lines of code";
         }
     }
-    method find(Pattern :$name --> List[File]) {
+    method find(Pattern :$name)-->List[File] {
         ${find $self ('-name', $name if $name)}
     }
 
-    method ls(:$all -->List[File]) {
+    method ls(:$all)-->List[File] {
         ${ls ('-A' if $all) $self }
     }
 
-    static method tmp-fifo(--> File) {
+    static method tmp-fifo-->File {
         my File $tmpfifo .= tmp;
         $tmpfifo.remove;
         ${mkfifo $tmpfifo};
@@ -267,7 +267,7 @@ augment File {
     #|{
        say "creating " ~ File<path/to/my/dir>.mkdir
     }
-    method mkdir(--> File) {
+    method mkdir-->File {
         ${ mkdir -p $self};
         $self;
     }
@@ -280,12 +280,12 @@ augment File {
         ${ cd $self }
     }
 
-    method archive(:$to --> File) {
+    method archive(:$to)-->File {
         my $out = ($to || "$self.tgz");
         ?${ tar -C $self.parent -czf $out  $self.name } && $out;
     }
 
-    method extract(-->File) {
+    method extract-->File {
         ${ tar xvf $self | sed -n '1s/\/.*//p' };
     }
 

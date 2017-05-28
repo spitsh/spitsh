@@ -117,7 +117,7 @@ if $true and $false {
     class Foo {
         method ?Bool { $self.is-foo }
         method ?is-foo { $self eq 'foo' || $self eq 'fooish' }
-        method to-bar( -->Bar ){ $self ~ 'derp' }
+        method to-bar( )-->Bar{ $self ~ 'derp' }
     }
 
     if Foo<bar> {

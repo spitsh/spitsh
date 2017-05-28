@@ -64,7 +64,7 @@ augment DateTime {
     }
 }
 
-sub now(-->DateTime) { DateTime.now }
+sub now-->DateTime { DateTime.now }
 
 augment Date {
     method DateTime { "{$self}T00:00:00.000Z" }

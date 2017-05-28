@@ -14,7 +14,7 @@ class GitURL {
         GitURL<https://github.com/spitsh/spitsh.git/>.clone.cd;
         say ${ $*git status };
     }
-    method clone(#|[Path to clone the repo to] :$to --> File) {
+    method clone(#|[Path to clone the repo to] :$to)-->File {
         my $clone-into = ${ $*git clone $self @$to !>~ };
         ok $? , "$self: $clone-into";
         $clone-into.${sed ‘s/Cloning into '\(.*\)'.*/\1/’};
@@ -36,7 +36,7 @@ class GitHubRepo {
         GitHubRepo<spitsh/spitsh>.clone.cd;
         say ${ $*git status };
     }
-    method clone(#|[Path to clone the repo to] :$to --> File) {
+    method clone(#|[Path to clone the repo to] :$to)-->File {
         $self.url.clone(:$to);
     }
 
@@ -57,12 +57,12 @@ class GitHubRepo {
 
     #| Returns the https url for the repo
     #|{ GitHubRepo<nodejs/node>.url #-> https://github.com/nodejs/node.git }
-    method url(-->GitURL) { "https://github.com/$self.git" }
+    method url-->GitURL { "https://github.com/$self.git" }
 
-    method release-url($tag -->HTTP) {
+    method release-url($tag)-->HTTP {
         HTTP("https://github.com/$self/releases/$tag")
     }
-    method latest-release-url(-->HTTP) {
+    method latest-release-url-->HTTP {
         $self.release-url("latest").redirect-url;
     }
 }

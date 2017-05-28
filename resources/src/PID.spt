@@ -25,11 +25,11 @@ augment PID {
         ${kill $signal "-$self"}
     }
 
-    method children (-->List[PID]) {
+    method children -->List[PID] {
         ${ps -o 'ppid,pid' | awk -v "p=$self" '$1==p{print $2}'}
     }
 
-    method descendants(-->List[PID]) {
+    method descendants-->List[PID] {
         $_, .descendants for $self.children;
     }
 

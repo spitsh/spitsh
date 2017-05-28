@@ -81,13 +81,13 @@ plan 43;
 
 
 {
-    sub get-five ( --> Int ){ 5 }
+    sub get-five ( )-->Int{ 5 }
     is get-five() + get-five(), 10,"subs that return ints work";
 }
 
 
 {
-    sub plus-five(Int $i --> Int) {$i + 5}
+    sub plus-five(Int $i )-->Int {$i + 5}
     is plus-five(2),7,"Int typed param works";
 }
 
@@ -131,7 +131,7 @@ plan 43;
 }
 
 {
-    sub list-param(Int @a --> List[Int]) {
+    sub list-param(Int @a )-->List[Int] {
         $_ + 2 for @a;
     }
 

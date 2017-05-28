@@ -16,12 +16,12 @@ class Cmd {
         -->Pkg.install unless $self;
     }
 
-    method ensure-install(-->Cmd) {
+    method ensure-install-->Cmd {
         -->Pkg.install unless $self;
         $self;
     }
 
-    method path(-->File) on {
+    method path-->File on {
         RHEL   ${whereis -b $self | awk '{print $2}'}
         Debian ${whereis -b $self | awk '{print $2}'}
         Any ${ command -v $self }

@@ -1,11 +1,11 @@
 #| The JSON class represents any valid JSON;
 augment JSON {
-    method pretty(-->JSON) { $self.${$*jq} }
+    method pretty-->JSON { $self.${$*jq} }
 
-    method at-key($key -->JSON){
+    method at-key($key)-->JSON{
         $self.${ $*jq -c ".$key" }
     }
-    method at-pos(Int $pos -->JSON) {
+    method at-pos(Int $pos)-->JSON {
         $self.${ $*jq -c ".[$pos]"}
     }
     method @flatten {
@@ -20,7 +20,7 @@ sub j-array(JSON *@json){
     '[' ~ @json.join(',') ~ ']'
 }
 
-sub j-object(JSON *$json --> JSON) {
+sub j-object(JSON *$json)-->JSON {
     (
         '{' ~
         (loop (my $j = 0; $j < $json; $j += 2) {

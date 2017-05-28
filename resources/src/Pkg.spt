@@ -23,7 +23,7 @@ class Pkg {
         Alpine ${ apk update -q }
     }
 
-    static method last-updated(-->DateTime) on {
+    static method last-updated-->DateTime on {
         Debian {
             $*pkglist-path
               .add("deb.debian.org_debian_dists_{Debian.release-name}_Release")
