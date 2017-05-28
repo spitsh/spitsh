@@ -20,7 +20,7 @@ is eval{
         say "three";
     }
     sleep 1;
-    $pid.kill('TERM');
+    $pid.kill;
     say "two";
 }.${sh}, <one two>, ‘.kill on start's pid cancels it’;
 

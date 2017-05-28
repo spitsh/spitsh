@@ -14,7 +14,7 @@ given Port.random {
     ok .listening, '.serve-file - something is listening';
     is .listening, $pid, 'listening PID is the one we started';
 
-    ok Host.local.connectable($_, :timeout(1)), 'localhost is connectable';
+    ok Host.local.connectable($_), 'localhost is connectable';
 
     is Host.local.read-port($_), "Hello world",
     'Host.local.read-port returns the file being served #1';
@@ -22,9 +22,9 @@ given Port.random {
     is Host.local.read-port($_), "Hello world",
     'Host.local.read-port returns the file being served #2';
 
-    $pid.kill('TERM');
+    $pid.kill;
 
     nok .listening, '.listening after .kill';
     nok Host.local.connectable($_, :timeout(1)),
-    '.connectable after .kill';
+      '.connectable after .kill';
 }

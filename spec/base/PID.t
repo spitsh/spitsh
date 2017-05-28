@@ -1,6 +1,6 @@
 use Test;
 
-plan 11;
+plan 13;
 
 ok $?PID ~~ Int, 'PIDs are Ints';
 ok $?PID > 0, 'PID is greater than 0';
@@ -39,12 +39,20 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
     ok $pid.descendants == 9, '.descendants';
 
     # If you don't kill $pid as well you get zombies
-    kill "TERM", $pid, $pid.descendants;
+    kill $pid, $pid.descendants;
 
     ok $pid.children    == 0, '.children after killing';
     ok $pid.descendants == 0, '.descendants after killing';
 }
 
 {
-    is eval{ kill 'TERM' }.${sh *>~}, '', 'no error message when called with no arguments';
+    is eval{ kill }.${sh *>~}, '', 'no error message when called with no arguments';
+}
+
+{
+    my $pid = start { start { start { sleep 100; ${true} }; sleep 100; ${true} }; sleep 100; ${true} };
+
+    $pid.descendants.kill;
+    ok $pid, 'pid still exists after .descendants.kill';
+    nok $pid.descendants, '.descendants is false after .descendants.kill';
 }

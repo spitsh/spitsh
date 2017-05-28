@@ -1,4 +1,4 @@
-sub kill($signal, PID *@pids) {
+sub kill(PID *@pids, :$signal = 'TERM') {
     ${kill "-$signal" @pids} if @pids;
 }
 
@@ -17,11 +17,11 @@ augment PID {
     }
     #| Sends the process a signal. Returns true if the signal was successfully
     #| sent.
-    method ?kill($signal) {
+    method ?kill($signal = 'TERM') {
         ${kill "-$signal" $self};
     }
 
-    method ?kill-group($signal){
+    method ?kill-group($signal = 'TERM'){
         ${kill $signal "-$self"}
     }
 
@@ -38,5 +38,5 @@ augment PID {
 
 augment List[PID] {
     method wait { wait @$self }
-    method kill($signal) { kill $signal, @$self }
+    method kill($signal = 'TERM') { kill :$signal, @$self }
 }
