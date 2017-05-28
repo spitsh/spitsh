@@ -100,8 +100,8 @@ augment List {
         ('[' ~ (.JSON for @$self).join(',') ~ ']')-->JSON;
     }
 
-    method pick-->Elem-Type {
-        $self.${ shuf -n 1 }
+    method pick($n = 1)-->Elem-Type {
+        $self.${ shuf -n $n }
     }
 }
 
