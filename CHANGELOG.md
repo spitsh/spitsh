@@ -1,3 +1,41 @@
+## 0.0.29
+
+- **NOTICE**: routine return type syntax has changed:
+  - `foo(...-->Type)` is not `sub foo(...)-->Type`
+- **New Feature**: Perl 6 style Parameter defaults (!)
+  - `sub foo($foo = "bar", :$bar = "bar") {...}`
+- **New Feature**: Runtime arguments to `eval`
+  - You can now do:
+  ```perl6
+  my $foo = "bar";
+  my $shell = eval(:$foo){ my $*foo; say $*foo };
+  ```
+  And spit will insert the runtime value for `$foo` into the compiled script
+- **New Feature**: `start { }` blocks which are an interface to `&` asynchronous lists
+  - It returns a `PID` (maybe one day a promise)
+  - Used like:
+  ```perl6
+      my $pid = start sleep 1000;
+      say "waiting for a while";
+      sleep 10;
+      if $pid {
+        note "it's still running. Killing it";
+        .kill;
+      }
+  ```
+
+- `File.write .move and .chmod` return the invocant now.
+- Add `Str.substr` which does what you expect
+- Add `Str.random` which produces random strings
+- Add `List.pick`  (same as Perl 6)
+- Add `PID.children` and `PID.descendants`
+- Add `&kill` and `List[PID].kill`
+- Add `&wait` and `List[PID].wait` and `PID.wait`
+- New phasers that run **after** `END`: `FILE-CLEAN` and `CHECK-CLEAN`
+- Add `List[JSON].sort($key)` which can sort a list of JSON objects
+  based on the value in a certain key
+- Add `$*socat` and add it to spit-helper
+
 ## 0.0.28
 
 - Add `$*set-delimiter` and `§` quote metachar to refer to it (works
@@ -14,7 +52,7 @@
 - Add `File.sha256`
 - Add `$*jq` for getting jq (currently pulls a binary from github)
 - Add `Str.substr-re` (WIP leading up to ~~ s/foo/bar/g etc)
-- New Feature: Perl 6 style C-style for `loop`
+- **New Feature**: Perl 6 style C-style for `loop`
 ``` perl6
 # e.g two at a time iteration
 my @a = <one two three four>;
@@ -22,10 +60,10 @@ loop (my $i = 0; $i < @a; $i += 2) {
     say @a[$i], @a[$i+1];
 }
 ```
-- New Feature: Perl 6 Q{...} and ｢...｣ quotes
-- New Feature: Perl 6 "\x[...]" quotes and \a \b \f \r escape
+- **New Feature**: Perl 6 Q{...} and ｢...｣ quotes
+- **New Feature**: Perl 6 "\x[...]" quotes and \a \b \f \r escape
   sequences
-- New Feature: Slurpy positional parameters:
+- **New Feature**: Slurpy positional parameters:
 ``` perl6
 sub foo($a, $b, *@c) {
     say "$a, $b, @c";
