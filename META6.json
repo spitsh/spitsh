@@ -3,7 +3,7 @@
     "license" : "Artistic-2.0",
     "perl" : "6.c",
     "version" : "0.0.29",
-    "description" : "The Spook in the Shell Script (Spit-sh) compiler",
+    "description" : "The Spook in the Shell (Spit-sh) compiler",
     "authors" : ["Lloyd Fournier lloyd.fourn@gmail.com"],
     "provides" : {
         "Spit::Compile" : "lib/Spit/Compile.pm6",
