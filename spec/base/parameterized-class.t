@@ -7,7 +7,7 @@ plan 28;
         static method doit()-->Type { 3 }
         static method echo(Type $a )-->Type  { $a }
         static method echo-list(Type $a )-->List[Type] { $a, $a }
-        static method return-type* { "something" }
+        static method return-type^ { "something" }
         static method first-in-list(Type @list )-->Type { @list[0] }
     }
 
@@ -63,7 +63,7 @@ plan 28;
 
 {
     class Parent[Param] {
-        method return-self* { $self.chars }
+        method return-self^ { $self.chars }
         method return-param()-->Param { $self.bytes }
     }
 

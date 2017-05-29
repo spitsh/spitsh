@@ -24,7 +24,7 @@ plan 27;
     class Parent {
         static method dont-override~ { ":D"}
         static method override~      { "parent" }
-        static method return-self*   { "parent" }
+        static method return-self^   { "parent" }
     }
 
     class Child is Parent {
@@ -53,7 +53,7 @@ plan 27;
     class Foo {
         method second($a)~ { $self ~ $a ~ "baz"}
         method first($a)~  { $self.second($a) }
-        method return-self* { $self.uc }
+        method return-self^ { $self.uc }
     }
 
     is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";
@@ -80,7 +80,7 @@ plan 27;
     class Child is Parent {}
 
     augment Parent {
-        static method return-self* { "augment return-self"}
+        static method return-self^ { "augment return-self"}
     }
 
     is Parent.return-self, 'augment return-self', 'call method added by augment';

@@ -236,11 +236,11 @@ Q{END {
         }
     }
 
-    method write-to(File $to)* {
+    method write-to(File $to)^ {
         $self.${awk -v "f=$to" -v 'RS=^$' '{printf "%s",$0>f;printf "%s",$0}'}
     }
 
-    method append-to(File $to)* {
+    method append-to(File $to)^ {
         $self.${tee -a $to}
     }
 

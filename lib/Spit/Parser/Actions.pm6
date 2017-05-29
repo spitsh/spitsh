@@ -403,7 +403,7 @@ method return-type-sigil:sym<~>($/) { make tStr }
 method return-type-sigil:sym<+>($/) { make tInt }
 method return-type-sigil:sym<?>($/) { make tBool }
 method return-type-sigil:sym<@>($/) { make tList }
-method return-type-sigil:sym<*>($/) {
+method return-type-sigil:sym<^>($/) {
     $*CLASS or
       SX.new(message => 'Whatever-Invocant return type used outside of a class').throw;
 

@@ -88,7 +88,7 @@ augment List {
         $self.${sort -n};
     }
 
-    method grep(Regex $regex)* {
+    method grep(Regex $regex)^ {
         $self.${ egrep $regex }
     }
 

@@ -9,7 +9,7 @@ class Host is Str {
         }
     }
 
-    static method local* { 'localhost' }
+    static method local^ { 'localhost' }
 
     method wait-connectable(Port $port, Int :$timeout = 60)? {
         my $total = 0;
