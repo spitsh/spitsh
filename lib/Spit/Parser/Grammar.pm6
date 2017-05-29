@@ -267,7 +267,7 @@ grammar Spit::Grammar is Spit::Lang {
         [
             $<param-def>=<.r-wrap:'(',')', 'parameter list', rule {
                 <paramlist>
-                [<.longarrow> <.panic("Return type inside signature. Put it outside (...)⟶Type.")>]?
+                (<.longarrow> <.panic("Return type inside signature. Put it outside (...)⟶Type.")>)?
             }>
         ]?
         <.ws>
