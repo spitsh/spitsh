@@ -1,4 +1,4 @@
-# Spook in the Shell (Spit-sh) [![Build Status](https://travis-ci.org/spitsh/spitsh.svg?branch=master)](https://travis-ci.org/spitsh/spitsh)
+# 👻 Spook in the Shell 👻 (Spit-sh) [![Build Status](https://travis-ci.org/spitsh/spitsh.svg?branch=master)](https://travis-ci.org/spitsh/spitsh)
 
 **Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh), is Perl-6-like
 language and compiler for producing modular, dynamic and testable
