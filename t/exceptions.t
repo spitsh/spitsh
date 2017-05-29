@@ -61,7 +61,7 @@ throws-like {
     compile name => 'parameterized class bad call',
     q:to/END/;
     class Foo[Type] {
-        static method echo(Type $a --> Type) { $a }
+        static method echo(Type $a)-->Type { $a }
     }
     Foo[Int].echo("blah");
     END

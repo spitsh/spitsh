@@ -6,7 +6,7 @@ nok compile(q|say "hello world"|,:$name).contains('e()'),"e() isn't included for
 
 is compile(
     q{  foo("wee");
-        sub ~foo($a) { $a ~ "bar" ~ "makeitlongenoughsonoinline" };
+        sub foo($a)~ { $a ~ "bar" ~ "makeitlongenoughsonoinline" };
     },:$name).match(/'foo()'/,:g).elems,1,'only one definition of post-declared sub';
 
 is compile(
