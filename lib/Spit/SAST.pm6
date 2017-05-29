@@ -98,7 +98,7 @@ role SAST is rw {
     method node-name {
         if self ~~ SAST::Force {
             self.^name.subst(/^'SAST::'/,'')\
-                .subst(/'SAST::Force'/,"Force({$.type.^name},{$.itemize})")
+                .subst(/'SAST::Force'/,"Force({$.type.^name},{$.itemize ?? '$' !! '@'})")
         } else {
             self.^name.subst(/^'SAST::'/,'')
         }
