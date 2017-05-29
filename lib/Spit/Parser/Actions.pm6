@@ -410,6 +410,10 @@ method return-type-sigil:sym<^>($/) {
     make $*CLASS.class.^whatever-invocant;
 }
 
+method return-type-sigil:sym<*>($/) {
+    make tWhateverContext;
+}
+
 method paramlist ($/) {
     my @params = $<params>.map(*<param>.ast);
 
@@ -590,11 +594,7 @@ method term:name ($/) {
         }
     } else {
         my (:@pos,:%named) := $<call-args><args>.ast || Empty;
-        if $name eq 'die' {
-            SAST::Die.new(message => @pos);
-        } else {
-            SAST::SubCall.new(:$name,:@pos,:%named);
-        }
+        SAST::SubCall.new(:$name,:@pos,:%named);
     }
 }
 

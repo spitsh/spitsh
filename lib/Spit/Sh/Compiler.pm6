@@ -1093,11 +1093,5 @@ multi method arg(SAST::NAME:D $_) {
         escape $name;
     } else {
         SX.new(message => 'value doesn\'t have name', node => $_[0]).throw;
-
     }
 }
-
-#!Die
-multi method node(SAST::Die:D $_)       { self.node(.call) }
-multi method cap-stdout(SAST::Die:D $_) { self.node(.call) }
-multi method cond(SAST::Die:D $_)       { self.node(.call) }

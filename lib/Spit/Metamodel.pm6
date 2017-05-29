@@ -271,7 +271,8 @@ class Spit::Metamodel::Parameterized is Spit::Metamodel::Type {
     method needs-reification(Mu $) {
         @!params.first(*.^needs-reification).so
     }
-    method reify(Mu $, Mu \invocant-type) {
+    method reify(Mu \type, Mu \invocant-type) {
+        return type unless type.^needs-reification;
         my @reified-params = @!params.map(*.^reify(invocant-type));
         $!derived-from.^parameterize(@reified-params);
     }
@@ -325,6 +326,11 @@ class Spit::Metamodel::WhateverInvocant is Spit::Metamodel::Type {
     }
 }
 
+class Spit::Metamodel::WhateverContext is Spit::Metamodel::Type {
+    method needs-reification(Mu $) { True }
+    method reify(Mu $, Mu $i?, Spit::Type :$ctx!) { $ctx }
+}
+
 sub gen-type($name,\parent,:$metatype = Spit::Metamodel::Type,:$primitive) {
     my $type := $metatype.new_type(:$name);
     $type.^add_parent(parent) if parent;
@@ -343,6 +349,7 @@ constant tFD is export = gen-type('FD', tInt,);
 constant tFile is export  = gen-type('File', tStr);
 constant tOS is export  = gen-type('OS', tEnumClass, metatype => Spit::Metamodel::EnumClass);
 constant tPID is export = gen-type('PID', tInt);
+constant tWhateverContext = gen-type('WhateverContext',tStr, metatype => Spit::Metamodel::WhateverContext);
 
 sub gen-param-type($name, @param-names, :$primitive) {
     my $param-type := Spit::Metamodel::Parameterizable.new_type(:$name);
