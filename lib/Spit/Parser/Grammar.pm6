@@ -260,8 +260,8 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token longarrow {['-->'| '⟶']}
-    token new-routine(|c){
-        <return-type-sigil>?$<name>=<.identifier><.ws>
+    rule new-routine(|c){
+        $<name>=<.identifier>
         { $*DECL = $*ACTIONS.make-routine($/,|c) }
         <.attach-pre-doc>
         [
@@ -270,12 +270,16 @@ grammar Spit::Grammar is Spit::Lang {
                 (<.longarrow> <.panic("Return type inside signature. Put it outside (...)⟶Type.")>)?
             }>
         ]?
-        <.ws>
-        [<.longarrow> [
-             || $<return-type>=<.type>
-             || \s <.panic("No whitespace allowed after ⟶")>
-             || <.invalid("return type")>
-         ]
+
+        [
+            |[
+                <.longarrow> [
+                    || $<return-type>=<.type>
+                    || \s <.panic('No whitespace allowed after ⟶')>
+                    || <.invalid('return type')>
+                ]
+            ]
+            |<return-type-sigil>
         ]?
     }
 

@@ -95,7 +95,7 @@ augment FD {
     }
 
     #| Returns True if the file descriptor is open.
-    method ?is-open {
+    method is-open? {
         # note this works regardless of whether it's open for reading
         # or writing.
         quietly { ${true ›$self} }
@@ -109,7 +109,7 @@ augment FD {
     #| Reads all data up to and **including** the next newline or up
     #| to the EOF and puts it into `$~`. The newline (if any) will be
     #| discarded.
-    method ?get on {
+    method get? on {
         Debian {
             ${read -r  $~.NAME ‹ $self} || $~;
         }
@@ -118,7 +118,7 @@ augment FD {
         }
     }
     #| Reads a fixed number of characters
-    method ?getc(#|[The number of characters to read]Int $n) on {
+    method getc(#|[The number of characters to read]Int $n)? on {
         Any {
             ${read -r -u $self -n $n $~.NAME}
                 ?? ($~ ||= "\n")
@@ -135,5 +135,5 @@ augment FD {
         say $*OUT.tty;  #probably true
         say FD<42>.tty; #probably false
     }
-    method ?tty { ${test -t $self} }
+    method tty? { ${test -t $self} }
 }

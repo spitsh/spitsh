@@ -1,7 +1,7 @@
 ##| Returns the text as green.
-#sub ~green($txt) { ${printf '\\33[0;' ~ 32 ~ 'm%s\\33[0m', $txt} }
+#sub green($txt)~ { ${printf '\\33[0;' ~ 32 ~ 'm%s\\33[0m', $txt} }
 ##| Returns the text as red.
-# sub ~red($txt)   { ${printf '\\33[0;' ~ 31 ~ 'm%s\\33[0m', $txt}  }
+# sub red($txt)~   { ${printf '\\33[0;' ~ 31 ~ 'm%s\\33[0m', $txt}  }
 
 #| If the condition true, ok prints the message with a friendly
 #| '✔'. Otherwise, dies with an angry '✘'.

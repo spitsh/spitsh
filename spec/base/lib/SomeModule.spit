@@ -1,7 +1,7 @@
-sub ~exported-sub is export { "foo" }
+sub exported-sub~ is export { "foo" }
 
 class Exported-Class {
-    static method ~doit { "foo" }
+    static method doit~ { "foo" }
 }
 
 constant $exported-scalar is export = "exported scalar";

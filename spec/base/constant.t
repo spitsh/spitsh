@@ -7,7 +7,7 @@ plan 5;
 }
 
 {
-    sub ~foo { "bar" }
+    sub foo~ { "bar" }
     constant $x = foo;
     is $x,'bar','constant assigned to a sub call';
 }

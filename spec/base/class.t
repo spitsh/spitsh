@@ -4,11 +4,11 @@ plan 27;
 
 {
     class Foo {
-        static method ~doit { "foo" }
+        static method doit~ { "foo" }
     }
 
     class Bar {
-        static method ~doit { "bar" }
+        static method doit~ { "bar" }
     }
 
     is Foo.doit,"foo","basic static method call";
@@ -22,14 +22,14 @@ plan 27;
 
 {
     class Parent {
-        static method ~dont-override { ":D"}
-        static method ~override      { "parent" }
-        static method *return-self   { "parent" }
+        static method dont-override~ { ":D"}
+        static method override~      { "parent" }
+        static method return-self*   { "parent" }
     }
 
     class Child is Parent {
-        static method ~override { "child" }
-        static method ~child-only { "child-only" }
+        static method override~ { "child" }
+        static method child-only~ { "child-only" }
     }
 
     is Child.dont-override,':D','child inherited from parent';
@@ -51,9 +51,9 @@ plan 27;
 
 {
     class Foo {
-        method ~second($a) { $self ~ $a ~ "baz"}
-        method ~first($a)  { $self.second($a) }
-        method *return-self { $self.uc }
+        method second($a)~ { $self ~ $a ~ "baz"}
+        method first($a)~  { $self.second($a) }
+        method return-self* { $self.uc }
     }
 
     is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";
@@ -68,7 +68,7 @@ plan 27;
 
 {
     class Foo {
-        static method ~cmd ${ printf 'foo' }
+        static method cmd~ ${ printf 'foo' }
     }
 
     is Foo.cmd, 'foo', 'method ${...} syntax';
@@ -80,7 +80,7 @@ plan 27;
     class Child is Parent {}
 
     augment Parent {
-        static method *return-self { "augment return-self"}
+        static method return-self* { "augment return-self"}
     }
 
     is Parent.return-self, 'augment return-self', 'call method added by augment';
@@ -89,11 +89,11 @@ plan 27;
 
 {
     class HasSlurpy {
-        method @slurpy(*@a) {
+        method slurpy(*@a)@ {
             "\$self=$self", "\@a=@a";
         }
 
-        method @slurpy2($a, *@a) {
+        method slurpy2($a, *@a)@ {
             "\$self=$self", "\$a=$a", "\@a=@a";
         }
     }
@@ -108,10 +108,10 @@ plan 27;
 {
     class Piping-Methods {
 
-        method ~one is no-inline{
+        method one~ is no-inline{
             $self.${cat}
         }
-        method ~two is no-inline {
+        method two~ is no-inline {
             $self.one;
         }
 

@@ -28,7 +28,7 @@ plan 28;
 }
 
 class Foo is Int {
-    method ?Bool { $self <= 8 }
+    method Bool? { $self <= 8 }
     method squared()-->Foo { $self * $self }
     method times2()-->Foo  { $self + $self }
 }
@@ -103,14 +103,14 @@ class Foo is Int {
 {
     # Testing that these methods don't turn into piped commands
     class BadPipe {
-        method +bad-pipe-cond {
+        method bad-pipe-cond+ {
             my $k = 1;
             while $self.${ grep >X $k } {
                 $k++;
             }
             $k;
         }
-        method ~bad-pipe-loop {
+        method bad-pipe-loop~ {
             my $k = 0;
             while $k < 4 {
                 $self.${ grep $k };

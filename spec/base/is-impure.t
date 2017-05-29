@@ -5,7 +5,7 @@ plan 3;
 
 {
     my $canary = False;
-    sub ~foo() is return-by-var {
+    sub foo()~ is return-by-var {
         $canary = True;
         "bar";
     }
@@ -19,7 +19,7 @@ plan 3;
 {
     my $canary = False;
     class Foo {
-        method ?faa() is impure {
+        method faa()? is impure {
             $canary = True;
             $self.${tr o a | grep faa}
         }

@@ -5,9 +5,9 @@ env File $?PWD;
 
 
 augment List[File] {
-    method ?remove { $self.${xargs rm -rf !>X} }
+    method remove? { $self.${xargs rm -rf !>X} }
 
-    method @cat { ${cat @$self} }
+    method cat@ { ${cat @$self} }
 }
 
 my File $?file-cleanup = ${mktemp};
@@ -23,40 +23,40 @@ my File $?file-cleanup = ${mktemp};
 }
 augment File {
     #| Returns True if the file exists.
-    method ?exists { ${test -e $self}  }
+    method exists? { ${test -e $self}  }
     #| Alias for .exists
-    method ?e      { $self.exists }
+    method e?      { $self.exists }
     #| In Bool context, Files return [.exists](#exists)
     method Bool { $self.exists }
     #| Returns True if the file is a directory]
-    method ?dir    { ${test -d $self} }
+    method dir?    { ${test -d $self} }
     #| Alias for .dir
-    method ?d      { $self.dir }
+    method d?      { $self.dir }
     #| Returns True if the file is file
-    method ?file   { ${test -f $self}  }
+    method file?   { ${test -f $self}  }
     #| Alias for .file
-    method ?f      { $self.file }
+    method f?      { $self.file }
     #| Removes (unlinks) the file and returns True if it was successful.
     #| If the file is a directory it will recursively it's children.
-    method ?remove ${rm -rf $self}
+    method remove? ${rm -rf $self}
     #| Returns True if the file is empty
-    method ?empty  { ! ${test -s $self} }
+    method empty?  { ! ${test -s $self} }
     #| Returns True if the file is writable by the current user.
-    method ?writable { ${test -w $self}  }
+    method writable? { ${test -w $self}  }
     #| Alias for .writable
-    method ?w        { $self.writable        }
+    method w?        { $self.writable        }
     #| Returns True if the file is executable
-    method ?executable { ${test -x $self} }
+    method executable? { ${test -x $self} }
     #| Alias for .executable
-    method ?x          { $self.executable     }
+    method x?          { $self.executable     }
     #| Returns True if the file is readable by the current user.
-    method ?readable   { ${test -r $self} }
+    method readable?   { ${test -r $self} }
     #| Alias for .readable
-    method ?r          { $self.readable }
+    method r?          { $self.readable }
     #| Returns the size of the file in bytes
-    method +size   { ${wc -c < $self}  }
+    method size+   { ${wc -c < $self}  }
     #| Alias for .size
-    method +s      { $self.size }
+    method s+      { $self.size }
 
     method mtime-->DateTime on {
         GNU     ${ date -u -r $self '+%FT%T.%3N' !>X}
@@ -69,7 +69,7 @@ augment File {
         BusyBox ${ stat -c '%z' $self !>X | sed -r 's/ /T/;s/0{6}$//' }
     }
 
-    method +lines { ${wc -l < $self} }
+    method lines+ { ${wc -l < $self} }
     #| Returns the line of text at an index. `.at-pos` is the
     #| internal method called when using postcircumfix `[]`.
     #|{
@@ -77,22 +77,22 @@ augment File {
         $file.write(~<foo bar baz>);
         say $file[1] #-> bar
     }
-    method ~at-pos(#|[The index of the line to return]Int $i) {
+    method at-pos(#|[The index of the line to return]Int $i)~ {
         ${sed -n ($i+1 ~ 'p') $self}
     }
     #| Calls chmod(1) with the file as the last argument.
     #|{ .chmod(400) if File<foo.txt>.writeable }
-    method *chmod(#|[The argument passed to chmod(1)]$mode) {
+    method chmod(#|[The argument passed to chmod(1)]$mode)* {
         ${chmod $mode $self} ?? $self !! ()
     }
     #| Returns the name of the user that owns the file.
-    method ~owner on {
+    method owner~ on {
         GNU { ${ stat -c '%U' $self } }
         Any { ${ ls -ld $self | awk '{print $3}' } }
     }
 
     #| Returns the name of the group that own the file.
-    method ~group on {
+    method group~ on {
         GNU { ${ stat -c '%G' $self } }
         Any { ${ ls -ld $self | awk '{print $4}' } }
     }
@@ -104,26 +104,26 @@ augment File {
     #| newline, one will be prepended to the string. A newline is
     #| appended to the string regardless of whether it already ends in
     #| a string. Returns the argument string.
-    method ~push(#|[string to push] $str) {
+    method push(#|[string to push] $str)~ {
         $self.slurp.${
             awk :l($str) -v "f=$self"
              '{print>f}END{l=ENVIRON["l"];print l>f; printf "%s", l}'
         }
     }
 
-    method ~unshift($str) {
+    method unshift($str)~ {
         $self.slurp.${
             awk :l($str) -v "f=$self" -v 'RS=^$'
               'END{l=ENVIRON["l"];printf "%s",l;print l>f;printf "%s",$0>f}'
         }
     }
 
-    method ~shift   ${sed -nri -e '1!p;1w/dev/stdout' $self}
-    method ~pop     ${sed -nri -e '$!p;$w/dev/stdout' $self}
+    method shift~   ${sed -nri -e '1!p;1w/dev/stdout' $self}
+    method pop~     ${sed -nri -e '$!p;$w/dev/stdout' $self}
 
     #| Calls `touch(1)` on the file.
     #|{ .touch unless File<foo.txt> }
-    method ?touch {
+    method touch? {
         # Ohhh when I think about you I
         ${touch $self}
     }
@@ -136,20 +136,20 @@ augment File {
     #| Moves the file to another location. Overwrites pre-existing
     #| files at the destination location. Returns whether the move
     #| was completed successfully.
-    method *move-to(#|[The path to move the file to] $destination) {
+    method move-to(#|[The path to move the file to] $destination)* {
         ${mv $self $destination} ?? $destination !! ()
     }
 
     #| Sets the file's contents to `$data`. If the file doesn't exist
     #| it will be created.
-    method *write(#|[The string to write to the file] $data)  {
+    method write(#|[The string to write to the file] $data)*  {
         $data.${ > $self  } ?? $self !! ()
     }
 
     #| Returns true if the file contains the string
     #|{ say "we're in trouble" unless File</etc/hosts>.contains("localhost") }
-    method ?contains(#|[String to be searched for] $needle,
-                     #|[Enable case insensitivity] Bool :$i) {
+    method contains(#|[String to be searched for] $needle,
+                    #|[Enable case insensitivity] Bool :$i)? {
         $self.slurp.contains($needle,:$i);
     }
 
@@ -175,7 +175,7 @@ augment File {
         my $content = File</etc/hosts>.slurp
         say $content[2]; # print the 3rd line
     }
-    method @slurp ${cat $self}
+    method slurp@ ${cat $self}
 
     #| Opens the file and returns a FD that can be written to.
     #|{
@@ -211,17 +211,17 @@ augment File {
         say $file;
         say $file.path.subst('foo','bar');
     }
-    method ~path { $self }
+    method path~ { $self }
     #| Returns the name of the file.
     #|{ say File</etc/hosts>.name #->hosts }
-    method ~name { ${basename $self} }
+    method name~ { ${basename $self} }
     #| Returns the parent directory of the file.
     #|{ say File</etc/foo/foo.cfg>.name #->/etc/foo }
-    method ~parent-->File{ ${dirname $self} }
+    method parent-->File{ ${dirname $self} }
     #| Adds an element to the path. This is the same as concatinating
     #| the path with a '/' and the argument.
     #|{ say File</etc/foo>.add('foo.cfg') #->/etc/foo/foo.cfg }
-    method ~add($name)-->File { $self.path ~ '/' ~ $name }
+    method add($name)-->File { $self.path ~ '/' ~ $name }
 
     #| Creates a tempfile via mktemp(1) and adds it to a list of
     #| files which will be removed at the END.
@@ -232,7 +232,7 @@ augment File {
         ${mktemp ('-d' if $dir)}-->File.cleanup
     }
 
-    method *cleanup {
+    method cleanup* {
         $?file-cleanup.push($self);
         FILE-CLEAN ${rm -rf @($?file-cleanup.slurp) $?file-cleanup }
     }
@@ -289,15 +289,15 @@ augment File {
         ${ tar xvf $self | sed -n '1s/\/.*//p' };
     }
 
-    method @grep(Regex $regex) {
+    method grep(Regex $regex)@ {
         ${egrep $regex $self}
     }
 
-    method ~first(Regex $regex){
+    method first(Regex $regex)~ {
         ${egrep -m1 $regex $self}
     }
 
-    method @remove-lines(Regex $regex) {
+    method remove-lines(Regex $regex)@ {
         on {
             GNU ${sed -rni "\\§$regex§!\{p;b;\};w/dev/stdout" $self}
             # BB sed doesn't likebranch inside {} without \n following
@@ -305,15 +305,15 @@ augment File {
         }
     }
 
-    method @filter(Regex $regex, $replacement, :$g) {
+    method filter(Regex $regex, $replacement, :$g)@ {
         ${sed -rni "s§$regex§$replacement§{$g && 'g'}p" $self}
     }
 
-    method @line-subst(Regex $regex, $replacement, :$g) {
+    method line-subst(Regex $regex, $replacement, :$g)@ {
         ${sed -ri "s§$regex§$replacement§{$g && 'g'}" $self}
     }
 
-    method ~sha256 ${ sha256sum -b $self | awk '{print $1}' }
+    method sha256~ ${ sha256sum -b $self | awk '{print $1}' }
     method sha256-ok($sha256-expected, :$what) {
         my $sha256-got = $self.sha256;
         $sha256-got eq $sha256-expected or

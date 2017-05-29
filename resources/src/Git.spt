@@ -23,7 +23,7 @@ class GitURL {
     #| Gets the last section of the url without its extension. This is
     #| the same as directory name git will use to clone into by default.
     #|{ say GitURL<https://github.com/nodejs/node.git>.name #->node }
-    method ~name {
+    method name~ {
         $self.${sed 's/\/$//;s/.*\///g;s/\.git$//'}
     }
 }
@@ -42,13 +42,13 @@ class GitHubRepo {
 
     #| Returns the owner part of the GitHubRepo.
     #|{ say GitHubRepo<nodejs/node>.owner #-> nodejs }
-    method ~owner {
+    method owner~ {
         $self.${sed 's/\/.*//'}
     }
 
     #| Returns the name part of the GitHubRepo.
     #|{ say GitHubRepo<nodejs/node>.name #-> node }
-    method ~name {
+    method name~ {
         $self.${sed 's/.*\///'}
     }
 

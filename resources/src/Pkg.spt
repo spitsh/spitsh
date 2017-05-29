@@ -17,7 +17,7 @@ constant File $*pkglist-path = on {
 class Pkg {
 
     #| Tells the system specific package manager to update its list of pacakges.
-    static method ?update-pkglist on {
+    static method update-pkglist? on {
         Debian ${ apt-get update *>X   }
         RHEL   { ${yum clean expire-cache >X} && ${ yum check-update >X}; $? != 1 }
         Alpine ${ apk update -q }
@@ -41,7 +41,7 @@ class Pkg {
         }
     }
 
-    static method ?check-update {
+    static method check-update? {
         my $last-updated = Pkg.last-updated;
         if !$last-updated || now().posix - $last-updated.posix > $*pkglist-stale {
             note "Updating package list because it " ~ (
@@ -55,23 +55,23 @@ class Pkg {
 
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
-    method ?install {
+    method install? {
         $self-->List[Pkg].install;
     }
 
-    method ?ensure-install {
+    method ensure-install? {
         $self.installed || $self.install;
     }
 
     #| Returns True if a version of the package is installed.
-    method ?installed on {
+    method installed? on {
         Debian { ${dpkg -s $self *>X} }
         RHEL   { ${yum list installed $self *>X} }
         Alpine { ${apk info $self >X} }
     }
 
     #| Gets the version of the currently installed package
-    method ~version on {
+    method version~ on {
         Debian ${dpkg -s $self |sed -n 's/^Version: //p' }
         RHEL   ${yum info installed $self |sed -n 's/Version *: //p'}
         Alpine ${apk version $self | sed -rn '2s/\w+-(\S*).*/\1/p' }
@@ -93,7 +93,7 @@ augment List[Pkg] {
 
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
-    method ?install on {
+    method install? on {
         RHEL ${yum install -y @$self *>X}
         Debian {
             Pkg.check-update;

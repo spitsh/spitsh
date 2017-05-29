@@ -16,7 +16,7 @@ enum-class GNU is UNIXish { }
 
 #| For OS's based on the [Debian linux distribution](https://www.debian.org/)
 enum-class Debian is GNU is Linux {
-    static method ~release-name {
+    static method release-name~ {
         File</etc/os-release>.slurp.${sed -rn 's/^VERSION=.*\((.*)\).*/\1/p'}
     }
 }

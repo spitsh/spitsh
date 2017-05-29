@@ -23,7 +23,7 @@ plan 39;
 }
 
 {
-    sub ~paired(Pair $p) { $p.value }
+    sub paired(Pair $p)~ { $p.value }
     is paired((foo => "bar")), "bar", 'pair can be used as positional argument';
 }
 

@@ -28,7 +28,7 @@ augment List {
         my @a = <one two three>;
         @a[1] = "deux";
     }
-    method ~set-pos(Int $pos,Elem-Type $item) is rw {
+    method set-pos(Int $pos,Elem-Type $item)~ is rw {
         $self.${
           awk -v "pos=$pos" '{ print } END { for (i = (NR-1); i <= pos; i++) print "\n" }'
         | awk -v "pos=$pos" -v "item=$item" '{ print((NR-1) == pos ? item : $0) }'
@@ -37,7 +37,7 @@ augment List {
     #| Returns the number notional elements in the list. This is equal
     #| to the number of lines of text regardless of whether the last
     #| line is terminated by a newline.
-    method +elems { $self.${awk 'END{print NR}'} }
+    method elems+ { $self.${awk 'END{print NR}'} }
     #| The list in Int context returns `.elems`
     #|{
         my @a = <one two three>;
@@ -80,15 +80,15 @@ augment List {
 
     #| Returns the result of removing the `\n` between each line and
     #| replacing it with a new separtor.
-    method ~join(#|[The separator to join on]$sep) {
+    method join(#|[The separator to join on]$sep)~ {
         $self.${awk :s($sep) '{if(NR != 1) printf "%s", ENVIRON["s"]; printf "%s", $0}'}
     }
 
-    method @numeric-sort {
+    method numeric-sort@ {
         $self.${sort -n};
     }
 
-    method *grep(Regex $regex) {
+    method grep(Regex $regex)* {
         $self.${ egrep $regex }
     }
 

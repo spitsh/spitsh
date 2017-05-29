@@ -38,7 +38,7 @@ END{if(!found){ printf "%s\t%s\n", ENVIRON["key"],ENVIRON["value"]}}｣;
         $self.${ awk :$key '-F\t' '$1 != ENVIRON["key"] { print }' }
     }
 
-    method ?exists-key($key)  {
+    method exists-key($key)?  {
         $self.${
             awk :$key '-F\t'
             '$1==ENVIRON["key"]{ found=1; exit } END { if(!found) exit 1 }'

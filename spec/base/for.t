@@ -147,12 +147,12 @@ for 4,5 {
 {
     # Testing that these method don't get piped
     class BadPipe {
-        method ~bad-pipe-for {
+        method bad-pipe-for~ {
             for <1 2 3> {
                 $self.${grep $_};
             }
         }
-        method ~bad-pipe-method-for {
+        method bad-pipe-method-for~ {
             for <1 2 3> {
                 $self.uc;
             }

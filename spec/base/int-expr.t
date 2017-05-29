@@ -70,9 +70,9 @@ plan 30;
 }
 
 {
-    sub +mul(Int $x,Int $y) { $x * $y }
-    sub +sum(Int $x,Int $y) { $x + $y }
-    sub +subt(Int $x,Int $y) { $x - $y }
+    sub mul(Int $x,Int $y)+ { $x * $y }
+    sub sum(Int $x,Int $y)+ { $x + $y }
+    sub subt(Int $x,Int $y)+ { $x - $y }
 
     is sum(3,5),8,'+ as return value';
     is subt(3,5),-2,'- as return value';

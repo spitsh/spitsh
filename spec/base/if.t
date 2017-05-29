@@ -112,11 +112,11 @@ if $true and $false {
 
 {
     class Bar {
-        method ?Bool { $self eq 'bar' }
+        method Bool? { $self eq 'bar' }
     }
     class Foo {
-        method ?Bool { $self.is-foo }
-        method ?is-foo { $self eq 'foo' || $self eq 'fooish' }
+        method Bool? { $self.is-foo }
+        method is-foo? { $self eq 'foo' || $self eq 'fooish' }
         method to-bar( )-->Bar{ $self ~ 'derp' }
     }
 
@@ -285,7 +285,7 @@ if $true and $false {
 }
 
 {
-    class JustBool { method ?doit { True } }
+    class JustBool { method doit? { True } }
     if JustBool<foo>.doit {
         is $_, "foo",
           ‘inlining a method doesn't disappear the topic’;

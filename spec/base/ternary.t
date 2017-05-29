@@ -28,7 +28,7 @@ my $false = False;
 
 {
     class Foo {
-        method ?Bool { $self eq 'foo' }
+        method Bool? { $self eq 'foo' }
     }
     is Foo<foo> ?? 'true' !! 'false','true','?? !! boolifies condition (true)';
     is Foo<bar> ?? 'true' !! 'false','false','?? !! boolifies condition (false)';

@@ -2,15 +2,15 @@ sub ef($str)-->Str is native  { }
 sub et($str)-->Str  is native { }
 
 #| Joins arguments on a `\n` creating a `List`.
-sub @list(*$list) is no-inline {
+sub list(*$list)@ is no-inline {
     $list ?? ${printf '%s\n' $list} !! ();
 }
 
-sub e($str)-->Str { ${printf '%s' $str} }
+sub e($str)~ { ${printf '%s' $str} }
 #| Prints its argument to `$*OUT` with a newline
-sub ?say($str)  { ${printf '%s\\n' $str > $*OUT}  }
+sub say($str)?  { ${printf '%s\\n' $str > $*OUT}  }
 #| Prints its argument to `$*ERR` with a newline.
-sub ?note($str) { ${printf '%s\\n' $str >! }      }
+sub note($str)? { ${printf '%s\\n' $str >! }      }
 #| Prints its argument to `$*OUT` with no newline.
 sub print($str){ ${printf '%s' $str > $*OUT }   }
 
@@ -31,9 +31,9 @@ sub sleep(Int $seconds) { ${sleep $seconds} }
         say "wrong, the chicken DID come before the egg.";
     }
 }
-sub ?prompt(
+sub prompt(
     #|[The question to pose to the user]Str $question,
-    #|[The default answer] Bool :$default) {
+    #|[The default answer] Bool :$default)? {
     if $*interactive {
         my $yn = $default ?? '[Y/n]' !! '[y/N]';
         say "👻 $question $yn";
@@ -49,4 +49,4 @@ sub ?prompt(
     }
 }
 
-sub ?not(Bool $thing) { !$thing }
+sub not(Bool $thing)? { !$thing }

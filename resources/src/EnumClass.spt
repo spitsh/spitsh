@@ -4,7 +4,7 @@
 augment EnumClass {
 
     #| Returns the name of the enum class.
-    method ~name { $self.${cut -f1 '-d|'} }
+    method name~ { $self.${cut -f1 '-d|'} }
 
     #| Returns true if the argument string exactly matches a member of
     #| the enum class.
@@ -13,11 +13,11 @@ augment EnumClass {
         say RHEL.has-member('Ubuntu'); # false
         say Ubuntu ~~ Debian; # true
     }
-    method ?has-member(#|[A string to match against the enum's members] $candidate) {
+    method has-member(#|[A string to match against the enum's members] $candidate)? {
         $candidate.matches(/^($self)$/)
     }
 
     #| Returns True if the argument EnumClass is a member of the
     #| invocant EnumClass.
-    method ?ACCEPTS(EnumClass $b) { $self.has-member($b.name) }
+    method ACCEPTS(EnumClass $b)? { $self.has-member($b.name) }
 }

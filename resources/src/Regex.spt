@@ -2,5 +2,5 @@
 augment Regex {
     #| Returns the value of calling .match on the argument with the
     #| invocant regex as the argument.
-    method ?ACCEPTS($b) { $b.match($self) }
+    method ACCEPTS($b)? { $b.match($self) }
 }

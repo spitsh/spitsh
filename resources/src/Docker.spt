@@ -15,7 +15,7 @@ constant File $?docker-cleanup = ${mktemp};
 
 augment Docker {
 
-    static method ~latest-build-ver {
+    static method latest-build-ver~ {
         my $gh-release-url = $*moby-github.latest-release-url;
         die "unable to get latest docker version" unless $gh-release-url;
         $gh-release-url.${sed 's/.*\/v//'};
@@ -38,7 +38,7 @@ augment Docker {
         ${ sh -c (HTTP<https://get.docker.com>.get) };
     }
 
-    static method ?hello-world {
+    static method hello-world? {
         ${ $*docker run -i --rm hello-world >X };
     }
 
@@ -65,16 +65,16 @@ augment Docker {
         };
     }
 
-    method ?exists ${ $*docker container inspect $self *>X }
+    method exists? ${ $*docker container inspect $self *>X }
     method Bool    { $self.exists }
 
     method copy($from,$to) {
         ${ $*docker cp $from "$self:$to" }
     }
 
-    method ?remove { ${ $*docker rm -f $self >X} }
+    method remove? { ${ $*docker rm -f $self >X} }
 
-    method ?running {
+    method running? {
         ${ $*docker inspect -f '{{.State.Status}}' $self } eq 'running';
     }
 
@@ -82,7 +82,7 @@ augment Docker {
         'while true; do sleep 1; done'.${ $*docker start $self };
     }
 
-    method ?exec(Str $eval) {
+    method exec(Str $eval)? {
         if $self.running {
             $eval.${ $*docker exec -i $self sh};
         } else {
@@ -119,10 +119,10 @@ augment Docker {
 }
 
 augment DockerImg {
-    method ?exists { ${ $*docker image inspect $self *>X } }
-    method ?remove { ${ $*docker rmi $self >X} }
+    method exists? { ${ $*docker image inspect $self *>X } }
+    method remove? { ${ $*docker rmi $self >X} }
     method Bool { $self.exists }
-    method *tag ($tag) {
+    method tag ($tag)* {
         ?${$*docker tag $self $tag} && $tag;
     }
 }

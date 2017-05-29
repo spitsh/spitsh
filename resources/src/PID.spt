@@ -11,17 +11,17 @@ augment PID {
     #| In Bool context the PID returns the result of `.exists`
     method Bool { $self.exists }
     #| Returns true if the process exists on the system.
-    method ?exists on {
+    method exists? on {
         Alpine ${ps -o 'pid' | awk -v "p=$self" '$1==p{f=1}END{exit !f}'}
         Any    ${ps -p $self >X}
     }
     #| Sends the process a signal. Returns true if the signal was successfully
     #| sent.
-    method ?kill($signal = 'TERM') {
+    method kill($signal = 'TERM')? {
         ${kill "-$signal" $self};
     }
 
-    method ?kill-group($signal = 'TERM'){
+    method kill-group($signal = 'TERM')?{
         ${kill $signal "-$self"}
     }
 

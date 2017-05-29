@@ -8,10 +8,10 @@ augment JSON {
     method at-pos(Int $pos)-->JSON {
         $self.${ $*jq -c ".[$pos]"}
     }
-    method @flatten {
+    method flatten@ {
         $self.${ $*jq -cr '.[]' }
     }
-    method ~unescape {
+    method unescape~ {
         $self.${ $*jq -cr '.'}
     }
 }
@@ -31,7 +31,7 @@ sub j-object(JSON *$json)-->JSON {
 }
 
 augment List[JSON] {
-    method *sort($key) {
+    method sort($key)* {
         $self.${$*jq -rcs "sort_by(.$key)|.[]"}
     }
 }

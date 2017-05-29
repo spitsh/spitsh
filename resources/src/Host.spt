@@ -1,6 +1,6 @@
 class Host is Str {
 
-    method ?connectable(Port $port, Int :$timeout = 1) on {
+    method connectable(Port $port, Int :$timeout = 1)? on {
         Alpine {
             ${nc $self $port -w $timeout -z >X}
         }
@@ -9,9 +9,9 @@ class Host is Str {
         }
     }
 
-    static method *local { 'localhost' }
+    static method local* { 'localhost' }
 
-    method ?wait-connectable(Port $port, Int :$timeout = 60) {
+    method wait-connectable(Port $port, Int :$timeout = 60)? {
         my $total = 0;
         while $total < $timeout and !$self.connectable($port) {
             $total += 1;
@@ -19,11 +19,11 @@ class Host is Str {
         $total < $timeout;
     }
 
-    method ~read-port(Int $port) {
+    method read-port(Int $port)~ {
         ${ $*socat -u "TCP:$self:$port" -}
     }
 
-    method ~write-port(Int $port, $message) {
+    method write-port(Int $port, $message)~ {
         $message.${ $*socat - "TCP:$self:$port"};
     }
 }

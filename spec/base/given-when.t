@@ -132,7 +132,7 @@ plan 20;
 
 {
     my $canary;
-    sub ?bewl($foo) {
+    sub bewl($foo)? {
         given $foo {
             when /food/   { $canary = True;  True }
             when /fo/     { $canary = True;  True }

@@ -11,12 +11,12 @@
 }
 augment Bool {
     #| In Int context, Bools become a 1 if True or a 0 if False.
-    method +Int { $self ?? 1 !! 0 }
+    method Int+ { $self ?? 1 !! 0 }
     #| .gist returns "True" or "False".
-    method ~gist { $self ?? "True" !! "False" }
+    method gist~ { $self ?? "True" !! "False" }
 
     method JSON { ($self ?? 'true' !! 'false')-->JSON }
 
     #| Simply returns the value of the invocant regardless of the argument.
-    method ?ACCEPTS($b) { $self }
+    method ACCEPTS($b)? { $self }
 }

@@ -19,7 +19,7 @@ plan 43;
 }
 
 {
-    sub ~echo($a) { $a }
+    sub echo($a)~ { $a }
     my @a = <one two three>;
     is echo(<one two three>), @a, "<one two three> is a single arg";
     is echo(@a), @a, '@a is a single arg';
@@ -92,7 +92,7 @@ plan 43;
 }
 
 {
-    sub ~per-os() on {
+    sub per-os()~ on {
         RHEL { 'redhat' }
         Debian { 'debian' }
     }
@@ -110,7 +110,7 @@ plan 43;
 
 {
     my $canary = 0;
-    sub +check-re-enter is return-by-var {
+    sub check-re-enter+ is return-by-var {
         my $foo = ++$canary;
         $*NULL.write($foo);
         $foo;
@@ -140,7 +140,7 @@ plan 43;
 
 
 {
-    sub ~cmd-sub ${ printf 'foo' };
+    sub cmd-sub~ ${ printf 'foo' };
 
     is cmd-sub(), 'foo', 'sub ${..} syntax';
 
@@ -149,7 +149,7 @@ plan 43;
 
 
 {
-    sub @simple-slurpy(*@a) {
+    sub simple-slurpy(*@a)@ {
         "zero", @a;
     }
     is simple-slurpy(), "zero", '(*@a) with 0 args';
@@ -161,7 +161,7 @@ plan 43;
 }
 
 {
-    sub @less-simple-slurpy($a, $b, *@a) {
+    sub less-simple-slurpy($a, $b, *@a)@ {
         "\$a=$a", "\$b=$b","\@a=@a"
     }
 
@@ -173,7 +173,7 @@ plan 43;
 }
 
 {
-    sub @for-slurpy($c, *@a) {
+    sub for-slurpy($c, *@a)@ {
         .uc for @a;
     }
 
@@ -188,7 +188,7 @@ plan 43;
 }
 
 {
-    sub +primitive-typed-slurpy(Int *@a) { +@a }
+    sub primitive-typed-slurpy(Int *@a)+ { +@a }
     is primitive-typed-slurpy(1,2,<3 4 5>,6), 6,
       'primitive typed slurpy with list in arguments';
 }

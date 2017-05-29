@@ -27,20 +27,20 @@ augment Str {
     #| Writes string to `$*OUT`.
     method print { $self.${ >$*OUT } }
     #| Returns an uppercase version of the string
-    method ~uc    { $self.${tr '[:lower:]' '[:upper:]'} }
+    method uc~    { $self.${tr '[:lower:]' '[:upper:]'} }
     #| Returns an lowercase version of the string
-    method ~lc    { $self.${tr '[:upper:]' '[:lower:]'} }
+    method lc~    { $self.${tr '[:upper:]' '[:lower:]'} }
     #| Returns the number of characters in the string. **note:** This
     #| will depend on the locale of the terminal the script is running in.
-    method +chars { $self.${wc -m} }
+    method chars+ { $self.${wc -m} }
     #| Returns the number of bytes in the string.
-    method +bytes { $self.${wc -c} }
+    method bytes+ { $self.${wc -c} }
 
-    method +lines { $self.${wc -l} }
+    method lines+ { $self.${wc -l} }
 
     #| Splits the string on a separator. Returns the string with each
     #| instance of the `$sep` replaced with `\n` as a [List].
-    method @split(#|[The separator to split on]$sep) {
+    method split(#|[The separator to split on]$sep)@ {
         $self.${
           awk -v "FS=$sep" '{l = split($0,a); for (i = 0; i < l;) print a[++i]}'
          }
@@ -56,9 +56,9 @@ augment Str {
        $a.subst('o','e',:g).say;
        say $a;
     }
-    method ~subst(#|[The string to be replaced]$target,
+    method subst(#|[The string to be replaced]$target,
                   #|[The string to replace it with]$replacement,
-                  #|[Turns on global matching]Bool :$g){
+                  #|[Turns on global matching]Bool :$g)~ {
 
 constant $subst-awk =
 Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
@@ -73,7 +73,7 @@ Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
         $self.${awk -v "g=$g" $subst-awk :T($target) :R($replacement)};
     }
 
-    method ~subst-eval($placeholder,$value) {
+    method subst-eval($placeholder,$value)~ {
         $self.subst($placeholder,$value.subst("'","'\\''"));
     }
     #| Returns true if the string contains `$needle`.
@@ -82,8 +82,8 @@ Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
        say "Hello, World".contains('wo'); #-> False
        say "Hello, World".contains('wo',:i); #-> True
     }
-    method ?contains(#|[The string being searched for]$needle,
-                     #|[Turns on case insensitive matching]Bool :$i) on {
+    method contains(#|[The string being searched for]$needle,
+                     #|[Turns on case insensitive matching]Bool :$i)? on {
         Any {
             $self.${awk -v 'RS=^$' -v "t=$needle" -v "i=$i"
                     'END{exit(!index(i ? tolower($0) :$0, i ? tolower(t) : t))}'}
@@ -106,7 +106,7 @@ Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
             default { "well I'm not sure.." }
         }
     }
-    method ?starts-with(#|[True if the string starts-with this]$starts-with) {
+    method starts-with(#|[True if the string starts-with this]$starts-with)? {
         $self.${
             awk :T($starts-with) -v 'RS=^$'
             '{exit(index($0,ENVIRON["T"])!=1)}'
@@ -123,7 +123,7 @@ Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
             when .ends-with('.io')  { say 'a moon of Jupiter' }
         }
     }
-    method ?ends-with(#|[True if the string ends-with this]$ends-with) {
+    method ends-with(#|[True if the string ends-with this]$ends-with)? {
 constant $awk-ends-with =
 Q{END {
   T=ENVIRON["T"]
@@ -149,7 +149,7 @@ Q{END {
             say @/[3]; #-> spitsh/spitsh
         }
     }
-    method ?match(#|[The regular expression to match against]Regex $r) is impure on {
+    method match(#|[The regular expression to match against]Regex $r)? is impure on {
         RHEL {
             @/ = $self.${
                 awk :$r (
@@ -223,7 +223,7 @@ Q{END {
             }
         }
     }
-    method ?matches(Regex $r) on {
+    method matches(Regex $r)? on {
         Debian {
             # because mawk is the worst
             $self.${perl -e '(join "",<STDIN>) =~ /@ARGV[0]/s or exit 1' $r}
@@ -236,21 +236,21 @@ Q{END {
         }
     }
 
-    method *write-to(File $to) {
+    method write-to(File $to)* {
         $self.${awk -v "f=$to" -v 'RS=^$' '{printf "%s",$0>f;printf "%s",$0}'}
     }
 
-    method *append-to(File $to) {
+    method append-to(File $to)* {
         $self.${tee -a $to}
     }
 
     method extract-->File {
         $self.${ tar xvz | sed -n '1s/\/.*//p' };
     }
-    method ~gist { $self }
+    method gist~ { $self }
 
     #| Returns True if the invocant and argument string are equal.
-    method ?ACCEPTS($b) { $b eq $self }
+    method ACCEPTS($b)? { $b eq $self }
 
 constant $json-escape =
 Q｢END{
@@ -276,7 +276,7 @@ constant $awk-subst-re =
   printf "%s", R
 }｣;
 
-    method ~subst-re(Regex $target, $replacement, Bool :$g, Bool :$i) on {
+    method subst-re(Regex $target, $replacement, Bool :$g, Bool :$i)~ on {
         Debian {
             $self.${
                 perl -pe
@@ -297,14 +297,14 @@ constant $awk-subst-re =
         }
     }
 
-    method ~substr(Int $start, Int $length) {
+    method substr(Int $start, Int $length)~ {
         $self.${
             awk -v 'RS=^$' -v "s={$start + 1}" -v "l=$length"
             '{printf "%s", substr($0,s,l)}'
         }
     }
 
-    static method ~random($n = 10) {
+    static method random($n = 10)~ {
         ${ tr -dc 'a-zA-Z0-9' < '/dev/urandom' | head -c $n }
     }
 
