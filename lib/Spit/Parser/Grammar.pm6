@@ -351,10 +351,10 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     rule list {
-        <EXPR($gt-comma)>* % ','
+        [<EXPR($gt-comma)>+ % ',' ','?]?
     }
     rule args {
-        [$<named>=<.pair> || $<pos>=<.EXPR($gt-comma)> ]* % ','
+        [[$<named>=<.pair> || $<pos>=<.EXPR($gt-comma)> ]+ % ',' ','?]?
     }
 
     token termish {

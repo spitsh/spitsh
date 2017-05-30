@@ -1,6 +1,6 @@
 use Test;
 
-plan 43;
+plan 44;
 
 {
     sub foo() {
@@ -89,6 +89,7 @@ plan 43;
 {
     sub plus-five(Int $i )-->Int {$i + 5}
     is plus-five(2),7,"Int typed param works";
+    is plus-five(2,),7, "trailnig , in arg list";
 }
 
 {
