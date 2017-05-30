@@ -640,6 +640,8 @@ method inline-value($inner,$outer,$_ is raw) {
             $clone.stage3-done = False;
             self.walk($clone);
             $clone;
+        } else {
+            Nil
         }
     }
     when *.compile-time.defined {
@@ -659,6 +661,8 @@ method inline-value($inner,$outer,$_ is raw) {
             my $clone = .clone;
             $clone.children = @inlined;
             $clone;
+        } else {
+            Nil
         }
     }
     default {
