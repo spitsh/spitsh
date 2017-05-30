@@ -529,9 +529,7 @@ method var-create($/,$decl-type) {
     );
 }
 
-method term:block ($/) { make $<block>.ast }
 method term:quote ($/)   { make $<quote>.ast  }
-method term:angle-quote ($/) { make $<angle-quote>.ast }
 method term:int ($/)   { make $<int>.ast    }
 method int ($/) { make SAST::IVal.new: val => $/.Int }
 method term:var ($/)   { make $<var>.ast }
@@ -556,6 +554,22 @@ method var ($/)   {
         }
     }
 }
+
+method term:circumfix ($/) {
+    make $<circumfix>.ast
+}
+method circumfix:sym«< >» ($/) { make $<angle-quote>.ast }
+method circumfix:sym<( )> ($/) {
+    my @stmts = $<statementlist>.ast;
+    make do if not @stmts {
+        SAST::Empty.new;
+    } elsif @stmts == 1 {
+        @stmts[0];
+    } else {
+        SAST::Stmts.new(|@stmts)
+    }
+}
+method circumfix:sym<{ }> ($/) { make $<block>.ast }
 
 method special-var:sym<?> ($/) { make SAST::LastExitStatus.new }
 
@@ -598,22 +612,9 @@ method term:name ($/) {
     }
 }
 
-
-
 method term:sast ($/) {
     my (:@pos,:%named) := $<args>.ast;
     make ::('SAST::' ~ $<identifier>.Str).new(|@pos,|%named);
-}
-
-method term:parens ($/) {
-    my @stmts = $<statementlist>.ast;
-    make do if not @stmts {
-        SAST::Empty.new;
-    } elsif @stmts == 1 {
-        @stmts[0];
-    } else {
-        SAST::Stmts.new(|@stmts)
-    }
 }
 
 method term:cmd ($/) {

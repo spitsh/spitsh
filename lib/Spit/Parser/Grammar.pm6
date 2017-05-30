@@ -366,7 +366,6 @@ grammar Spit::Grammar is Spit::Lang {
     token term:true { 'True' }
     token term:false { 'False' }
     token term:quote { <quote> }
-    token term:angle-quote { <angle-quote> }
     token term:int { <int> }
     token int { \d+ }
     token term:var { <var> }
@@ -388,7 +387,21 @@ grammar Spit::Grammar is Spit::Lang {
     proto token twigil {*}
     token twigil:sym<*> { <sym> }
     token twigil:sym<?> { <sym> }
-    token term:block { <block>  }
+
+    token term:circumfix { <circumfix> }
+    proto token circumfix {*}
+    token circumfix:sym«< >» { <angle-quote> }
+    token circumfix:sym<( )> {
+        $<statementlist>=<.wrap: '(',')', 'parenthesized expression', rule {
+            '' <R=.statementlist>
+        }>
+    }
+    token circumfix:sym<{ }> { <block> }
+    token circumfix:sym<[ ]> {
+        $<statementlist>=<.wrap: '[', ']', 'structured list', rule {
+            '' <R=.list>
+        }>
+    }
     token term:sym<self>  {
         <sym>
         { SX.new(message => 'Use of Perl 6 sytle invocant. In Spit use ‘$self’').throw }
@@ -450,12 +463,6 @@ grammar Spit::Grammar is Spit::Lang {
         $<key>=<.identifier>
         \h*'=>'<.ws>
         $<value>=<.EXPR($gt-fatarrow)>
-    }
-
-    token term:parens {
-        $<statementlist>=<.wrap: '(',')', 'parenthesized expression', rule {
-            '' <R=.statementlist>
-        }>
     }
 
     rule term:cmd { <cmd> }
@@ -625,7 +632,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token cmd-term {
         $<i-sigil>=<::('prefix:i-sigil')>*
-        (<var> | $<parens>=<::("term:parens")> <![<>›‹]> | <quote> | <cmd> )
+        (<var> | $<parens>=<::("circumfix:sym<( )>")> <![<>›‹]> | <quote> | <cmd> )
         <postfix>*
     }
 
