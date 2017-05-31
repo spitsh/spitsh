@@ -1,6 +1,6 @@
 use Test;
 
-plan 19;
+plan 18;
 
 {
     my File $file .= tmp;
@@ -38,11 +38,4 @@ plan 19;
     is $file.slurp, "foobar\nbaz\n%s", ‘.push('%s')’;
 
     CHECK-CLEAN nok $file.exists,"tempfiles should be rm by END";
-}
-
-{
-    given File.tmp {
-        .write(<foo bar baz>);
-        is .slurp[1],'bar','.slurp[1]';
-    }
 }

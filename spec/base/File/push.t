@@ -1,4 +1,4 @@
-use Test; plan 1;
+use Test; plan 2;
 
 {
     my File $file .= tmp;
@@ -7,4 +7,12 @@ use Test; plan 1;
     }
 
     ok $file.slurp.matches(/^foo\nbar\nbaz\n$/),".push in loop";
+}
+
+{
+    given File.tmp {
+        .remove;
+        .push('foo');
+        is .slurp, 'foo', '.push onto non-existing file';
+    }
 }

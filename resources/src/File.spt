@@ -105,14 +105,14 @@ augment File {
     #| appended to the string regardless of whether it already ends in
     #| a string. Returns the argument string.
     method push(#|[string to push] $str)~ {
-        $self.slurp.${
+        $self.try-slurp.${
             awk :l($str) -v "f=$self"
              '{print>f}END{l=ENVIRON["l"];print l>f; printf "%s", l}'
         }
     }
 
     method unshift($str)~ {
-        $self.slurp.${
+        $self.try-slurp.${
             awk :l($str) -v "f=$self" -v 'RS=^$'
               'END{l=ENVIRON["l"];printf "%s",l;print l>f;printf "%s",$0>f}'
         }
@@ -175,8 +175,13 @@ augment File {
         my $content = File</etc/hosts>.slurp
         say $content[2]; # print the 3rd line
     }
-    method slurp@ ${cat $self}
+    method slurp@ {
+        $self ?? ${cat $self} !! die "$self could't be slurped because it doesn't exist"
+    }
 
+    method try-slurp@ {
+        $self.f ?? ${cat $self} !! ()
+    }
     #| Opens the file and returns a FD that can be written to.
     #|{
         my File $file = 'foo.txt';
