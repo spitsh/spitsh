@@ -346,7 +346,11 @@ grammar Spit::Grammar is Spit::Lang {
         [
             [ <!{ $min-precedence }> || {} <.check-prec($min-precedence,$<termish>[*-1].ast)> ]
             <infix>
-            [ <termish>  || {}<.expected("term after infix {$<infix>[*-1]<sym>.Str}")>  ]
+            [
+                || <termish>
+                || <?{ $<infix>[*-1] eq ',' }> # trailing , is allowed
+                || <.expected("term after infix {$<infix>[*-1]<sym>.Str}")>
+            ]
         ]*
     }
 

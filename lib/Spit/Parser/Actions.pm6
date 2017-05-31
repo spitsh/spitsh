@@ -723,12 +723,12 @@ method infix:sym<.=> ($/) {
     }
 }
 method infix:sym<,>  ($/) {
-    make -> $lhs,$rhs {
+    make -> $lhs,$rhs? {
         if $lhs ~~ SAST::List && $rhs !~~ SAST::List {
-            $lhs.push($rhs);
+            $lhs.push($rhs) if $rhs;
             $lhs;
         } else {
-            SAST::List.new($lhs,$rhs);
+            SAST::List.new($lhs, $rhs // Empty);
         }
     }
 }
