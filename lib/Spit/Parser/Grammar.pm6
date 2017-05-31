@@ -261,7 +261,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token longarrow {['-->'| '⟶']}
     rule new-routine(|c){
-        $<name>=<.identifier>
+        [$<name>=<.identifier> || <.invalid("routine name")>]
         { $*DECL = $*ACTIONS.make-routine($/,|c) }
         <.attach-pre-doc>
         [
