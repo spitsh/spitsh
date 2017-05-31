@@ -65,9 +65,9 @@ class Pkg {
 
     #| Returns True if a version of the package is installed.
     method installed? on {
-        Debian { ${dpkg -s $self *>X} }
-        RHEL   { ${yum list installed $self *>X} }
-        Alpine { ${apk info $self >X} }
+        Debian ${dpkg -s $self *>X}
+        RHEL   ${yum list installed $self *>X}
+        Alpine ${apk info -e $self}
     }
 
     #| Gets the version of the currently installed package
