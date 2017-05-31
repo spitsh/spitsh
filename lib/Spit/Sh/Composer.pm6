@@ -1,10 +1,12 @@
-unit class Spit::Sh::Composer;
 use Spit::SAST;
 need Spit::Exceptions;
 need Spit::Constants;
 need Spit::DependencyList;
 use Spit::Metamodel;
 need Spit::OptsParser;
+need Spit::Sh::Method-Optimizer;
+unit class Spit::Sh::Composer does Method-Optimizer;
+
 
 multi reduce-block(SAST::Stmts:D $block) {
     if $block.children.all ~~ SAST::Empty {
@@ -24,19 +26,6 @@ has %.opts;
 has $!os;
 has %.clone-cache;
 has $.no-inline;
-
-# cache for method declarations
-has $!ENUMC-ACCEPTS;
-has $!ENUMC-NAME;
-has $!STR-BOOL;
-has $!STR-MATCH;
-has $!STR-SUBST-EVAL;
-
-method ENUMC-ACCEPTS { $!ENUMC-ACCEPTS //= tEnumClass.^find-spit-method: 'ACCEPTS' }
-method ENUMC-NAME    { $!ENUMC-NAME //= tEnumClass.^find-spit-method: 'name' }
-method STR-MATCHES   { $!STR-MATCH //= tStr.^find-spit-method: 'match' }
-method STR-BOOL      { $!STR-BOOL //= tBool.^find-spit-method: 'Bool' }
-method STR-SUBST-EVAL     { $!STR-SUBST-EVAL //= tStr.^find-spit-method: 'subst-eval' }
 
 method os {
     $!os ||= do {
@@ -516,38 +505,8 @@ multi method walk(SAST::Stmts:D $THIS is rw) {
 
 multi method walk(SAST::MethodCall:D $THIS is rw) {
     self.walk($THIS.declaration);
-
-    my \ident = $THIS.declaration.identity;
-
-    if ident === self.STR-BOOL
-        and (my $ct = $THIS.invocant.compile-time).defined
-    {
-        $THIS .= stage3-node(SAST::BVal, val => ?$ct);
-    }
-
-    elsif ident === self.ENUMC-NAME
-        and $THIS.invocant.compile-time -> $ct
-    {
-        $THIS .= stage3-node(SAST::SVal,val => $ct.name);
-    }
-
-    elsif ident === self.ENUMC-ACCEPTS {
-        my $enum := $THIS[0];
-        my $candidate := $THIS.pos[0];
-
-        if $candidate.compile-time -> $a {
-            if $enum.compile-time -> Spit::Type $b {
-                my $val = do given $a {
-                    when Str { so $b.^types-in-enum».name.first($a) }
-                    when Spit::Type { $a ~~ $b }
-                };
-                $THIS .= stage3-node(SAST::BVal,:$val);
-            }
-        }
-    }
-    else {
-        callsame;
-    }
+    self.method-optimize($THIS.invocant.type, $THIS, $THIS.declaration.identity)
+      and callsame;
 }
 
 multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {

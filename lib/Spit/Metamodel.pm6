@@ -350,6 +350,7 @@ constant tFile is export  = gen-type('File', tStr);
 constant tOS is export  = gen-type('OS', tEnumClass, metatype => Spit::Metamodel::EnumClass);
 constant tPID is export = gen-type('PID', tInt);
 constant tWhateverContext = gen-type('WhateverContext',tStr, metatype => Spit::Metamodel::WhateverContext);
+constant tJSON is export = gen-type('JSON', tStr, :primitive);
 
 sub gen-param-type($name, @param-names, :$primitive) {
     my $param-type := Spit::Metamodel::Parameterizable.new_type(:$name);
@@ -371,6 +372,6 @@ constant tList is export = gen-param-type('List', ['Elem-Type'], :primitive);
 constant tPair is export = gen-param-type('Pair', ['Key', 'Value'], :primitive);
 
 constant %bootstrapped-types is export  = %(
-    (tAny,tStr,tInt,tBool,tList,tRegex,tPattern,tEnumClass,tFD,tOS, tPID, tPair)\
+    (tAny,tStr,tInt,tBool,tList,tRegex,tPattern,tEnumClass,tFD,tOS, tPID, tPair, tJSON)\
       .map({ .^name => $_ }).eager.Slip;
 );

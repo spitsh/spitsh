@@ -848,6 +848,12 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
         ($.invocant unless $.declaration.static), |@.pos, |%.named.values
     }
 
+    method auto-compose-children {
+        # Don't want invocant to be walked so we can check for method chains that
+        # can be optimized/improved
+        |@.pos, |%.named.values;
+    }
+
     method topic($self is rw:)  is rw {
         $!topic or do if $.type ~~ tBool {
             $.invocant.topic

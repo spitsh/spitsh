@@ -2,9 +2,9 @@ use Test;
 
 plan 3;
 {
-    my $one = j{ :id(0), :val("q")};
-    my $two = j{ :id(1), :val("a")};
-    my $three = j{ :id(2), :val("z") };
+    my $one = { :id(0), :val("q")};
+    my $two = { :id(1), :val("a")};
+    my $three = { :id(2), :val("z") };
     my JSON @a = $one, $two, $three;
     my @b = @a.sort("val");
     is @b[0], $two, '.sort first correct';

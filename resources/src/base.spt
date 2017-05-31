@@ -12,7 +12,7 @@ class File {} #
 class PID {} # is Int
 class Pair {} # is Str is primitive
 
-class JSON is Str is primitive { }
+class JSON { } # is Str is primitive
 class DateTime { }
 class HTTP {}
 enum-class OS { }

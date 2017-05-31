@@ -402,7 +402,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
     token circumfix:sym<{ }> { <block> }
     token circumfix:sym<[ ]> {
-        $<statementlist>=<.wrap: '[', ']', 'structured list', rule {
+        $<list>=<.wrap: '[', ']', 'structured list', rule {
             '' <R=.list>
         }>
     }
@@ -477,12 +477,6 @@ grammar Spit::Grammar is Spit::Lang {
     # -->Pkg.install unless Cmd<curl>
     rule term:topic-cast {
         <.longarrow> [ <type> || <.expected('A type to cast $_ to')> ]
-    }
-
-    rule term:j-object {
-        'j' $<pairs>=<.wrap: '{', '}', 'json object', rule {
-             '' <pair>* % ','
-         }>
     }
 
     proto token eq-infix {*}

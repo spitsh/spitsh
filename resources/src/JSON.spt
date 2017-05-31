@@ -1,23 +1,19 @@
 #| The JSON class represents any valid JSON;
-augment JSON {
+augment JSON { # is Str is primitive
     method pretty-->JSON { $self.${$*jq} }
 
-    method at-key($key)-->JSON{
-        $self.${ $*jq -c ".$key" }
-    }
-    method at-pos(Int $pos)-->JSON {
-        $self.${ $*jq -c ".[$pos]"}
-    }
-    method flatten@ {
-        $self.${ $*jq -cr '.[]' }
-    }
-    method unescape~ {
-        $self.${ $*jq -cr '.'}
+    method at-key($key)-->JSON is native { }
+    method at-pos(Int $pos)-->JSON is native { }
+    method keys@  is native {}
+    method values@ is native {}
+    method List is native {}
+    method at-path(*@args)* {
+        $self.${ $*jq -cr @args }
     }
 }
 
-sub j-array(JSON *@json){
-    '[' ~ @json.join(',') ~ ']'
+sub j-array(JSON *@json)-->JSON {
+    ('[' ~ @json.join(',') ~ ']')-->JSON
 }
 
 sub j-object(JSON *$json)-->JSON {

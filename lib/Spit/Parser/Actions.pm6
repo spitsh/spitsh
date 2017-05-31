@@ -569,7 +569,39 @@ method circumfix:sym<( )> ($/) {
         SAST::Stmts.new(|@stmts)
     }
 }
-method circumfix:sym<{ }> ($/) { make $<block>.ast }
+method circumfix:sym<{ }> ($/) {
+    my $block = $<block>.ast;
+    make do if $block.one-stmt andthen (
+        $_ ~~ SAST::Pair and my @pairs = $_ or
+        (
+            $_ ~~ SAST::List and
+            not .children.first(* !~~ SAST::Pair) and
+            @pairs = .children
+        )
+    )
+    {
+        SAST::SubCall.new(
+            name => 'j-object',
+            match => $/,
+            pos => flat @pairs.map: {
+                SAST::Blessed.new(
+                    .key,
+                    class-type => tStr,
+                    match => .key.match
+                ),
+                .value
+            }
+        );
+    }
+    else {  $block }
+}
+method circumfix:sym<[ ]> ($/) {
+    make SAST::SubCall.new(
+        name => 'j-array',
+        match => $/,
+        pos => $<list>.ast.children,
+    )
+}
 
 method special-var:sym<?> ($/) { make SAST::LastExitStatus.new }
 
@@ -633,23 +665,6 @@ method term:topic-call ($/) {
 
 method term:topic-cast ($/) {
     make SAST::Cast.new(to => $<type>.ast,SAST::Var.new(name => '_',sigil => '$'));
-}
-
-method term:j-object ($/) {
-    my @pos = flat $<pairs><wrapped><pair>.map(*.ast).map: -> @pair {
-        SAST::Blessed.new(
-            @pair[0],
-            class-type => tStr,
-            match => @pair[0].match,
-        ),
-        @pair[1]
-    };
-
-    make SAST::SubCall.new(
-        name => 'j-object',
-        match => $/,
-        :@pos,
-    );
 }
 
 method term:pair ($/) { make SAST::Pair.new(|$<pair>.ast) }
