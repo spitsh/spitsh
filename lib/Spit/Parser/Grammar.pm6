@@ -76,7 +76,6 @@ grammar Spit::Grammar is Spit::Lang {
                 | <pragma>
                 | <declaration>
                 | <statement-control>
-                | <statement-prefix>
                 | {} <EXPR-and-mod>
             )
             | <?[;]>
@@ -115,17 +114,16 @@ grammar Spit::Grammar is Spit::Lang {
 
     proto token statement-prefix {*}
 
-    constant @phaser-names = eager Spit-Phaser::.keys;
-    rule statement-prefix:phaser {
-        $<sym>=@phaser-names <blorst>
+    token statement-prefix:phaser {
+        $<sym>=['END'|'FILE-CLEAN'|'CHECK-CLEAN'] \s <.ws> <blorst>
     }
 
-    rule statement-prefix:sym<quietly> {
-        <.sym> <blorst>
+    token statement-prefix:sym<quietly> {
+        <.sym> \s <.ws> <blorst>
     }
 
-    rule statement-prefix:sym<start> {
-        <.sym> <blorst>
+    token statement-prefix:sym<start> {
+        <.sym> \s <.ws> <blorst>
     }
 
     proto token statement-mod-cond {*}
@@ -478,6 +476,7 @@ grammar Spit::Grammar is Spit::Lang {
     rule term:topic-cast {
         <.longarrow> [ <type> || <.expected('A type to cast $_ to')> ]
     }
+    token term:statement-prefix { <statement-prefix> }
 
     proto token eq-infix {*}
 

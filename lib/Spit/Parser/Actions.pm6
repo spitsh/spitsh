@@ -667,6 +667,8 @@ method term:topic-cast ($/) {
     make SAST::Cast.new(to => $<type>.ast,SAST::Var.new(name => '_',sigil => '$'));
 }
 
+method term:statement-prefix ($/) { make $<statement-prefix>.ast }
+
 method term:pair ($/) { make SAST::Pair.new(|$<pair>.ast) }
 
 method pair ($/) { make $<pair>.ast }
