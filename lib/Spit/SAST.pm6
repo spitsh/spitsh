@@ -1245,28 +1245,28 @@ class SAST::List is SAST::MutableChildren {
 role SAST::CompileTimeVal does SAST {
     method compile-time { $.val }
     method gist { $.node-name ~ "({$.val})" }
-    method stage2 ($) { self }
+    method stage3-done is rw { $ = True }
+    method stage2-done is rw { $ = True }
+    method do-stage2($ctx, :$desc) {
+        # Simplify do-stage2 for compile time things
+        $.ctx = $ctx;
+        coerce self,$ctx,:$desc;
+    }
 }
 
 class SAST::IVal does SAST::CompileTimeVal {
     has Int:D $.val is required is rw;
-    method compile-time { $!val }
     method type { tInt }
 }
 
 class SAST::SVal does SAST::CompileTimeVal {
     has Str:D $.val is required is rw;
     method type { tStr }
-    method compile-time { $!val }
 }
 
 class SAST::BVal does SAST::CompileTimeVal {
     has Bool:D $.val is required is rw;
     method type { tBool }
-    method compile-time { $!val }
-    # method stage2 ($ctx where { $_ ~~ tInt }) {
-    #     SAST::IVal.new(val => +$!val,:$.match).do-stage2($ctx);
-    # }
 }
 
 class SAST::Concat is SAST::MutableChildren {
