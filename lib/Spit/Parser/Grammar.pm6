@@ -163,6 +163,9 @@ grammar Spit::Grammar is Spit::Lang {
     rule statement-control:sym<when> {
         (
             <.sym>
+            # whenver you use blocks without following it with <.eat-terminator>
+            # you have to compensate by manually setting $*ENDSTMT
+            { $*ENDSTMT = False }
             [
                 <EXPR> <block>
                 ||
@@ -281,14 +284,16 @@ grammar Spit::Grammar is Spit::Lang {
         ]?
     }
 
-    rule on-switch {
-        'on' $<candidates>=<.wrap: '{','}','on switch', rule {
+    token on-switch {
+        'on' <.ws> $<candidates>=<.wrap: '{','}','on switch', rule {
             (
                 <!before '}'>
                 [<os> || <.expected('OS name')> ]
                 [<cmd-block> || <.expected("A block for { $<os>.Str }")>]
+                { $*ENDSTMT = False }
             )*
         }>
+        <.ENDSTMT>
     }
 
     rule declaration:var {

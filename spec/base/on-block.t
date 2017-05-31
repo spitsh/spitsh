@@ -1,5 +1,5 @@
 use Test;
-plan 4;
+plan 5;
 
 {
     constant $foo = on {
@@ -20,4 +20,11 @@ plan 4;
     }
 
     is eval(os => RHEL){ print $bar }.${sh}, 'redhat', 'on { OS ${...} } syntax';
+}
+
+{
+    is (on {
+        UNIXish { "unix" }
+        Any { "any" if True }
+    }), 'unix', 'weird parsing bug';
 }

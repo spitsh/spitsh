@@ -1,6 +1,6 @@
 use Test;
 
-plan 20;
+plan 21;
 
 {
     my $a = "foo";
@@ -146,4 +146,11 @@ plan 20;
         flunk 'caseable as a Bool return value';
     }
     ok $canary, ‘doesn't get run in a subshell’;
+}
+
+{
+    is (given $*os {
+           when UNIXish { "unix" }
+           when Any     { "any" if True }
+       }), 'unix', 'weird parsing bug';
 }
