@@ -845,7 +845,8 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     }
 
     method children {
-        ($.invocant unless $.declaration.static), |@.pos, |%.named.values
+        # if asked for children before stage2 return invocant regardlress
+        ($.invocant unless $.stage2-done and $.declaration.static), |@.pos, |%.named.values
     }
 
     method auto-compose-children {
