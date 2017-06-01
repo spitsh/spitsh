@@ -34,6 +34,8 @@ constant FD $*ERR = 2;
 }
 constant FD $?CAP = 1;
 
+constant File $?devnull = '/dev/null';
+
 #|File descriptor redirected to '/dev/null' by default. 'X' is a short
 #|alias for `$*NULL` in `${..}` commands.
 #|{
@@ -42,7 +44,7 @@ constant FD $?CAP = 1;
     }
 }
 constant $*NULL = {
-    FD<4>.open-w("/dev/null");
+    FD<4>.open-w($?devnull);
     FD<4>;
 }
 #| The maximum file descriptor number that can be open or can be
