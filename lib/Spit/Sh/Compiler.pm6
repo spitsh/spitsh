@@ -892,7 +892,7 @@ multi method node(SAST::Quietly:D $_) {
 
 #!Start
 multi method node(SAST::Start:D $_) {
-    |self.node(.block, :curlies), ' &'
+    |self.node(.block, :curlies), ">{self.null} \&";
 }
 
 multi method cap-stdout(SAST::Start:D $_) {

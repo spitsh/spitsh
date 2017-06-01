@@ -1,6 +1,6 @@
 use Test;
 
-plan 4;
+plan 6;
 
 is eval{
     start {
@@ -55,3 +55,14 @@ is eval{
     wait $pid1, $pid2;
     say 6;
 }.${sh}, <1 2 3 4 5 6>, ‘List[PID].wait’;
+
+{
+    my $pid = File.tmp;
+    sub foo()~ {
+        $pid.write: start sleep 1000;
+        "foo";
+    }
+
+    is foo(), 'foo', 'can return from a sub that starts a process';
+    ok $pid.slurp-->PID.kill, 'kill process created in sub';
+}
