@@ -20,13 +20,13 @@ sub ok (#|[The success condition] Bool $cond,
 #|{
     is File</etc/meaning-of-life.cfg>.slurp,'42',"configured with correct MOL";
 }
-sub is (
-    #|[The string to check]$a,
-    #|[The expected string]$b,
-    #|[The associated message]$msg?) {
-    $a eq $b
-        ?? say '✔' ~ " - $msg"
-        !! die '✘' ~ " - $msg. Expected '$b' but got '$a'";
+sub is (#|[The string to check] $got,
+        #|[The expected string] $expected,
+        #|[The associated message] $msg?) {
+
+    $got eq $expected
+        ??     "✔ - $msg"
+        !! die "✘ - $msg. Expected '$expected' but got '$got'";
 }
 
 #| The negated form of `ok`. Succeeds when the $cond is false.
