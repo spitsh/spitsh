@@ -1,5 +1,6 @@
 use Test;
-plan 49;
+
+plan 50;
 
 if True {
    pass "basic if works";
@@ -294,6 +295,12 @@ if $true and $false {
 
 {
     my @c = <one two three>;
+
+    if @c[1] ~~ "two" {
+        is $_, 'two', 'topic when condition is @c[1] ~~ "two"';
+    } else {
+        flunk 'topic when condition is @c[1] ~~ "two"';
+    }
 
     if @c.grep(/^t/)[1] {
         is $_, "three", '.grep(...)[1] as topic';

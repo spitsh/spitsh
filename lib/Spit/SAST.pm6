@@ -816,7 +816,7 @@ class SAST::Call  is SAST::Children {
 class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     has $!signature;
     has $!type;
-    has $.topic;
+    has $.force-topic-first-pos;
 
     method invocant is rw { self[0] }
     method type {
@@ -858,10 +858,12 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
     }
 
     method topic($self is rw:)  is rw {
-        $!topic or do if $.type ~~ tBool {
+        if $!force-topic-first-pos {
+            @.pos[0]
+        } elsif $.type ~~ tBool {
             $.invocant.topic
         } else {
-            $self;
+            $self
         }
     }
 
@@ -1547,7 +1549,8 @@ class SAST::ACCEPTS is SAST::MutableChildren {
                 self[1],
                 name => 'ACCEPTS',
                 pos => self[0],
-                topic => self[0],
+                # Since some ACCEPTS don't return bool
+                :force-topic-first-pos,
                 :$.match,
             ).do-stage2($ctx);
         }
