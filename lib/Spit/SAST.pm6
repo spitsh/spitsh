@@ -1439,10 +1439,10 @@ class SAST::For is SAST::Children {
                 name => '_',
                 match => $!list.match,
                 sigil => '$',
-                decl-type => $!list.elem-type,
                 :dont-depend,
             );
         }
+        $!iter-var.decl-type ||= $!list.elem-type;
         $!iter-var.do-stage2(tAny);
         $!block.declare: $!iter-var;
         my $*no-pipe = True;

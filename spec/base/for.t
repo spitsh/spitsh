@@ -1,6 +1,6 @@
 use Test;
 
-plan 41;
+plan 43;
 
 for <one two three> {
 
@@ -175,4 +175,12 @@ is ($_ * 2 if $_ > 2 for 1..5), <6 8 10>, 'grep-like for loop';
     # This checks that a List[Int] doesn't get coerced to an Int
     # in List[Int] context
     is @b, <0 1 2 3 1 1 2 3 2 1 2 3>, 'for in List[Int] context';
+}
+
+{
+    my Int @a = 1;
+    for @a -> $i {
+        ok $i ~~ Int, 'iterating over List[Int] gives a -> $iterator element type Int';
+        ok $i == 1,   'can use -> $iterator variable as a Int while iterating over List[Int]';
+    }
 }
