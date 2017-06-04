@@ -227,10 +227,6 @@ method statement-control:sym<when> ($/) {
     make $if;
 }
 
-method statement-control:sym<on> ($/) {
-    make SAST::OnBlock.new: os-candidates => $<on-switch>.ast;
-}
-
 method declare-new-type($/,$name,\MetaType) {
     my $type :=
       do if $!use-bootstrap-types and %bootstrapped-types{$name}
@@ -668,6 +664,10 @@ method term:topic-cast ($/) {
 }
 
 method term:statement-prefix ($/) { make $<statement-prefix>.ast }
+
+method term:sym<on> ($/) {
+    make SAST::OnBlock.new: os-candidates => $<on-switch>.ast;
+}
 
 method term:pair ($/) { make SAST::Pair.new(|$<pair>.ast) }
 

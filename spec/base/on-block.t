@@ -23,8 +23,8 @@ plan 5;
 }
 
 {
-    is (on {
+    is on {
         UNIXish { "unix" }
         Any { "any" if True }
-    }), 'unix', 'weird parsing bug';
+    }, 'unix', 'weird parsing bug';
 }

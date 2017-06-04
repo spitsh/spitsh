@@ -176,10 +176,6 @@ grammar Spit::Grammar is Spit::Lang {
         )+
     }
 
-    rule statement-control:sym<on> {
-        <on-switch>
-    }
-
     proto token declaration {*}
 
     rule new-class {
@@ -482,6 +478,10 @@ grammar Spit::Grammar is Spit::Lang {
         <.longarrow> [ <type> || <.expected('A type to cast $_ to')> ]
     }
     token term:statement-prefix { <statement-prefix> }
+
+    token term:sym<on> {
+        <on-switch>
+    }
 
     proto token eq-infix {*}
 
