@@ -383,6 +383,7 @@ class SAST::Var is SAST::Children does SAST::Assignable {
     method desc { "Assignment to $.spit-gist" }
 
     method itemize { itemize-from-sigil($!sigil) }
+    method bare-name  { $.name.subst(/^<[*?]>/,'') }
 }
 
 class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
@@ -394,10 +395,11 @@ class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
         figure-out-var-type($.sigil, $!type, $!decl-type, :$.assign, :$.desc);
         self;
     }
-    method bare-name  { $.name.subst(/^<[*?]>/,'') }
+
     method dont-depend is rw { $!dont-depend }
     method depends { Empty }
     method declaration { self }
+    method bare-name { self.SAST::Var::bare-name }
 }
 
 class SAST::EnvDecl is SAST::VarDecl { }
