@@ -663,10 +663,27 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     # can be done.
     $replacement.stage3-done = False;
     self.walk($replacement);
-    if $replacement ~~ SAST::Cmd and $outer.ctx === tAny and $outer.type ~~ tStr {
-        $replacement.silence = True;
+    if $replacement ~~ SAST::Cmd and $outer.ctx === tAny
+       and $outer.type ~~ tStr and $outer.type !~~ tBool {
+        # If the thing we're replacing with a command returned a value
+        # (outputed something to FD 1) but was in Any context we have to
+        # put the command's FD 1 >/dev/null so it doesn't leak to stdout.
+        self.silence-cmd($replacement);
     }
     $replacement;
+}
+
+has $!NULL;
+multi method silence-cmd($cmd){
+    my $match = $cmd.match;
+    my $stdout = (SAST::IVal.new(val => 1, :$match) does SAST::Force);
+    $stdout.type = tFD;
+    my $null = ($!NULL //= $*SETTING.lookup(SCALAR,'*NULL')).gen-reference(:stage2-done, :$match);
+    self.walk($null);
+    $cmd.write.append(
+        $stdout,
+        $null,
+    );
 }
 
 multi method inline-call(SAST::Call:D $outer,SAST::CompileTimeVal:D $_) { $_ }

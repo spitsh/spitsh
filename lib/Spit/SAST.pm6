@@ -599,7 +599,6 @@ class SAST::Cmd is SAST::MutableChildren is rw {
     has SAST @.write;
     has SAST @.append;
     has SAST %.set-env;
-    has $.silence is rw;
 
     method stage2($ctx) is default {
         $_ .= do-stage2(tStr) for ($!pipe-in,|@.nodes,|%!set-env.values).grep(*.defined);

@@ -823,8 +823,6 @@ method compile-redirection(@cmd-body, $cmd) {
                   1,'>>',$cmd.append,
                   0,«<» ,$cmd.in;
 
-    @redir.push('', '>', self.null(match => $cmd.match)) if $cmd.silence;
-
     for @redirs -> $default-lhs, $sym, @list {
         for @list -> $lhs,$rhs {
             my $lhs-ct := $lhs.compile-time;
