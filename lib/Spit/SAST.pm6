@@ -310,6 +310,7 @@ class SAST::CompUnit is SAST::Children {
     has @.phasers;
     has @.exported;
     has $.name is required;
+    has tOS $.composed-for is rw;
 
     method do-stage2 {
         my $*CU = self;

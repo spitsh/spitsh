@@ -77,6 +77,7 @@ multi method walk(SAST::CompUnit:D $THIS is rw) {
     my $*CU = $THIS;
     self.include($THIS);
     $THIS.depends-on = $!deps;
+    $THIS.composed-for = $.os;
 }
 
 multi method walk(SAST::ClassDeclaration:D $THIS is rw) {
