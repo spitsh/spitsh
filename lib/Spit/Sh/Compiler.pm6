@@ -484,7 +484,7 @@ multi method cap-stdout(SAST::Loop:D $_) { self.node($_) }
 multi method node(SAST::While:D $_) {
     .until ?? 'until' !! 'while',' ',
     |self.compile-topic(.topic-var, (.cond, .block)),
-    |self.cond(.cond),"; do \n",
+    |self.cond(.cond),"; do\n",
     |self.node(.block,:indent,:no-empty),
     "\n{$*pad}done";
 }
