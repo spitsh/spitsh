@@ -6,6 +6,8 @@ sub wait(PID *@pids) {
     ${wait @pids}
 }
 
+constant File $?pid-cleanup = ${mktemp};
+
 #| The PID class represents an integer process ID.
 augment PID {
     #| In Bool context the PID returns the result of `.exists`
@@ -31,6 +33,14 @@ augment PID {
 
     method descendants-->List[PID] {
         $_, .descendants for $self.children;
+    }
+
+    method cleanup^ {
+        $?pid-cleanup.push($self)-->PID;
+        FILE-CLEAN {
+            ${kill @($?pid-cleanup.slurp) !>X};
+            $?pid-cleanup.remove;
+        }
     }
 
     method wait { wait $self }
