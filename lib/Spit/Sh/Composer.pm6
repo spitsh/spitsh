@@ -383,6 +383,7 @@ multi method walk(SAST::Eval:D $THIS is rw) {
             outer => $THIS.outer,
             :one-block,
         ),
+        :!preserve-end
     );
 
     if list %opts.values.grep(SAST::EvalArg) -> @runtime-args {

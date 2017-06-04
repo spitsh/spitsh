@@ -1266,6 +1266,8 @@ class SAST::IVal does SAST::CompileTimeVal {
 
 class SAST::SVal does SAST::CompileTimeVal {
     has Str:D $.val is required is rw;
+    # whether to make sure no newline is removed or added during compilation
+    has $.preserve-end is rw = True;
     method type { tStr }
 }
 

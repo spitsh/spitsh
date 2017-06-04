@@ -40,7 +40,7 @@ constant @reserved-cmds = %?RESOURCES<reserved.txt>.slurp.split("\n");
 has Hash @!names;
 has %.opts;
 has $.max-chars-per-line = 80;
-
+has tOS $.compile-for;
 
 method BUILDALL(|) {
     @!names[SCALAR]<_> = '_';
@@ -173,11 +173,13 @@ method null(:$match) {
     $!null //= '&' ~ self.arg(self.scaf-ref('*NULL', :$match));
 }
 
+has $!composed-for;
 method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
     my $*pad = '';
     my $*depends = $CU.depends-on;
     my ShellElement:D @compiled;
 
+    $!composed-for = $CU.composed-for;
     my @MAIN = self.node($CU,:indent);
 
     my @END = flat $CU.phasers.grep(*.defined).map: {
@@ -192,12 +194,11 @@ method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
     my @run;
 
     if $one-block and not @END {
-        @compiled.append: |self.maybe-oneline-block(
+        @compiled.append: |self.maybe-oneline-block:
             [
                 |(|@BEGIN,"\n" if @BEGIN)
                 ,|@MAIN
-            ]
-        ), "\n";
+            ];
     } else {
         for :@BEGIN,:@MAIN {
             if .value {
@@ -769,7 +770,7 @@ method pipe-input(
        # then the pipe is implicit and we don't need to do anything.
        !($input.is-invocant andthen .piped)
        {
-           if self.try-heredoc($input, :preserve-end) -> ($delim, $body) {
+           if self.try-heredoc($input) -> ($delim, $body) {
                # Our input can be heredoc'd with cat.
                # Note: You might think that you should be able to do this without
                # cat by just <<- into the first command in the pipe.
@@ -927,38 +928,57 @@ multi method arg (SAST::BVal:D $_) { .val ?? '1' !! '""' }
 multi method cond(SAST::BVal:D $_) { .val ?? 'true' !! 'false' }
 multi method int-expr(SAST::BVal $ where { .val === False } ) { '0' }
 
+constant @cats = qqw:to/END/;
+\c[SMILING CAT FACE WITH OPEN MOUTH]
+\c[Grinning Cat Face With Smiling Eyes]
+\c[Cat Face With Tears of Joy]
+\c[SMILING CAT FACE WITH HEART-SHAPED EYES]
+\c[Cat Face With Wry Smile]
+\c[Kissing Cat Face With Closed Eyes]
+\c[Weary Cat Face]
+\c[Crying Cat Face]
+\c[pouting cat face]
+\c[Cat]
+\c[Cat Face]
+\c[Tiger Face]
+\c[Lion Face]
+END
 
+constant @cat-names = %?RESOURCES<cat-names.txt>.slurp.split("\n");
+has $!debian;
+# There are three situations that determine whether we heredoc
+# 1. The string ends in a newline and you want it to stay that way
+#    - Don't heredoc to cat(1) as an arg because it requires command substitution
+# 2. The string doesn't end in a newline and you want it to stay that way
+#    - Don't heredoc into a | to command/call
+# 3. You don't care either way
+#    - Heredoc away!
 method try-heredoc($sast, :$preserve-end) {
     if $sast ~~ SAST::SVal
            # heredocs must end in \n which is sometimes undesirable
-       and (!$preserve-end or $sast.val.ends-with("\n"))
+       and ($sast.val.ends-with("\n") or not ($preserve-end // $sast.preserve-end))
        and (my @lines = $sast.val.split("\n")) > 2
-    {
-        my @emojis = qqw:to/END/;
-        \c[GHOST]
-        \c[SPIRAL SHELL]
-        \c[GLOWING STAR]
-        \c[HORSE FACE]
-        \c[POUTING CAT FACE]
-        \c[OCTAGONAL SIGN]
-        \c[SEE-NO-EVIL MONKEY]
-        \c[HOURGLASS]
-        \c[REVERSED HAND WITH MIDDLE FINGER EXTENDED]
-        END
-        my $emoji;
-        repeat { $emoji = @emojis.shift } while @lines.first(*.match(/^"\t"+$emoji/));
-        $emoji or SX::Bug.new(message => "EMOJIS DEPLETED", match => .match).throw;
-        return $emoji, ("\n\t",
-               @lines.join("\n\t"),
-               ("\n\t" if @lines[*-1]),
-               "$emoji\n$*pad");
+       {
+        $!debian ||= $*SETTING.lookup(CLASS,'Debian').class;
+        # Debian's /bin/sh (dash) doesn't do nested multi-byte character heredocs 😿
+        my @pick = ($!composed-for ~~ $!debian ?? @cat-names !! @cats);
+        my $cat;
+        repeat { $cat =  ~ @pick.shift } while @lines.first(*.match(/^"\t"+$cat/));
+        $cat or SX::Bug.new(
+            desc => "😿 Nekos depleted - mine more nekos 😿",
+            match => $sast.match
+        ).throw;
+        return $cat,
+               ("\n\t", @lines.join("\n\t"), ("\n\t" if @lines[*-1]), "$cat\n$*pad  ");
     } else {
         Nil;
     }
 }
 #!SVal
 multi method arg(SAST::SVal:D $_) {
-    if !.val.ends-with("\n") and self.try-heredoc($_) -> ($delim, $body) {
+    if !.preserve-end || !.val.ends-with("\n")
+       and self.try-heredoc($_, :!preserve-end) -> ($delim, $body)
+    {
         cs "cat <<-'$delim'",|$body
     } else {
         escape .val
@@ -967,8 +987,6 @@ multi method arg(SAST::SVal:D $_) {
 #!IVal
 multi method arg(SAST::IVal:D $_) { .val.Str }
 multi method int-expr(SAST::IVal:D $_) { .val.Str }
-#!Eval
-multi method arg(SAST::Eval:D $_) { self.arg(.compiled) }
 
 #!Case
 multi method node(SAST::Case:D $_) {
