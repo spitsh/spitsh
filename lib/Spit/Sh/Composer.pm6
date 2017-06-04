@@ -76,6 +76,7 @@ multi method walk(SAST::CompUnit:D $THIS is rw) {
     self.add-scaffolding($_) for @!scaffolding;
     my $*CU = $THIS;
     self.include($THIS);
+    self.include($_) for $THIS.phasers.values.grep(*.defined).map(*.Slip);
     $THIS.depends-on = $!deps;
     $THIS.composed-for = $.os;
 }
@@ -727,7 +728,6 @@ multi method include(SAST:D $sast) {
 }
 
 multi method include(SAST::PhaserBlock:D $phaser-block is rw) {
-    self.include($phaser-block.block);
     $*CU.phasers[$phaser-block.stage].push($phaser-block.block);
     $phaser-block .= stage3-node(SAST::Empty,:included);
 }
