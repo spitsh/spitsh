@@ -357,7 +357,7 @@ multi method walk(SAST::Eval:D $THIS is rw) {
     my %opts = $THIS.opts;
     %opts<os> //= SAST::Type.new(class-type => $.os,match => $THIS.match);
 
-    my @placeholders = @eval-placeholders.pick(*);
+    my @placeholders = @eval-placeholders;
 
     for %opts.kv -> $name, $opt is rw {
         my $ct = $opt.compile-time;
