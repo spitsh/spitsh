@@ -24,6 +24,7 @@
         "Spit::Sh::Composer"   : "lib/Spit/Sh/Composer.pm6",
         "Spit::Sh::ShellElement" : "lib/Spit/Sh/ShellElement.pm6",
         "Spit::Sh::Method-Optimizer" : "lib/Spit/Sh/Method-Optimizer.pm6",
+        "Spit::Sh::Call-Inliner" : "lib/Spit/Sh/Call-Inliner.pm6",
         "Spit::SpitDoc"        : "lib/Spit/SpitDoc.pm6",
         "Spit::Parser::Grammar" : "lib/Spit/Parser/Grammar.pm6",
         "Spit::Parser::Actions" : "lib/Spit/Parser/Actions.pm6",
