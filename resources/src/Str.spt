@@ -168,7 +168,6 @@ Q{END {
             @/ = '';
             # note: GNU doesn't mean it has gawk
             if $self.matches($r) {
-                my $RE = $r.subst('#','\\#');
                 @/ = {
                     my $i = 0;
                     $i++ while $self.${
@@ -176,13 +175,13 @@ Q{END {
                         (
                             # slurp the input
                             'H;1h;$!d;x;' ~
-                            # surround match with crazy delims
-                            "s#$RE#👻\\$i\\n🐚#;" ~
+                            # surround match with 0x1c
+                            "s§$r§\\$i\\n§;" ~
                             # remove delims and print
-                            "s/.*👻|🐚.*//gp"
+                            's/^[^]*|[^]*$//gp'
                         )
                     };
-                    "";
+                    ();
                 };
                 $?;
             }
@@ -195,12 +194,12 @@ Q{END {
                     $i++ while $i < 10 and $self.${
                         awk :$r -v 'RS=^$' -v "i=$i" (
                             '{' ~
-                            '$0 = gensub(ENVIRON["r"], "👻\\\\"i"🐚",1);' ~
-                            'print gensub(/.*👻|🐚.*/,"","G")' ~
+                            '$0 = gensub(ENVIRON["r"], "§\\\\"i"§",1);' ~
+                            'print gensub(/^[^§]*§|§[^§]*$/,"","G")' ~
                             '}'
                         )
                     };
-                    "";
+                    ();
                 }
                 True;
             }
