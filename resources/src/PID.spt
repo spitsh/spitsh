@@ -20,7 +20,7 @@ augment PID {
     #| Sends the process a signal. Returns true if the signal was successfully
     #| sent.
     method kill($signal = 'TERM')? {
-        ${kill "-$signal" $self};
+        ${kill "-$signal" $self !>X};
     }
 
     method kill-group($signal = 'TERM')?{
