@@ -1,6 +1,6 @@
 use Test;
 
-plan 30;
+plan 31;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -17,6 +17,7 @@ is ${ (${printf 'printf'}) '%s' 'win'},'win','cmd inside parents inside cmd';
 is ${ ${printf 'printf'} '%s' 'win'},'win','cmd inside cmd';
 
 is ${printf 'foo' >X },'','>X';
+is ${printf 'foo' >()}, 'foo','>()';
 
 {
     my $data = eval{ $*OUT.write("1"); $*ERR.write("2") };
