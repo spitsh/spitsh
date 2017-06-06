@@ -523,8 +523,8 @@ grammar Spit::Grammar is Spit::Lang {
         '.'<.ws>$<name>=<.identifier>
         [
             |':' <.ws> <args>
-            |$<args>=<.r-wrap: '(',')','method call arguments', token {
-                <R=.args>
+            |$<args>=<.wrap: '(',')','method call arguments', rule {
+                '' <R=.args>
             }>
         ]?
     }

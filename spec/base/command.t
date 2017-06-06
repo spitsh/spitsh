@@ -1,4 +1,4 @@
-use Test; plan 28;
+use Test; plan 29;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -57,4 +57,9 @@ my $a = <one two three>;
 
 {
     is \${ printf "hello world" }, ("printf", "hello world"), '\${...}';
+}
+
+{
+    is ${ "brintf".subst('b','p') 'hello world' }, 'hello world',
+      'methodcall wtih args in command';
 }
