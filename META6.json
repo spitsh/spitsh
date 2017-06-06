@@ -35,6 +35,7 @@
     "depends" : ["DispatchMap","JSON5::Tiny","Terminal::ANSIColor"],
     "resources" : [
         "reserved.txt",
+        "cat-names.txt",
         "src/Any.spt",
         "src/Bool.spt",
         "src/Cmd.spt",
