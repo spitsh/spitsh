@@ -30,16 +30,24 @@ has $!NULL;
 has %.clone-cache;
 has $.no-inline;
 
-method os {
-    $!os ||= do {
-        my $os-var = $*SETTING.lookup(SCALAR,'*os');
-        self.walk($os-var);
-        if (my $match = $os-var.match and  $os-var ~~ SAST::Block)
-        or ($match = $os-var.assign.match and !$os-var.assign.compile-time) {
-            SX.new(message => q<$*os definition too complex>,:$match).throw;
-        }
-        $os-var.assign.compile-time;
+# Figures out what an option is assigned to at compile time
+method compile-time-option($name) {
+    my $declaration = $*SETTING.lookup(SCALAR,"*$name");
+    self.walk($declaration);
+    if # if it has been tucked
+       (my $match = $declaration.match and  $declaration ~~ SAST::Stmts)
+       # or if its assignment is not compile time
+       or ($match = $declaration.assign.match and $declaration.assign.compile-time === Nil) {
+        # we can't use it as a definition for this option
+        SX.new(message => "\$*$name definition too complex",:$match).throw;
     }
+    $declaration.assign.compile-time;
+}
+
+method os {
+    $!os ||= self.compile-time-option('os');
+}
+
 
 method NULL(:$match!) {
     $!NULL //= do {
