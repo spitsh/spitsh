@@ -277,7 +277,6 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
             $decl .= last-stmt;
         }
 
-        # .inline-value is in Call-Inliner.pm6
         if $decl.inline-value -> $inline {
             $THIS.switch: $inline;
         }
@@ -544,6 +543,7 @@ multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
         if $block ~~ SAST::Block and not $block.ann<cant-inline> and not $decl.no-inline {
             # only inline routines with one child for now
             if $block.one-stmt <-> $last-stmt {
+                # .inline-call is in Call-Inliner.pm6
                 if self.inline-call($THIS,$last-stmt) -> $replacement {
                     if $replacement ~~ $accept {
                         $THIS.switch: $replacement;
