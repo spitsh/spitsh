@@ -1,6 +1,4 @@
-use Test;
-
-plan 31;
+use Test; plan 28;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -26,12 +24,6 @@ is ${printf 'foo' >()}, 'foo','>()';
     is $data.${sh *>~},"12",'*>~';
     is $data.${sh !>~ >X},'2','>X !>~';
     is $data.${sh !>$?CAP >$*NULL},'2','!>$?CAP >$*NULL';
-}
-
-
-{
-    my $cmd = Cmd<nOrtExist> || Cmd<AlsOnotzist> || Cmd<printf>;
-    is $cmd,'printf','Cmd or junction returns the one that exists';
 }
 
 my $a = <one two three>;
@@ -65,13 +57,4 @@ my $a = <one two three>;
 
 {
     is \${ printf "hello world" }, ("printf", "hello world"), '\${...}';
-}
-
-{
-    my $bin = on {
-        RHEL { '/usr/bin' }
-        Any  { '/bin' }
-    };
-    is Cmd<ls>.path, "$bin/ls" , 'Cmd<ls>.path';
-    is Cmd<grep>.path, "$bin/grep", 'Cmd<grep>.path';
 }
