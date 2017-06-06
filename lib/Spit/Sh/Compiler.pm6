@@ -223,7 +223,7 @@ method maybe-oneline-block(@compiled) {
         "\{\n", $compiled,"\n$*pad\}";
     } else {
         $compiled ~~ s/^\s+//;
-        '{ ', $compiled, (';' unless $compiled.ends-with('&')),' }';
+        '{ ', ($compiled || ':'), (';' unless $compiled.ends-with('&')),' }';
     }
 }
 
