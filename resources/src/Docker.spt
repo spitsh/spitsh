@@ -123,6 +123,6 @@ augment DockerImg {
     method remove? ${ $*docker rmi $self >debug('🐳remove') !>X}
     method Bool { $self.exists }
     method tag ($tag)^ {
-        ${$*docker tag $self $tag !>fatal('🐳tag')} ?? "$self:$tag" !! ()
+        ${$*docker tag $self $tag !>fatal('🐳tag')} ?? $tag !! ()
     }
 }
