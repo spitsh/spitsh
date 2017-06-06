@@ -115,16 +115,14 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     $replacement;
 }
 
-has $!NULL;
+
 method silence-cmd($cmd){
     my $match = $cmd.match;
     my $stdout = (SAST::IVal.new(val => 1, :$match) does SAST::Force);
     $stdout.type = tFD;
-    my $null = ($!NULL //= $*SETTING.lookup(SCALAR,'*NULL')).gen-reference(:stage2-done, :$match);
-    self.walk($null);
     $cmd.write.append(
         $stdout,
-        $null,
+        self.NULL(:$match),
     );
 }
 

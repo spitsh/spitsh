@@ -26,6 +26,7 @@ has $!deps = Spit::DependencyList.new;
 has @.scaffolding;
 has %.opts;
 has $!os;
+has $!NULL;
 has %.clone-cache;
 has $.no-inline;
 
@@ -39,6 +40,13 @@ method os {
         }
         $os-var.assign.compile-time;
     }
+
+method NULL(:$match!) {
+    $!NULL //= do {
+        my $null = $*SETTING.lookup(SCALAR,'*NULL').gen-reference(:stage2-done, :$match);
+        self.walk($null);
+        $null;
+    };
 }
 
 method clone-node($node is rw) {
