@@ -69,5 +69,5 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
     $pid.descendants.kill;
     sleep 1;
     ok $pid, 'pid still exists after .descendants.kill';
-    nok $pid.descendants, '.descendants is false after .descendants.kill';
+    is $pid.descendants, "", '.descendants is empty after .descendants.kill';
 }
