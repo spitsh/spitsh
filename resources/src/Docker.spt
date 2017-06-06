@@ -27,9 +27,9 @@ augment Docker {
     }
     static method install-cli-->File {
         my $url = Docker.latest-build-tgz-url;
-        note "Getting latest docker build from $url";
+        info "Getting latest docker build from $url";
         my $docker-dir = $url.get.extract.cleanup;
-        note "Installing to $*docker-install-cli-path";
+        info "Installing to $*docker-install-cli-path";
         $docker-dir.add('docker').move-to($*docker-install-cli-path);
         $*docker-install-cli-path;
     }
@@ -84,9 +84,9 @@ augment Docker {
 
     method exec(Str $eval)? {
         if $self.running {
-            $eval.${ $*docker exec -i $self sh};
+            $eval.${ $*docker exec -i $self sh >debug('🐳exec') !>warn('🐳exec')};
         } else {
-            $eval.${ $*docker start -i $self};
+            $eval.${ $*docker start -i $self >debug('🐳start') !>warn('🐳start')};
         }
     }
 
@@ -104,7 +104,7 @@ augment Docker {
         :$workdir
     )-->DockerImg {
         my DockerImg $img-name = $name ~ (":$_" if $tag);
-        ${$*docker commit
+        ${$*docker commit >debug('🐳commit') !>fatal('🐳commit')
           ("-c=CMD $_" if $cmd )
           ("-c=ENV $_" if $env )
           ("-c=ENTRYPOINT $_" if $entrypoint)
@@ -114,15 +114,15 @@ augment Docker {
           ("-c=WORKDIR $_" if $workdir)
           $self
           $img-name
-         } && $img-name;
+         } ?? $img-name !! ();
     }
 }
 
 augment DockerImg {
     method exists? { ${ $*docker image inspect $self *>X } }
-    method remove? { ${ $*docker rmi $self >X} }
+    method remove? ${ $*docker rmi $self >debug('🐳remove') !>X}
     method Bool { $self.exists }
     method tag ($tag)^ {
-        ?${$*docker tag $self $tag} && $tag;
+        ${$*docker tag $self $tag !>fatal('🐳tag')} ?? "$self:$tag" !! ()
     }
 }

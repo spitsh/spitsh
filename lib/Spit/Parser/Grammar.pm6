@@ -649,9 +649,20 @@ grammar Spit::Grammar is Spit::Lang {
             | $<null>='X'
             | $<cap>='~'
             | $<err>='!'
+            | $<log>=(
+                 <log-level>
+                 [
+                     || '(' $<empty-path>=\s* ')'
+                     || $<path>=<.wrap: '(', ')', 'log path', token { <R=.EXPR> }>
+                 ]?
+            )
             | {} <.ws> [$<fd>=<.cmd-term> ||
                         <.invalid('redirection right-hand-side. Try putting "(...)" around expressions')>]
         )
+    }
+
+    token log-level {
+        ['fatal'||'debug'||'info'||'warn'||'error']
     }
 
     proto token quote {*}

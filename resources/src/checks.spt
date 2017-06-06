@@ -3,6 +3,8 @@
 ##| Returns the text as red.
 # sub red($txt)~   { ${printf '\\33[0;' ~ 31 ~ 'm%s\\33[0m', $txt}  }
 
+constant $*check-log-success-symbol = "✅";
+constant $*check-log-failure-symbol = "❌";
 #| If the condition true, ok prints the message with a friendly
 #| '✔'. Otherwise, dies with an angry '✘'.
 #|{
@@ -11,8 +13,10 @@
 sub ok (#|[The success condition] Bool $cond,
         #|[The associated message] $msg?) {
     $cond
-        ?? say '✔' ~ " - $msg"
-        !! die '✘' ~ " - $msg"
+        ??  ($*log ?? $msg.log(3, $*check-log-success-symbol)
+                   !! say "✔ - $msg")
+        !!  ($*log ?? $msg.log(0, $*check-log-failure-symbol)
+                   !! die "✘ - $msg")
 }
 
 #|If the two strings are equal, prints the message with a friendly
@@ -25,8 +29,8 @@ sub is (#|[The string to check] $got,
         #|[The associated message] $msg?) {
 
     $got eq $expected
-        ??     "✔ - $msg"
-        !! die "✘ - $msg. Expected '$expected' but got '$got'";
+        ?? pass "$msg"
+        !! flunk “{$msg && "$msg - "}Expected '$expected' but got '$got'”;
 }
 
 #| The negated form of `ok`. Succeeds when the $cond is false.

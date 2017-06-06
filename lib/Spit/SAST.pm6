@@ -1761,3 +1761,18 @@ class SAST::LastExitStatus does SAST {
 class SAST::CurrentPID does SAST {
     method type { tPID }
 }
+
+class SAST::OutputToLog is SAST::Children {
+    has $.path is rw;
+    has $.level is rw;
+
+    method stage2($ctx) {
+        $!level //= SAST::IVal.new(val => 3, :$.match);
+        $!level .= do-stage2(tInt);
+        $!path  andthen $_ .= do-stage2(tStr);
+        self;
+    }
+
+    method children { $!path // Empty, $!level // Empty }
+    method type { tFile }
+}

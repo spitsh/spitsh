@@ -967,7 +967,17 @@ method redirection($/) {
     ?? { $*SETTING.lookup(SCALAR,'?CAP').gen-reference(match => $dst<cap>)    }
     !! $dst<err>
     ?? { $*SETTING.lookup(SCALAR,'*ERR').gen-reference(match => $dst<err>) }
-    !! { $dst<fd>.ast.deep-clone };
+    !! $dst<fd>
+    ?? { $dst<fd>.ast.deep-clone }
+    !! {
+        my $log   = $dst<log>;
+        my $level = $log<log-level>.ast;
+        my $path = $log<empty-path>
+              ?? $*SETTING.lookup(SCALAR, '*log-default-path').gen-reference(match => $log<empty-path>)
+              !! ($log<path> andthen .ast);
+
+        SAST::OutputToLog.new(:$path, :$level);
+    }
 
     my (@write,@append,@in);
     for @src-fd -> $src-fd {
@@ -980,6 +990,16 @@ method redirection($/) {
         }
     }
     make (@write,@append,@in);
+}
+
+method log-level($/) {
+    make SAST::IVal.new: val => do given $/.Str {
+        when 'fatal' { 0 }
+        when 'error' { 1 }
+        when 'warn'  { 2 }
+        when 'info'  { 3 }
+        when 'debug' { 4 }
+    };
 }
 
 sub make-quote($/) { make $<str>.ast andthen .match = $/ }

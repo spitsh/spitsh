@@ -1,21 +1,28 @@
 constant $*build-os = Alpine;
 constant $*tag = $?spit-version;
 
-constant $build = eval(os => $*build-os){
-    say ${ $*curl --version };
-    say ${ $*docker --version };
-    say ${ $*git --version };
+constant $build = eval(os => $*build-os, :log){
     Pkg<jq>.install;
-    say ${ $*jq --version };
-    say ${ $*ssh -V };
-    say ${ $*socat -V };
+    ok ${ $*curl --version   >info}, 'curl version';
+    ok ${ $*docker --version >info}, 'docker version';
+    ok ${ $*git --version    >info}, 'git version';
+    ok ${ jq --version       >info}, 'jq version';
+    ok ${ $*ssh -V          !>info}, 'ssh version';
+    ok ${ $*socat -V >X} && ${$*socat -V | head -n2 >info('socat')}, 'socat works';
 };
 
 given Docker.tmp('alpine', :mount-socket) {
+    # copy docker binary to the container
     .copy($*docker.path, $*docker.path);
-    note "exec()ing helper build script in container";
+
+    info "exec()ing helper build script in container";
+
+    # run the build script
     ok .exec($build), 'build script ran successfully';
+
     if .commit("spit-helper", :$*tag) {
-        say "built $_";
+        info "built $_";
+    } else {
+        die "failed to build spit-helper";
     }
 }

@@ -26,7 +26,10 @@ has $!deps = Spit::DependencyList.new;
 has @.scaffolding;
 has %.opts;
 has $!os;
+has $!log;
 has $!NULL;
+has $!ERR;
+has $!OUT;
 has %.clone-cache;
 has $.no-inline;
 
@@ -48,12 +51,32 @@ method os {
     $!os ||= self.compile-time-option('os');
 }
 
+method log {
+    $!log //= self.compile-time-option('log');
+}
 
 method NULL(:$match!) {
     $!NULL //= do {
         my $null = $*SETTING.lookup(SCALAR,'*NULL').gen-reference(:stage2-done, :$match);
         self.walk($null);
         $null;
+    };
+}
+
+method ERR(:$match!) {
+    $!ERR //= do {
+        my $err = $*SETTING.lookup(SCALAR,'*ERR').gen-reference(:stage2-done, :$match);
+        self.walk($err);
+        $err;
+    };
+}
+
+
+method OUT(:$match!) {
+    $!OUT //= do {
+        my $out = $*SETTING.lookup(SCALAR,'*OUT').gen-reference(:stage2-done, :$match);
+        self.walk($out);
+        $out;
     };
 }
 
@@ -111,9 +134,47 @@ multi method walk(SAST::Cmd:D $THIS is rw) {
         }
     }
 
+    # Check log outputs
+    for $THIS.write -> $, $rhs is rw {
+        if $rhs ~~ SAST::OutputToLog {
+            my $cmd = $THIS.nodes[0];
+            if ! $rhs.path.defined and (
+               ($cmd andthen .compile-time and my $name = $cmd) or
+               (
+                   $cmd ~~ SAST::Var and
+                   $name = SAST::SVal.new(val => $cmd.bare-name, match => $rhs.match)
+               )
+            )
+            {
+                $rhs.path = $name;
+            }
+            $rhs .= stage2-node(
+                SAST::SubCall,
+                name => 'log-fifo',
+                declaration => $*SETTING.lookup(SUB,'log-fifo'),
+                pos => (
+                    $rhs.level,
+                    ($rhs.path // Empty),
+                ),
+                match => $rhs.match
+            );
+            self.walk($rhs);
+        }
+    }
+
     if ($THIS.pipe-in andthen .is-invocant) -> $invocant {
         # vote to pipe the invocant
         $invocant.vote-pipe-yes;
+    }
+}
+
+multi method walk(SAST::OutputToLog:D $THIS is rw) {
+    if not $.log {
+        $THIS = do given $THIS.level.compile-time {
+            when * <= 2  { self.ERR(match => $THIS.match) }
+            when * <= 3  { self.OUT(match => $THIS.match) }
+            default      { self.NULL(match => $THIS.match) }
+        }
     }
 }
 

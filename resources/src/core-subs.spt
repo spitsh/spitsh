@@ -15,8 +15,12 @@ sub note($str)?  ${printf '%s\\n' $str >! }
 #| Prints its argument to `$*OUT` with no newline.
 sub print($str)? ${printf '%s' $str > $*OUT }
 
+constant $*log-die-path = '💀';
 #| Prints the message to stdout and then exits
-sub die($str)*  { note($str) && $?PID.kill; () }
+sub die($str)*  {
+    $*log ?? ("$str".log(0, $*log-die-path); ())
+          !! (note($str) && $?PID.kill; ())
+}
 
 #| Suspends execution for an interval of time measured in seconds.
 #| **note** `sleep(1)` can usually take floating point numbers but

@@ -20,7 +20,7 @@ class Pkg {
     static method update-pkglist? on {
         Debian ${ apt-get update *>X   }
         RHEL   { ${yum clean expire-cache >X} && ${ yum check-update >X}; $? != 1 }
-        Alpine ${ apk update -q }
+        Alpine ${ apk update >debug }
     }
 
     static method last-updated-->DateTime on {
@@ -44,7 +44,7 @@ class Pkg {
     static method check-update? {
         my $last-updated = Pkg.last-updated;
         if !$last-updated || now().posix - $last-updated.posix > $*pkglist-stale {
-            note "Updating package list because it " ~ (
+            info "Updating package list because it " ~ (
                 $last-updated
                   ?? "was last updated at $last-updated"
                   !! "doesn't exist at $*pkglist-path"
@@ -101,7 +101,7 @@ augment List[Pkg] {
         }
         Alpine {
             Pkg.check-update;
-            ${ apk add @$self -q --no-progress !>X };
+            ${ apk add @$self --no-progress >debug };
         }
     }
 }

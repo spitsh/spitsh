@@ -67,6 +67,9 @@ Options:
   --os=<os name> (default: debian)
     Shortcut for --opts='{ "os" : ": OS<debian>" }'
 
+  --log
+    Shortcut for --opts='{ "log" : true }'
+
   -s --mount-docker-socket
     Mounts /var/run/docker.sock into the container.
 
@@ -253,6 +256,7 @@ my class commands {
                 name => $build-helper-src,
                 opts => {
                     os => late-parse('Alpine'),
+                    log => late-parse('True')
                 }
             );
             write-docker($helper-builder, $p, $compile);
@@ -328,6 +332,10 @@ sub compile-or-eval($command, @pos, %named) {
     } else {
         $_ = {};
     };
+
+    with %named<log> {
+        %named<opts><log> = late-parse('True');
+    }
     with %named<os> {
         %named<opts><os> //= late-parse("OS<$_>")
     }
