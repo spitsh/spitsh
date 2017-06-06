@@ -1,6 +1,6 @@
 use Test; plan 4;
 
-my $pkg1 = Pkg<telnet>;
+my $pkg1 = $*Pkg-openssh-client;
 my $pkg2 = Pkg<socat>;
 
 
@@ -9,7 +9,7 @@ if ! $pkg1 {
 } else {
     pass ".install $pkg1 (already exists)";
 }
-ok $pkg1-->Cmd, "$pkg1 commmand installed";
+ok Cmd<ssh>, "$pkg1 commmand installed";
 
 if ! $pkg2 {
     ok .install, ".install $pkg2";
