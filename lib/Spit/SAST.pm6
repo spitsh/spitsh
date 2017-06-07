@@ -31,6 +31,7 @@ class SAST::RoutineDeclare { ... }
 class SAST::Cmd {...}
 class SAST::ACCEPTS {...}
 class SAST::Itemize {...}
+class SAST::Cast {...}
 
 role SAST::Force {...}
 
@@ -631,7 +632,7 @@ class SAST::Coerce is SAST::MutableChildren {
     method type { $!to }
     method stage2 ($) {
         self[0] .= do-stage2($!to);
-        self[0];
+        self.stage2-node(SAST::Cast, :$!to, self[0]);
     }
     method gist { $.node-name ~ "({$!to.name})" ~ $.gist-children }
 }
