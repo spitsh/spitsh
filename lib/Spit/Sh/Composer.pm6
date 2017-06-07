@@ -268,7 +268,7 @@ multi method walk(SAST::If:D $THIS is rw,:$sub-if) {
             $THIS = $sub-if ?? $THIS.then !! reduce-block($THIS.then);
         } else {
             if $THIS.else <-> $else {
-                $THIS = $else;
+                $THIS = reduce-block($else);
                 self.walk($THIS);
             } else {
                 $THIS .= stage3-node(SAST::Empty);
@@ -340,8 +340,15 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
         $decl .= last-stmt;
     }
 
-    if $decl ~~ SAST::ConstantDecl and $decl.inline-value -> $inline {
-        $THIS.switch: $inline;
+    if $decl ~~ SAST::ConstantDecl {
+        if $decl.assign {
+            with $decl.inline-value -> $inline {
+                $THIS.switch: $inline;
+            }
+        } else {
+            # If it has no assignment just inline to False
+            $THIS.switch: SAST::BVal.new(match => $THIS.match, val => False);
+        }
     }
 
     elsif $decl ~~ SAST::MaybeReplace  {
@@ -536,7 +543,7 @@ multi method walk(SAST::CondReturn:D $THIS is rw) {
 
     with $THIS.Bool-call {
         self.walk(my $orig-invocant := .invocant);
-        self.walk($_, { acceptable-in-cond-return($_, $orig-invocant.identity) } );
+        self.walk($_, accept => { acceptable-in-cond-return($_, $orig-invocant.identity) } );
     }
     with ($THIS.Bool-call andthen .compile-time) {
         # We know the result of .Bool at compile time.
@@ -581,14 +588,14 @@ multi method walk(SAST::Stmts:D $THIS is rw) {
 
     $THIS .= &reduce-block if $THIS.auto-inline;
 }
-
-multi method walk(SAST::MethodCall:D $THIS is rw) {
+                                        # RAKUDOBUG: I have to put :$accept here
+multi method walk(SAST::MethodCall:D $THIS is rw, :$accept = True) {
     self.walk($THIS.declaration);
     self.method-optimize($THIS.invocant.type, $THIS, $THIS.declaration.identity)
       and callsame;
 }
 
-multi  method walk(SAST::Call:D $THIS is rw, $accept = True) {
+multi  method walk(SAST::Call:D $THIS is rw, :$accept = True) {
     my $decl := $THIS.declaration;
     self.walk($decl);
 

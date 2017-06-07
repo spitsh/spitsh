@@ -1,7 +1,7 @@
 use Test;
 use Spit::Compile;
 
-plan 5;
+plan 7;
 
 ok compile(name => "Cmd || Cmd",Q{ my $a = Cmd<printf> || Cmd<echo> || Cmd<true> }).
    contains('exists printf'&'exists echo'), "Cmd junction always looks like exists cmd ||";
@@ -35,3 +35,22 @@ nok compile(
         if ~$f { say "win $_"; say "win $_" }
     }
 ).contains('if'|'='), ‘casted compile-time known str gets inlined’;
+
+ok compile(
+    name => 'cond return assignment', Q{
+        constant $bar = "";
+        my $a = $bar || "weee";
+    }
+).contains('a=weee');
+
+ok compile(
+    name => 'if False', Q{
+        constant $foo = False;
+
+        my $a = if $foo {
+            "one";
+        } else {
+            "two"
+        }
+    }
+).contains('a=two');
