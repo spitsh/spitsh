@@ -591,7 +591,6 @@ multi method cap-stdout(SAST::CondReturn:D $_) {
 multi method cond(SAST::CondReturn:D $_,|c) { self.cond(.val,|c) }
 #!Ternary
 multi method node(SAST::Ternary:D $_,:$tight) {
-    # shouldn't this also be checking for Boo
     ('{ ' if $tight),
     |self.cond(.cond),
     |(' && ',|self.compile-in-ctx(.on-true,:tight) unless .on-true.compile-time ~~ ()),
