@@ -167,7 +167,7 @@ my $false = False;
     class C is A { }
     # Need to put ~ in front because in Any context I'm not
     # sure what a junction should return yet
-    is (~($true && B<foo> || C<foo>)).WHAT,'A','junction.WHAT returns common parent';
+    is (my $junct = ($true && B<foo> || C<foo>)).WHAT,'A','junction.WHAT returns common parent';
 }
 
 {

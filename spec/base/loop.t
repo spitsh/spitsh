@@ -19,7 +19,7 @@ plan 6;
     is @b, <0 1 4 9 16>, 'loop as a value';
 }
 {
-    ok (~(loop (my $j = 0; $j < 5; $j++) { $j*$j })) ~~ List[Int],
+    ok (my $loop = (loop (my $j = 0; $j < 5; $j++) { $j*$j })) ~~ List[Int],
        'loop return type is the correcy type of List';
 }
 
