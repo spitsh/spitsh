@@ -105,3 +105,10 @@ class DollarAT does DynamicShellElement {
     method as-item { '"$*"' }
     method as-flat { '"$@"' }
 }
+
+
+sub nnq    is export { NoNeedQuote.new: bits => @_ }
+sub dq     is export { DoubleQuote.new: bits => @_ }
+sub escape is export { Escaped.new: str => @_.join  }
+sub cs     is export { DoubleQuote.new: bits => ('$(',|@_,')')}
+sub var    is export { DoubleQuote::Var.new: name => $^a, :$:is-int }
