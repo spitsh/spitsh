@@ -651,6 +651,7 @@ class SAST::Cast is SAST::MutableChildren {
         self;
     }
     method gist { $.node-name ~ "({$!to.name})" ~ $.gist-children }
+    method compile-time { self[0].compile-time }
 }
 
 # Negation

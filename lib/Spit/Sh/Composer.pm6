@@ -330,18 +330,18 @@ multi method walk(SAST::Junction:D $THIS is rw) {
 multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
     my $decl := $THIS.declaration;
 
-    if $decl ~~ SAST::ConstantDecl {
-        self.walk($decl); # Walk the declaration early so we can inspect it for inlining
+    self.walk($decl);
 
-        if $decl ~~ SAST::Stmts {
-            $THIS.extra-depends.push($decl);
-            $decl .= last-stmt;
-        }
+    # If the decl is a Stmts after walking it means it has been tucked
+    # inside the block
+    if $decl ~~ SAST::Stmts {
+        $THIS.extra-depends.push($decl);
+        # So we have to set it back to the right value, before going any further
+        $decl .= last-stmt;
+    }
 
-        if $decl.inline-value -> $inline {
-            $THIS.switch: $inline;
-        }
-
+    if $decl ~~ SAST::ConstantDecl and $decl.inline-value -> $inline {
+        $THIS.switch: $inline;
     }
 
     elsif $decl ~~ SAST::MaybeReplace  {
@@ -360,12 +360,9 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
     elsif $decl ~~ SAST::Invocant  {
         # Pipe voting:
         # -------------
-        # Make sure the MethodDeclaration.invocant is cloned so we can start
-        # counting on its $.pipe-vote attribute.
-        self.walk($decl);
         # $.pipe-vote > 0 means it will get piped.
         without $decl.pipe-vote {
-            $decl.start-pipe-vote;
+            $decl.start-pipe-vote; # sets it to 1
         }
         # If the the no vote here is balanced by a yes vote
         # then it will get piped. Any further no votes will mean
