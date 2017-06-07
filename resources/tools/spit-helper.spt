@@ -11,6 +11,8 @@ constant $build = eval(os => $*build-os, :log){
     ok ${ $*socat -V >X} && ${$*socat -V | head -n2 >info('socat')}, 'socat works';
 };
 
+info "starting build of spit-helper:$?spit-version";
+
 given Docker.tmp('alpine', :mount-socket) {
     # copy docker binary to the container
     .copy($*docker.path, $*docker.path);
