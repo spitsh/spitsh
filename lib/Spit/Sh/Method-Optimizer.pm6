@@ -152,4 +152,4 @@ multi method method-optimize(tStr, $THIS is rw, $decl){
     }
 }
 
-multi method method-optimize($,$THIS,$) { self.walk($THIS.invocant); True }
+multi method method-optimize($,$THIS is rw,$) { self.walk($THIS.invocant); True }
