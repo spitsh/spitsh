@@ -133,6 +133,14 @@ multi method gen-name(SAST::MethodDeclare:D $method) {
     callwith($method,fallback => $method.class-type.name.substr(0,1) ~  $method.name);
 }
 
+multi method gen-name(SAST:D $node) {
+    SX::BugTrace.new(
+        desc => "Tried to generate a name for a {$node.^name}",
+        bt => Backtrace.new,
+        match => $node.match
+    ).throw;
+}
+
 method !avoid-name-collision($decl,$name is copy,:$fallback) {
     $name ~~ s:g/\W/_/;
     my $st = $decl.symbol-type;
