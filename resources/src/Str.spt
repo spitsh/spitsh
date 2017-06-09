@@ -296,10 +296,14 @@ constant $awk-subst-re =
         }
     }
 
-    method substr(Int $start, Int $length)~ {
+    method substr(Int $start, Int $length?)~ {
         $self.${
             awk -v 'RS=^$' -v "s={$start + 1}" -v "l=$length"
-            '{printf "%s", substr($0,s,l)}'
+            (
+                '{printf "%s", substr($0,s' ~
+                (~$length && ",l") ~
+                ')}'
+            )
         }
     }
 
