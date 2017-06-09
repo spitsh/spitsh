@@ -984,8 +984,9 @@ method redirection($/) {
         my $log   = $dst<log>;
         my $level = $log<log-level>.ast;
         my $path = $log<empty-path>
-              ?? $*SETTING.lookup(SCALAR, '*log-default-path').gen-reference(match => $log<empty-path>)
-              !! ($log<path> andthen .ast);
+               ?? $*SETTING.lookup(SCALAR, '*log-default-path').gen-reference(match => $log<empty-path>)
+               !! ($log<literal-path> andthen SAST::SVal.new(val => .Str))
+               || ($log<path> andthen .ast);
 
         SAST::OutputToLog.new(:$path, :$level);
     }

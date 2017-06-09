@@ -663,10 +663,11 @@ grammar Spit::Grammar is Spit::Lang {
             | $<cap>='~'
             | $<err>='!'
             | $<log>=(
-                 <log-level>
-                 [
-                     || '(' $<empty-path>=\s* ')'
-                     || $<path>=<.wrap: '(', ')', 'log path', token { <R=.EXPR> }>
+                <log-level>
+                [
+                    || ':' $<literal-path>=[<.identifier> || <:So>]+
+                    || '(' $<empty-path>=\s* ')'
+                    || $<path>=<.wrap: '(', ')', 'log path', token { <R=.EXPR> }>
                  ]?
             )
             | {} <.ws> [$<fd>=<.cmd-term> ||
