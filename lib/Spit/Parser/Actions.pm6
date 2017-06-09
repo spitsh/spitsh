@@ -216,14 +216,17 @@ method statement-control:sym<when> ($/) {
     my ($if,$last,$this);
     for $/[0] {
         $this = SAST::If.new(
-            cond => ($_<EXPR> andthen .ast or SAST::BVal.new(val => True,match => $_<block>)),
-            then => $_<block>.ast,
+            cond => $_<EXPR>.ast,
+            then => $_<blockish>.ast,
             :when,
         );
         $if //= $this;
         $last.else = $this if $last and $last ~~ SAST::If;
         $last = $this;
     }
+
+    $<default> andthen $last.else = .ast;
+
     make $if;
 }
 
@@ -385,7 +388,7 @@ method make-routine ($/,$type,:$static) {
 
 method on-switch ($/) {
     # XXX: BUG in rakudo. Value from seq disappears so assign to array first.
-    my @tmp = $/<candidates>.ast[0].map({  $_<os>.ast, $_<cmd-block>.ast }).flat;
+    my @tmp = $/<candidates>.ast[0].map({  $_<os>.ast, $_<cmd-blockish>.ast }).flat;
     make @tmp;
 }
 
@@ -866,12 +869,20 @@ method cmd-blockoid($/) {
     }
 }
 
-method cmd-block($/)    {
+method blockish($/) {
+    make $<blockoid>.ast;
+}
+
+method cmd-blockish($/) {
     make $<cmd-blockoid>.ast;
 }
 
 method block($/)    {
-    make $<blockoid>.ast
+    make $<blockish>.ast
+}
+
+method cmd-block($/)    {
+    make $<cmd-blockish>.ast;
 }
 
 method blorst($/) {

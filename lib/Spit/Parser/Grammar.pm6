@@ -160,20 +160,20 @@ grammar Spit::Grammar is Spit::Lang {
         <sym> <EXPR> <block>
     }
 
-    rule statement-control:sym<when> {
+    token statement-control:sym<when> {
+        # When statements are chained together and then
+        # compiled into a big if/elsif/else statements
         (
-            <.sym>
-            # whenver you use blocks without following it with <.eat-terminator>
-            # you have to compensate by manually setting $*ENDSTMT
-            { $*ENDSTMT = False }
+            <.ws> <.sym> <.ws>
             [
-                <EXPR> <block>
-                ||
-                <.invalid('when statement')>
+                || <EXPR> <blockish>
+                || <.invalid('when statement')>
             ]
-            |
-            'default' <block>
         )+
+        [
+            || <.ws> 'default' <.ws> $<default>=<.blockish> <?ENDSTMT>
+            || <?ENDSTMT>
+        ]
     }
 
     proto token declaration {*}
@@ -193,7 +193,7 @@ grammar Spit::Grammar is Spit::Lang {
         <trait>*
         <.newpad>
         <.declare-class-params>
-        <blockoid>
+        <blockoid><?ENDSTMT>
         <.finishpad>
     }
 
@@ -205,7 +205,7 @@ grammar Spit::Grammar is Spit::Lang {
         <.attach-pre-doc>
         <.newpad>
         <.declare-class-params>
-        <blockoid>
+        <blockoid><?ENDSTMT>
         <.finishpad>
     }
 
@@ -252,7 +252,7 @@ grammar Spit::Grammar is Spit::Lang {
         :my $*DECL;
         <.new-routine(|c)>
         <trait>*
-        [ <on-switch> || <cmd-blockoid> || <.expected("on switch or block to define routine")>]
+        [ <on-switch> || <cmd-blockoid><?ENDSTMT> || <.expected("on switch or block to define routine")>]
         <.finishpad>
     }
 
@@ -285,11 +285,10 @@ grammar Spit::Grammar is Spit::Lang {
             (
                 <!before '}'>
                 [<os> || <.expected('OS name')> ]
-                [<cmd-block> || <.expected("A block for { $<os>.Str }")>]
-                { $*ENDSTMT = False }
+                [<cmd-blockish> || <.expected("A block for { $<os>.Str }")>]
             )*
         }>
-        <.ENDSTMT>
+        <?ENDSTMT>
     }
 
     rule declaration:var {
@@ -568,26 +567,40 @@ grammar Spit::Grammar is Spit::Lang {
     token sigil:sym<$> { <sym> }
     token sigil:sym<@> { <sym> }
 
-    # requires a <.newpad> before invocation
-    # and a <.finishpad> after
+    # A pure match of a block, no lexical scope is created
     token blockoid {
         $<statementlist>=<.wrap: '{','}','block', token { <R=.statementlist> }>
-        <.ENDSTMT>
     }
 
+    # A match of a blockoid or a ${...} command
     token cmd-blockoid {
-        | <cmd> <.ENDSTMT>
+        | <cmd>
         | <blockoid>
     }
 
-    token cmd-block {
-        <?[${]> <.newpad> <cmd-blockoid> <.finishpad>
-    }
-
-    token block {
+    # A block with its own lexical scope
+    token blockish {
         <?[{]> <.newpad> <blockoid> <.finishpad>
     }
 
+    # A block or command with its own lexical scope
+    token cmd-blockish {
+        <?[${]> <.newpad> <cmd-blockoid> <.finishpad>
+    }
+
+    # A match of a block or a command as a statement with its own lexical scope
+    token cmd-block {
+        <cmd-blockish>
+        <?ENDSTMT>
+    }
+
+    # A block as a statement with its own lexical scope
+    token block {
+        <blockish>
+        <?ENDSTMT>
+    }
+
+    # A block or a statement
     token blorst {
         [ <?[{]> <block> | <![;]> <statement> || <.expected: 'block or statement'> ]
     }
