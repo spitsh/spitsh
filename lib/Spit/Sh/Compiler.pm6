@@ -474,23 +474,24 @@ multi method arg (SAST::BVal:D $_) { .val ?? '1' !! '""' }
 multi method cond(SAST::BVal:D $_) { .val ?? 'true' !! 'false' }
 multi method int-expr(SAST::BVal $ where { .val === False } ) { '0' }
 
-constant @cats = qqw:to/END/;
-\c[SMILING CAT FACE WITH OPEN MOUTH]
-\c[Grinning Cat Face With Smiling Eyes]
-\c[Cat Face With Tears of Joy]
-\c[SMILING CAT FACE WITH HEART-SHAPED EYES]
-\c[Cat Face With Wry Smile]
-\c[Kissing Cat Face With Closed Eyes]
-\c[Weary Cat Face]
-\c[Crying Cat Face]
-\c[pouting cat face]
-\c[Cat]
-\c[Cat Face]
-\c[Tiger Face]
-\c[Lion Face]
-END
+my @cats = BEGIN flat lazy qqw{
+    \c[smiling cat face with open mouth]
+    \c[grinning cat face with smiling eyes]
+    \c[cat face with tears of joy]
+    \c[smiling cat face with heart-shaped eyes]
+    \c[cat face with wry smile]
+    \c[kissing cat face with closed eyes]
+    \c[weary cat face]
+    \c[crying cat face]
+    \c[pouting cat face]
+    \c[cat]
+    \c[cat face]
+    \c[tiger face]
+    \c[lion face]
+} xx ∞;
 
-constant @cat-names = %?RESOURCES<cat-names.txt>.slurp.split("\n");
+
+my @cat-names = BEGIN flat lazy %?RESOURCES<cat-names.txt>.slurp.split("\n") xx ∞;
 has $!debian;
 # There are three situations that determine whether we heredoc
 # 1. The string ends in a newline and you want it to stay that way
@@ -507,9 +508,9 @@ method try-heredoc($sast, :$preserve-end) {
        {
         $!debian ||= $*SETTING.lookup(CLASS,'Debian').class;
         # Debian's /bin/sh (dash) doesn't do nested multi-byte character heredocs 😿
-        my @pick = ($!composed-for ~~ $!debian ?? @cat-names !! @cats);
+        my @nekos := ($!composed-for ~~ $!debian ?? @cat-names !! @cats);
         my $cat;
-        repeat { $cat =  ~ @pick.shift } while @lines.first(*.match(/^"\t"+$cat/));
+        repeat { $cat =  @nekos.shift } while @lines.first(*.match(/^"\t"+$cat/));
         $cat or SX::Bug.new(
             desc => "😿 Nekos depleted - mine more nekos 😿",
             match => $sast.match

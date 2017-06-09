@@ -423,21 +423,18 @@ multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
     callsame;
 }
 
-constant @eval-placeholders =
-"\c[
-bouquet, cherry blossom, white flower, rosette, rose, wilted flower, hibiscus,
-sunflower, blossom, tulip, kiss mark, heart with arrow, beating heart,
-broken heart, two hearts, sparkling heart, growing heart, blue heart, green heart ,
-yellow heart, purple heart, black heart, heart with ribbon, revolving hearts,
-heart decoration, love letter
-]".comb;
+my @placeholders = BEGIN lazy flat "\c[
+bouquet, revolving hearts,  blossom, two hearts, sunflower,growing heart,
+rose, heart with arrow, cherry blossom, beating heart, tulip,
+broken heart,  sparkling heart, hibiscus,blue heart, green heart, kiss mark,
+yellow heart, purple heart, black heart, heart with ribbon,
+heart decoration, wilted flower,love letter,rosette, white flower
+]".comb xx ∞;
 
 
 multi method walk(SAST::Eval:D $THIS is rw) {
     my %opts = $THIS.opts;
     %opts<os> //= SAST::Type.new(class-type => $.os,match => $THIS.match);
-
-    my @placeholders = @eval-placeholders;
 
     for %opts.kv -> $name, $opt is rw {
         my $ct = $opt.compile-time;
