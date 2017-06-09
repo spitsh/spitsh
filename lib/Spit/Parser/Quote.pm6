@@ -4,7 +4,7 @@ need Spit::Exceptions;
 
 role Spit::Quote::curlies {
     token elem:curlies {
-        <?before '{'> $<block>=<.LANG('MAIN','blockish')>
+        {} <?before '{'>  $<block>=<.LANG('MAIN','blockish')>
         {
             my $block := $<block>.ast;
             if $block.children == 0 {

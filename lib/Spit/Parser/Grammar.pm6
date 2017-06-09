@@ -731,17 +731,15 @@ grammar Spit::Grammar is Spit::Lang {
         :my $opener;
         :my @tweaks;
         [
-            |<opener>
+            | $<opener>=($<bracket>=<.opener> [ $<repeat>=. <?{ $<repeat> eq $<bracket> }>]*)
             |<!{$bracket-only}> $<open-and-close>=[<!before <.hyphen>|<.identifier>> .]
         ]
         {
             @tweaks = .Slip with $tweaks;
             if $<opener> {
-                $opener = $<opener>.Str;
-                my $i = @brackets.first($opener,:k);
-                $closer = @brackets[$i + 1];
-                # Rakudo remove curlies if our balnced quote is actually curlies so we do too.
-                @tweaks .= grep({ $_ ne 'curlies' }) if $opener eq '{';
+                $opener = $<opener>;
+                my $i = @brackets.first($opener<bracket>.Str,:k);
+                $closer = @brackets[$i + 1] x (($opener<repeat> andthen .elems) + 1);
             } else {
                 $closer = $opener = $<open-and-close>.Str;
             }
