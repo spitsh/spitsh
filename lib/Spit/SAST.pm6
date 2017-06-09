@@ -1618,7 +1618,12 @@ class SAST::Eval is SAST::Children   {
 
     method stage2($) {
         $!src .= do-stage2(tStr);
-        $_ .= do-stage2(tAny) for %!opts.values;
+        for %!opts.values {
+            $_ .= do-stage2: do {
+                when $_.WHAT === SAST::Type { tAny }
+                default { tStr }
+            }
+        }
         self
     }
 

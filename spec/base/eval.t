@@ -1,6 +1,6 @@
 use Test;
 
-plan 6;
+plan 7;
 
 {
     my $foo = "foo";
@@ -19,6 +19,13 @@ plan 6;
     my $foo = "bar";
     is eval(:$foo){ constant $*foo; print $*foo }.${sh}, 'bar',
       'runtime argument';
+}
+
+{
+    sub foo()~ { ${printf "baz"} }
+    is eval(foo => foo()){ constant $*foo; print $*foo }.${sh}, 'baz',
+        'inlinable sub call as runtime argument';
+
 }
 
 {
