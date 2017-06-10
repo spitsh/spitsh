@@ -60,15 +60,18 @@ Options:
     Turns inlining off for routine calls.
 
   -o --opts=<json>
-    A json object where the keys are the option names and the values
+    A JSON object where the keys are the option names and the values
     the option values. If a value starts with ':' the rest is evaluated
     as a Spit expression in the context of the option's declaration.
 
+  -f --opts-file=<file.json>
+    A file containing a JSON object interpreted in the same way as --opts
+
   --os=<os name> (default: debian)
-    Shortcut for --opts='{ "os" : ": OS<debian>" }'
+    Shortcut for --o='{ "os" : ": OS<debian>" }'
 
   --log
-    Shortcut for --opts='{ "log" : true }'
+    Shortcut for --o='{ "log" : true }'
 
   -s --mount-docker-socket
     Mounts /var/run/docker.sock into the container.
@@ -274,6 +277,21 @@ sub fail-print-usage($section = "general") {
     note %usage{$section}; exit 1;
 }
 
+sub combine-options($opts?, :@files) {
+
+    my %opts = do if (my $local = "./.spitsh.json".IO).e {
+        $local.&parse-opts;
+    }
+
+    for @files {
+        %opts.append: flat .IO.&parse-opts;
+    }
+
+    my %cli = ($opts andthen .&parse-opts);
+    %opts.append(%cli);
+    %opts;
+}
+
 sub do-main() is export {
     my (@pos,%named) := parse-args(@*ARGS);
 
@@ -282,15 +300,16 @@ sub do-main() is export {
     if not @pos {
         fail-print-usage;
     } else {
+        %named<opts> //= %named<o>;
+        %named<opts-file> //= %named<f>;
         given @pos[0] {
             when %named<help>:exists { print %usage{$_} // %usage<general> }
             when 'compile'|'eval' {
                 @pos[1]:exists or fail-print-usage($_);
-                compile-or-eval(@pos.shift, @pos, %named)
+                compile-or-eval(@pos.shift, @pos, %named);
             }
             when 'prove' {
                 @pos[1]:exists or fail-print-usage($_);
-                %named<opts> //= %named<o>;
                 %named<jobs> //= %named<j>;
                 %named<mount-docker-socket> //= %named<s>;
                 %named<verbose> //= %named<v>;
@@ -312,11 +331,11 @@ sub do-main() is export {
 }
 
 sub compile-or-eval($command, @pos, %named) {
+    %named<opts> = combine-options(%named<opts>, files => (%named<opts-file> // Empty,));
     my @*repos = [
         Spit::Repo::File.new,
         Spit::Repo::Core.new
     ];
-    %named<opts> //= %named<o>;
     %named<in-docker> //= %named<d>;
     %named<in-container> //= %named<D>;
     %named<in-helper> //= %named<h>;
@@ -326,12 +345,6 @@ sub compile-or-eval($command, @pos, %named) {
     %named<target> //= 'compile';
     %named<mount-docker-socket> //= %named<s> //= %named<in-helper>;
     my $*debug = %named<debug>;
-
-    with %named<opts> {
-        $_ .= &parse-opts;
-    } else {
-        $_ = {};
-    };
 
     with %named<log> {
         %named<opts><log> = late-parse('True');
@@ -428,7 +441,7 @@ sub start-docker($image is copy, :$mount-docker-socket, *%) {
     # SEE: https://gist.github.com/LLFourn/70b70b7e26b5e57de7894eefee3c97e1
     # For an explanation of this:
     my @args = 'docker','run',|$mount,'-i','--rm',$image,'sh', '-c',
-      ‘mkfifo stdin; trap 'kill $!' TERM; trap 'rm stdin' EXIT; sh<stdin & cat>stdin; wait $!’;
+      ‘mkfifo stdin; trap 'kill $!; wait $!' TERM; trap 'rm stdin' EXIT; sh<stdin & cat>stdin; wait $!’;
     note "starting docker with {@args[1..*].gist}" if $*debug;
     my $docker = Proc::Async.new(|@args, :w);
     cleanup-containers();

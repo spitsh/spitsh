@@ -44,7 +44,11 @@ my constant $actions = my class Spit::OptsParser::Actions is JSON5::Tiny::Action
     }
 }
 
-sub parse-opts(Str:D $json) is export  {
-    my $res = JSON5::Tiny::Grammar.parse($json,:$actions) || die "opts not valid json";
-    return $res.made;
+multi parse-opts(Str:D $json) is export  {
+    my $res = JSON5::Tiny::Grammar.parse($json,:$actions);
+    return ($res andthen .made);
+}
+
+multi parse-opts(IO::Path:D $json-file) {
+    parse-opts($json-file.slurp) || die "$json-file doesn't contain valid JSON";
 }
