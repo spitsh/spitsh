@@ -6,7 +6,18 @@ constant File $*docker-install-cli-path = '/usr/local/bin/docker';
 
 constant Cmd $*docker = on {
     Spit-Helper { 'docker' }
-    Linux { Cmd<docker> || Docker.install-cli }
+    Linux {
+        Cmd<docker> or (
+            if $*docker-socket {
+                debug "$_ exists so only installing docker cli";
+                Docker.install-cli;
+            } else {
+                debug "$_ doesn't exist so installing the full Docker package";
+                Docker.install;
+                'docker';
+            }
+        )
+    }
 }
 
 constant $*moby-github = GitHubRepo<moby/moby>;
