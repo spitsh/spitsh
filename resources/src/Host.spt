@@ -12,11 +12,13 @@ class Host is Str {
     static method local^ { 'localhost' }
 
     method wait-connectable(Port $port, Int :$timeout = 60)? {
-        my $total = 0;
-        while $total < $timeout and !$self.connectable($port) {
-            $total += 1;
+        my $start = now.posix;
+        my $connected = False;
+        while now.posix < ($start + $timeout) and !$connected {
+            $connected = $self.connectable($port);
+            sleep 1;
         }
-        $total < $timeout;
+        $connected;
     }
 
     method read-port(Int $port)~ {
