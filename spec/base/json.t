@@ -1,6 +1,6 @@
 use Test;
 
-plan 11;
+plan 13;
 
 {
     is 'foo'.JSON, '"foo"', '"foo".json';
@@ -35,4 +35,11 @@ plan 11;
 
     is $json, '{"one":"two","three":["four","five","six"],"four":{"seven":"eight"}}',
       'nested json objects and array';
+}
+
+
+{
+    my $empty = { };
+    ok $empty ~~ JSON, '{ } is an empty json object';
+    is $empty, '{}', 'it is "{}"';
 }

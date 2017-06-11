@@ -570,14 +570,17 @@ method circumfix:sym<( )> ($/) {
 }
 method circumfix:sym<{ }> ($/) {
     my $block = $<block>.ast;
-    make do if $block.one-stmt andthen (
-        $_ ~~ SAST::Pair and my @pairs = $_ or
+    my @pairs;
+    make do if # if it's empty, has one pair or a list of pairs then it's a json object
+      ( $block.children == 0) or
+      $block.one-stmt andthen (
+        $_ ~~ SAST::Pair and @pairs = $_ or
         (
             $_ ~~ SAST::List and
             not .children.first(* !~~ SAST::Pair) and
             @pairs = .children
         )
-    )
+      )
     {
         SAST::SubCall.new(
             name => 'j-object',
