@@ -18,9 +18,14 @@ class Pkg {
 
     #| Tells the system specific package manager to update its list of pacakges.
     static method update-pkglist? on {
-        Debian ${ apt-get update *>X   }
-        RHEL   { ${yum clean expire-cache >X} && ${ yum check-update >X}; $? != 1 }
-        Alpine ${ apk update >debug }
+        Debian ${ apt-get update >debug:📦 !>warn:📦  }
+        RHEL   {
+            ${yum clean expire-cache >debug:📦 !>warn:📦 } &&
+              ${ yum check-update >debug:📦 !>warn:📦};
+            $? != 1
+        }
+                # apt is noisy for no reason so send it to debug instead of warn
+        Alpine ${ apk update >debug:📦 !>debug:📦 }
     }
 
     static method last-updated-->DateTime on {
@@ -33,7 +38,7 @@ class Pkg {
         RHEL ${
             date -d
             ${
-                yum repolist enabled -v
+                yum repolist enabled -v !>warn:📦
                 | grep -m1 Repo-expire
                 | sed -r 's/.*last: |\)//g'
              }
@@ -94,14 +99,17 @@ augment List[Pkg] {
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
     method install? on {
-        RHEL ${yum install -y @$self *>X}
+        RHEL ${yum install -y @$self >debug:📦 !>warn:📦 }
         Debian {
             Pkg.check-update;
-            ${apt-get install -y -q --no-install-recommends @$self *>X};
+            ${
+                apt-get install !>warn:📦 >debug:📦 :DEBIAN_FRONTEND<noninteractive>
+                -y -q --no-install-recommends @$self
+            }
         }
         Alpine {
             Pkg.check-update;
-            ${ apk add @$self --no-progress >debug };
+            ${apk add @$self --no-progress >debug:📦 !>warn:📦};
         }
     }
 }
