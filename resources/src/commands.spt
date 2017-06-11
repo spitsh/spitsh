@@ -65,11 +65,11 @@ constant Cmd $*socat = on {
     Spit-Helper { 'socat' }
 }
 
-constant $*ss = on {
+constant Cmd $*ss = on {
     Debian { 'ss' }
 }
 
-constant $*netstat = on {
+constant Cmd $*netstat = on {
     RHEL { Pkg<net-tools>.ensure-install; 'netstat' }
     Alpine { 'netstat' }
 }
