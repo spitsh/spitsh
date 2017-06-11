@@ -70,14 +70,15 @@ augment Docker {
         $from,
         :$name,
         :@args,
-        :$mount-socket
-    )-->Docker {
-        ${
+        Bool :$mount-socket
+    ) -->Docker {
+        my $id = ${
             $*docker create -i
             ("--name=$_" if $name)
             ("-v=$*docker-socket:$*docker-socket" if $mount-socket)
             @args $from sh -c ':;sh'
-        };
+        }.substr(0,12); # 12 is a sufficient length of hash
+        $name || $id;
     }
 
     method exists? ${ $*docker container inspect $self *>X }
