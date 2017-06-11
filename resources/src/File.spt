@@ -312,6 +312,10 @@ augment File {
         ${sed -ri "s§$regex§$replacement§{$g && 'g'}" $self}
     }
 
+    method capture(Regex $regex)~ {
+        ${sed -rn "s§$regex§\\1§;T;s/^.*//p;q" $self}
+    }
+
     method sha256~ ${ sha256sum -b $self | awk '{print $1}' }
     method sha256-ok($sha256-expected, :$what) {
         my $sha256-got = $self.sha256;

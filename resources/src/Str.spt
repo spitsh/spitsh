@@ -311,4 +311,7 @@ constant $awk-subst-re =
         ${ tr -dc 'a-zA-Z0-9' < '/dev/urandom' | head -c $n }
     }
 
+    method capture(Regex $regex)~ {
+        $self.${sed -rn "s§$regex§\\1§;T;s/^.*//p;q"}
+    }
 }
