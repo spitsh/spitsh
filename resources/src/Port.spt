@@ -1,10 +1,16 @@
 class Port is Int {
     method serve-file(File $file) {
-        ${exec $*socat -U "TCP-LISTEN:$self,reuseaddr,fork" "FILE:$file"};
+        ${exec $*socat !>warn('serve-file') >debug('serve-file') -U
+          "TCP-LISTEN:$self,reuseaddr,fork" "FILE:$file"
+        }
     }
 
     method tail-file(File $file) {
-        ${exec $*socat -U "TCP-LISTEN:$self,reuseaddr,fork" "EXEC:tail -f '$file'"}
+        ${exec $*socat -ls !>warn('tail-file') >debug('tail-file')
+          # cool-write is to ignore all the useless EPIPE warnings
+          # (plz explain if you know why there are EPIPE in this situation)
+          -U "TCP-LISTEN:$self,reuseaddr,fork,cool-write" "EXEC:tail -f $file"
+         }
     }
 
     method serve-script(File $script) {
