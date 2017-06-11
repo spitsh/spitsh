@@ -33,9 +33,9 @@ class five {}
 # no doc comment
 class six {}
 
-ok one.WHY.contains("\nfoo"),'heredoc indenting alignment';
+is one.WHY, "foo",'heredoc indenting alignment';
 ok two.WHY.ends-with('bar'),'ws removed from the end of #|{}';
-ok three.WHY.starts-with(qq{\nif True {\n    foo\n}}),'curlies inside block';
+ok three.WHY.starts-with(qq{if True {\n    foo\n}}),'curlies inside block';
 ok four.WHY.contains("\{\n    note"),'non indented finishing curly';
 is five.WHY, 'one line', '#| comment';
 is six.WHY, "", '.WHY on something with no docs';

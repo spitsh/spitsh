@@ -25,17 +25,28 @@ role Spit::Quote::balanced {
     }
 }
 
-role Spit::Quote::align-indent {
+role Spit::Quote::sheardoc {
+
+    token TOP(:$*opener = Nil, :$*closer!) {
+        :my $*sheardoc;
+        [
+            ||"\n"
+               #TODO: Investigate how slow this is
+            || { $*sheardoc =  $/.pos - $/.orig.substr(0,$/.pos).rindex("\n") - 1 }
+        ]
+        <quoted>
+        { make $<quoted>.ast }
+    }
 
     token elem:line-start {
         <?after \n>
         [
-            || <!{$*align-indent.defined}>
+            || <!{$*sheardoc.defined}>
                 (\h*)
-                { $*align-indent = $/[0].Str.chars }
+                { $*sheardoc = $/[0].Str.chars }
             ||
-            <?{ $*align-indent > 0}>
-            \h ** { 1..$*align-indent }
+            <?{ $*sheardoc > 0}>
+            \h ** { 1..$*sheardoc }
         ]
         { $/.make('') }
     }
@@ -43,7 +54,6 @@ role Spit::Quote::align-indent {
 
 grammar Spit::Quote is Spit::Lang {
     token TOP(:$*opener = Nil,:$*closer!) {
-        :my $*align-indent;
         <quoted>
     }
 
@@ -56,7 +66,7 @@ grammar Spit::Quote is Spit::Lang {
     method get-tweak($_){
         when 'curlies' { Spit::Quote::curlies }
         when 'balanced' { Spit::Quote::balanced }
-        when 'align-indent' { Spit::Quote::align-indent }
+        when 'shear' { Spit::Quote::sheardoc }
     }
 }
 

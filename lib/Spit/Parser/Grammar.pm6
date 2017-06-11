@@ -712,17 +712,18 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token quote:sym<qq> {
-        <sym> » $<str>=<.balanced-quote('Quote-qq',:tweaks<curlies>)>
+        <sym> »
+        $<str>=<.balanced-quote('Quote-qq',:tweaks<curlies shear>)>
     }
 
     token quote:sym<q> {
         <sym> »
-        $<str>=<.balanced-quote('Quote-q')>
+        $<str>=<.balanced-quote('Quote-q', :tweaks<shear>)>
     }
 
     token quote:sym<Q> {
         <sym> »
-        $<str>=<.balanced-quote('Quote-Q')>
+        $<str>=<.balanced-quote('Quote-Q', :tweaks<shear>)>
     }
     # called when you know the next character is some kind of openning quote
     # but you don't know what it is yet.
@@ -791,7 +792,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token doc-bracket {
-        <balanced-quote('Quote-q',:bracket-only,:tweaks<align-indent>)>
+        <balanced-quote('Quote-q',:bracket-only,:tweaks<shear>)>
         {
             my $match = $<balanced-quote><str>;
             $/.make: do if $<balanced-quote><opener>.Str eq '{' {
