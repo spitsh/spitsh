@@ -43,26 +43,15 @@ method call($name, @named-param-pairs, @pos, :$slurpy-start) {
     }
 }
 
-method maybe-quietly(@cmd,\ret-type,\ctx,:$match) {
-    if ctx === tAny and ret-type !=== tAny and ret-type !=== tBool {
-         |@cmd,' >',self.null(:$match);
-    } else {
-        @cmd;
-    }
-}
-
 #!Call
 multi method node(SAST::Call:D $_)  {
-    self.maybe-quietly:
-      self.call(
-          self.gen-name(.declaration),
-          .param-arg-pairs,
-          .pos,
-          slurpy-start => (.declaration.signature.slurpy-param andthen .ord)
-      ),
-      .type,
-      .ctx,
-      match => .match;
+    |self.call(
+        self.gen-name(.declaration),
+        .param-arg-pairs,
+        .pos,
+        slurpy-start => (.declaration.signature.slurpy-param andthen .ord)
+    ),
+    |(.null andthen ' >&',|self.arg($_))
 }
 
 multi method assign($var,SAST::Call:D $call) {
@@ -100,7 +89,7 @@ multi method node(SAST::MethodCall:D $_, :$tight) {
         |self.gen-name(.invocant),'=$(',|$call,')';
     } else {
         ('{ ' if $pipe and $tight),
-        |self.maybe-quietly( $call, .type, .ctx, match => .match),
+        |$call, |(.null andthen ' >&',|self.arg($_)),
         (';}' if $pipe and $tight)
     }
 }

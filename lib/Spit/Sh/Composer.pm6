@@ -675,3 +675,8 @@ multi method include(SAST::PhaserBlock:D $phaser-block is rw) {
     $*CU.phasers[$phaser-block.stage].push($phaser-block.block);
     $phaser-block .= stage3-node(SAST::Empty,:included);
 }
+
+multi method include(SAST::Noisy:D $_) is default {
+    .null = self.NULL(match => .match) if .silence-condition;
+    callsame;
+}

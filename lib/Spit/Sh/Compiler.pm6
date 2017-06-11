@@ -55,7 +55,6 @@ method scaffolding {
     for
     (SUB,'list'),
     (SCALAR,'?IFS'),
-    (SCALAR,'*NULL'),
     (SUB,'et'),
     (SUB,'ef'),
     (SUB,'e')
@@ -82,26 +81,6 @@ method scaf($name) {
     my $scaf = $*depends.require-scaffolding($name);
     $scaf.depended = True;
     self.gen-name($scaf);
-}
-
-# gets a late reference to variable that's in the scaffolding.
-# At the time of commiting this is just needed for $*NULL.
-method scaf-ref($name,:$match) {
-    my $scaf = $*depends.require-scaffolding($name);
-    if $scaf ~~ SAST::Stmts {
-        $scaf .= last-stmt;
-    }
-    if $scaf.inline-value -> $inline {
-        $inline;
-    } else {
-        $scaf.gen-reference(:stage3,:$match);
-    }
-}
-
-has $!null;
-
-method null(:$match) {
-    $!null //= '&' ~ self.arg(self.scaf-ref('*NULL', :$match));
 }
 
 has $!composed-for;
@@ -324,9 +303,7 @@ multi method cap-stdout(SAST::Stmts $_, :$tight) {
 }
 
 #!LastExitStatus
-multi method cond(SAST::LastExitStatus:D $_) {
-    'expr $? = 0 >', self.null(match => .match);
-}
+multi method cond(SAST::LastExitStatus:D $_) { 'test $? = 0' }
 
 multi method arg(SAST::LastExitStatus:D $_) {
     .ctx ~~ tBool ?? callsame() !! '$?';
@@ -428,12 +405,12 @@ multi method cap-stdout(SAST::Empty:D $_) { ':' }
 
 #!Quietly
 multi method node(SAST::Quietly:D $_) {
-    |self.node(.block,:curlies),' 2>', self.null;
+    |self.node(.block,:curlies),' 2>&',|self.arg(.null)
 }
 
 #!Start
 multi method node(SAST::Start:D $_) {
-    |self.node(.block, :curlies), ">{self.null} \&";
+    |self.node(.block, :curlies), ' >&',|self.arg(.null), ' &';
 }
 
 multi method assign($var, SAST::Start:D $start) {

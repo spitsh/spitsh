@@ -763,7 +763,12 @@ class SAST::SubDeclare is SAST::RoutineDeclare {
     method declarator { 'sub' }
 }
 
-class SAST::Call  is SAST::Children {
+role SAST::Noisy {
+    has $.null is rw;
+    method silence-condition {...}
+}
+
+class SAST::Call  is SAST::Children does SAST::Noisy {
     has SAST:D %.named;
     has SAST:D @.pos;
     has SAST::RoutineDeclare $.declaration is rw;
@@ -793,6 +798,10 @@ class SAST::Call  is SAST::Children {
     method set-declaration(SAST::RoutineDeclare:D $!declaration) { }
 
     method clone(|c){ callwith(|c,:@!pos,:%!named) }
+
+    method silence-condition {
+        $.ctx === tAny && $.type !=== tAny && $.type !=== tBool
+    }
 
     method depends { $.declaration, }
 
@@ -851,7 +860,10 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
 
     method children {
         # if asked for children before stage2 return invocant regardlress
-        ($.invocant unless $.stage2-done and $.declaration.static), |@.pos, |%.named.values
+        ($.invocant unless $.stage2-done and $.declaration.static),
+        |@.pos,
+        |%.named.values,
+        ($.null // Empty)
     }
 
     method auto-compose-children {
@@ -883,7 +895,7 @@ class SAST::SubCall is SAST::Call {
         $*CURPAD.lookup(SUB,$.name,:$.match);
     }
 
-    method children { |@.pos,|%.named.values }
+    method children { |@.pos,|%.named.values, ($.null // Empty) }
 
     method spit-gist { $.name ~ "(...)" }
 }
@@ -1684,20 +1696,22 @@ class SAST::Case is SAST::Children is rw {
     method type { derive-common-parent (|@!blocks,$!default // Empty).map(*.type) }
 }
 
-class SAST::Quietly is SAST::Children {
+class SAST::Quietly is SAST::Children does SAST::Noisy {
     has SAST::Stmts:D $.block is required;
 
     method stage2($ctx) {
         $!block .= do-stage2($ctx,:!auto-inline);
         self;
     }
+    # always silence
+    method silence-condition { True }
 
     method type { $!block.type }
 
-    method children { $!block, }
+    method children { $!block, ($.null // Empty) }
 }
 
-class SAST::Start is SAST::Children {
+class SAST::Start is SAST::Children does SAST::Noisy {
     has SAST::Stmts:D $.block is required;
 
     method stage2($ctx) {
@@ -1705,9 +1719,13 @@ class SAST::Start is SAST::Children {
         self;
     }
 
+    # Always silence: It's necessary to close the pipe to the parent process'
+    # STDOUT when new process is forked, otherwise it might keep it open forever
+    method silence-condition { True }
+
     method type { tPID }
 
-    method children { $!block, }
+    method children { $!block, ($.null // Empty) }
 }
 
 class SAST::Doom does SAST {
