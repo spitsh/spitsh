@@ -14,7 +14,7 @@ multi method assign($var,SAST::Junction:D $j) {
     }
     if $or-equals and $var.type ~~ tStr {
         my $name = self.gen-name($var);
-        '${',$name,':=', |self.arg($j[1]).in-or-equals,'}';
+        '${',$name,':=', |self.arg($j[1]).in-param-expansion,'}';
     } else {
         nextsame;
     }
@@ -44,7 +44,7 @@ method try-param-substitution(SAST::Junction:D $junct) {
         dq '${',
         self.gen-name(LHS.val),
         (LHS.when ?? ':-' !! ':+'),
-        |self.arg(RHS),
+        self.arg(RHS).in-param-expansion,
         '}';
     }
 }

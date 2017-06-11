@@ -573,7 +573,7 @@ method compile-pattern($pattern is copy,@placeholders) {
         for @placeholders.kv -> $i, $v {
             @literals.splice: $i*2+1, 0, self.arg($v);
         }
-        self.concat-into-DQ(@literals);
+        concat @literals;
     } else {
         escape $pattern
     }
@@ -597,18 +597,9 @@ multi method arg(SAST::Range:D $_) {
      )
 }
 
-method concat-into-DQ(@elements) {
-    my $str = dq();
-
-    for @elements.reverse.kv -> $i,$_ {
-        $str.bits.prepend(.in-DQ(next => $str.bits.head));
-    }
-    $str;
-}
-
 #!Concat
 multi method arg(SAST::Concat:D $_) {
-    self.concat-into-DQ(.children.map({ self.arg($_) }).flat)
+    concat .children.map({ self.arg($_) }).flat;
 }
 #!Type
 multi method arg(SAST::Type $_) {
@@ -640,7 +631,7 @@ multi method loop-return(SAST::List:D $_) {
 
 #!Pair
 multi method arg(SAST::Pair:D $_) {
-    self.concat-into-DQ([self.arg(.key),"\t",self.arg(.value)])
+    concat [self.arg(.key),"\t",self.arg(.value)]
 }
 
 #!EvalArg

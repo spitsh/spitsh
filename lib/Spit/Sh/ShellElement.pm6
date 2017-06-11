@@ -5,9 +5,6 @@ my $metachar-re = BEGIN rx/\s|<[}<?'"\\$;&()|>*#`]>/;
 my $case-meta = BEGIN rx/<[[*?|]>/;
 
 role ShellElement {
-    method in-or-equals {
-        S:g!'}' | \\<?before '}'>!\\$/! given self.in-DQ.join;
-    }
 
     method in-case-pattern {
         S:g!$case-meta | \\ <?before $case-meta>!\\$/! given self.in-DQ.join;
@@ -22,6 +19,7 @@ BEGIN augment class Str does ShellElement {
     method in-ctx  { self }
     method itemize($)  { self }
     method faltten  { self }
+    method in-param-expansion { self }
 };
 
 # Role for anything that has to have its itemization or
@@ -33,6 +31,7 @@ role DynamicShellElement does ShellElement {
     method in-ctx { $!itemized ?? self.as-item !! self.as-flat }
     method itemize($!itemized) { self }
     method match(|c)    { self.Str.match(|c)  }
+    method in-param-expansion { self.in-DQ }
 }
 
 # A literal string - it should be escaped for whatever quotes it appears in
@@ -68,6 +67,43 @@ class Escaped does DynamicShellElement {
         }
     }
 
+    # Parameter expansion: ${foo:+bar}
+    # like double quotes but need to escape } too.
+    method in-param-expansion(:$next) {
+        S:g!
+           |<[$"`}]>
+           |\\ [ <?[\\$"`}]> || $ <?{$next andthen .match(/^<?[\\$"`}]>/)}> ]
+           !\\$/! given $!str;
+    }
+
+
+    method as-flat { self.as-item }
+}
+
+class Concat does DynamicShellElement {
+    has @.elements;
+
+    method in-DQ {
+        my @in-DQ;
+
+        for @!elements.reverse.kv -> $i,$_ {
+            @in-DQ.prepend(.in-DQ(next => @in-DQ.head));
+        }
+
+        @in-DQ;
+    }
+
+    method in-param-expansion {
+        my @in-DQ;
+
+        for @!elements.reverse.kv -> $i,$_ {
+            @in-DQ.prepend(.in-param-expansion(next => @in-DQ.head));
+        }
+
+        @in-DQ
+    }
+
+    method as-item { '"',|self.in-DQ, '"'}
     method as-flat { self.as-item }
 }
 
@@ -77,6 +113,7 @@ class DoubleQuote does DynamicShellElement {
     method in-DQ { @!bits }
     method as-item { '"',|@!bits,'"' }
     method as-flat { @!bits }
+    method in-param-expansion { @!bits }
 }
 
 # a vanilla variable.
@@ -112,3 +149,4 @@ sub dq     is export { DoubleQuote.new: bits => @_ }
 sub escape is export { Escaped.new: str => @_.join  }
 sub cs     is export { DoubleQuote.new: bits => ('$(',|@_,')')}
 sub var    is export { DoubleQuote::Var.new: name => $^a, :$:is-int }
+sub concat is export { Concat.new: elements => @_ }
