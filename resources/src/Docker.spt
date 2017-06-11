@@ -45,12 +45,17 @@ augment Docker {
         $*docker-install-cli-path;
     }
 
-    static method install-daemon {
-        ${ sh -c (HTTP<https://get.docker.com>.get) };
+    static method install {
+        info 'running https://get.docker.com script';
+        ${
+            sh -c (HTTP<https://get.docker.com>.get)
+            >debug('docker-install.sh')
+            !>debug('docker-install.sh')
+        };
     }
 
     static method hello-world? {
-        ${ $*docker run -i --rm hello-world >X };
+        ${ $*docker run -i --rm hello-world >debug('🐳:hell-world') !>debug('🐳:hello-world') };
     }
 
     static method tmp($from, :@args, :$mount-socket)-->Docker {
@@ -80,7 +85,7 @@ augment Docker {
     method Bool    { $self.exists }
 
     method copy($from,$to) {
-        ${ $*docker cp $from "$self:$to" }
+        ${ $*docker cp $from "$self:$to" !>error('🐳-copy')}
     }
 
     method remove? { ${ $*docker rm -f $self >X} }
@@ -90,14 +95,17 @@ augment Docker {
     }
 
     method start-sleep {
+        debug "Starting docker container $self with sleep";
         'while true; do sleep 1; done'.${ $*docker start $self };
     }
 
     method exec(Str $eval)? {
         if $self.running {
-            $eval.${ $*docker exec -i $self sh >debug('🐳exec') !>warn('🐳exec')};
+            $eval.${ $*docker exec -i $self sh >debug("🐳:$self") !>warn("🐳:$self")};
         } else {
-            $eval.${ $*docker start -i $self >debug('🐳start') !>warn('🐳start')};
+            $eval.${
+                $*docker start >debug("🐳:$self") !>warn("🐳:$self") -i $self
+            };
         }
     }
 
@@ -115,7 +123,8 @@ augment Docker {
         :$workdir
     )-->DockerImg {
         my DockerImg $img-name = $name ~ (":$_" if $tag);
-        ${$*docker commit >debug('🐳commit') !>fatal('🐳commit')
+        info "Committing $self as $img-name";
+        ${$*docker commit >X !>fatal('🐳-commit')
           ("-c=CMD $_" if $cmd )
           ("-c=ENV $_" if $env )
           ("-c=ENTRYPOINT $_" if $entrypoint)
@@ -134,6 +143,7 @@ augment DockerImg {
     method remove? ${ $*docker rmi $self >debug('🐳remove') !>X}
     method Bool { $self.exists }
     method tag ($tag)^ {
-        ${$*docker tag $self $tag !>fatal('🐳tag')} ?? $tag !! ()
+        info "Tagging $self as $tag";
+        ${$*docker tag $self $tag !>fatal('🐳-tag')} ?? $tag !! ()
     }
 }
