@@ -198,6 +198,10 @@ sub coerce(SAST:D $node, Spit::Type $target, :$desc) {
                 name => $target-prim.^name,
                 $node,
             );
+            # since we are wrapping it in a coercer method, the context the orignal
+            # node was in is no longer informative. Reset it so things don't get
+            # confused later on.
+            $node.ctx = $node.type;
             $call.set-declaration($meth);
             return $call.do-stage2($target-prim,:$desc);
         }

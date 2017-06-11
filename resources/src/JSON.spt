@@ -10,6 +10,10 @@ augment JSON { # is Str is primitive
     method at-path(*@args)* {
         $self.${ $*jq -cr @args }
     }
+
+    method defined? { $self.${$*jq -e '.' *>X} }
+    method Bool?    { $self.defined && $self.${$*jq '.'}-->Str.Bool }
+    static method null^ { 'null'-->JSON }
 }
 
 sub j-array(JSON *@json)-->JSON {
