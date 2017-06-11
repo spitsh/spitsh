@@ -104,6 +104,3 @@ augment List {
         $self.${ shuf -n $n }
     }
 }
-
-#| The internal field separator. For Spit it's always `\n`.
-env $?IFS = "\n";

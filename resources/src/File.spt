@@ -1,9 +1,3 @@
-#| The current user's home directory.
-env File $*HOME;
-#| The present working directory of the shell.
-env File $?PWD;
-
-
 augment List[File] {
     method remove? { $self.${xargs rm -rf !>X} }
 
