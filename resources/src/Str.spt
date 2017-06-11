@@ -60,17 +60,19 @@ augment Str {
                   #|[The string to replace it with]$replacement,
                   #|[Turns on global matching]Bool :$g)~ {
 
-constant $subst-awk =
-Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
-{
-    while((g || !i) && (i = index(substr($0,w + 1),t))){
-        $0 = substr($0,1,i + w - 1) r substr($0,w + i + length(t));
-        w += length(r) - length(t) + i
-        if(w < 0){ w = 0 }
-    }
-    print;
-}};
-        $self.${awk -v "g=$g" $subst-awk :T($target) :R($replacement)};
+        $self.${
+            awk -v "g=$g" -v 'RS=^$' :T($target) :R($replacement)
+            Q⟪
+            {
+                r=ENVIRON["R"]; t=ENVIRON["T"]
+                while((g || !i) && (i = index(substr($0,w + 1),t))){
+                    $0 = substr($0,1,i + w - 1) r substr($0,w + i + length(t));
+                    w += length(r) - length(t) + i
+                    if(w < 0){ w = 0 }
+                }
+                print;
+            }⟫
+        }
     }
 
     method subst-eval($placeholder,$value)~ {
@@ -109,7 +111,7 @@ Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
     method starts-with(#|[True if the string starts-with this]$starts-with)? {
         $self.${
             awk :T($starts-with) -v 'RS=^$'
-            '{exit(index($0,ENVIRON["T"])!=1)}'
+            Q⟪{exit(index($0,ENVIRON["T"])!=1)}⟫
         }
     }
 
@@ -124,18 +126,17 @@ Q{BEGIN { RS="^$"; r=ENVIRON["R"]; t=ENVIRON["T"] }
         }
     }
     method ends-with(#|[True if the string ends-with this]$ends-with)? {
-constant $awk-ends-with =
-Q{END {
-  T=ENVIRON["T"]
-  while (i = index(substr($0,w + 1),T)){
-    if(i = length($0)-length(T)+1)
-      exit 0
-    w = i
-  }
-  exit 1
-}};
-
-        $self.${ awk :T($ends-with) -v 'RS=^$' $awk-ends-with }
+        $self.${
+            awk :T($ends-with) -v 'RS=^$' Q⟪{
+                T=ENVIRON["T"]
+                while (i = index(substr($0,w + 1),T)){
+                    if(i = length($0)-length(T)+1)
+                      exit 0
+                    w = i
+                }
+                exit 1
+            }⟫
+        }
     }
 
     #| Returns true if the the string matches the regex and sets the
@@ -152,15 +153,16 @@ Q{END {
     method match(#|[The regular expression to match against]Regex $r)? is impure on {
         RHEL {
             @/ = $self.${
-                awk :$r (
+                awk :$r
                     # gawk match lets you pass an array which will get filled with
                     # all the matches
-                    '{'~
-                       'if (match($0,ENVIRON["r"],a)){' ~
-                           'i=0; while(a[i,"start"]) print a[i++]' ~
-                       '} else exit 1;' ~
-                    '}'
-                )
+                    Q⟪{
+                        if (match($0,ENVIRON["r"],a)){
+                            i=0; while(a[i,"start"]) print a[i++]
+                        } else {
+                            exit 1;
+                        }
+                    }⟫
             };
             $?;
         }
@@ -192,12 +194,11 @@ Q{END {
                 @/ = {
                     my $i = 0;
                     $i++ while $i < 10 and $self.${
-                        awk :$r -v 'RS=^$' -v "i=$i" (
-                            '{' ~
-                            '$0 = gensub(ENVIRON["r"], "§\\\\"i"§",1);' ~
-                            'print gensub(/^[^§]*§|§[^§]*$/,"","G")' ~
-                            '}'
-                        )
+                        awk :$r -v 'RS=^$' -v "i=$i" Q⟪
+                            {
+                                $0 = gensub(ENVIRON["r"], "§\\\\"i"§",1);
+                                print gensub(/^[^§]*§|§[^§]*$/,"","G");
+                            }⟫
                     };
                     ();
                 }
@@ -251,30 +252,22 @@ Q{END {
     #| Returns True if the invocant and argument string are equal.
     method ACCEPTS($b)? { $b eq $self }
 
-constant $json-escape =
-Q｢END{
-    e="\\\\-\\\\-\n-\\n-\\\"-\\\"-\t-\\t-\\/-\\/-\r-\\r-\f-\\f-\b-\\b"
-    split(e,a,"-");
-    for (i = 1; i < 19; i += 2){
-        gsub(a[i],a[i+1])
-    }
-    printf "%s", "\"" $0 "\""
-}｣;
-
     method JSON {
-        $self.${ awk -v 'RS=^$' $json-escape }
+        $self.${
+            awk -v 'RS=^$' Q⟪
+                END {
+                    e="\\\\-\\\\-\n-\\n-\\\"-\\\"-\t-\\t-\\/-\\/-\r-\\r-\f-\\f-\b-\\b"
+                    split(e,a,"-");
+                    for (i = 1; i < 19; i += 2){
+                        gsub(a[i],a[i+1])
+                    }
+                    printf "%s", "\"" $0 "\""
+                }⟫
+        }
     }
 
-constant $awk-subst-re =
-# has to covert $1 to \1 and \$ to just $
-｢END{
-
-  R = gensub(/([^\\]|^)((\\{2})*)\$([0-9&])/, "\\1\\2\\\\\\4", "g", ENVIRON["R"]);
-  R = gensub(/((\\*)\\)?\\[$]/,"\\2$","g",R);
-  R = gensub(ENVIRON["T"], R, g);
-  printf "%s", R
-}｣;
-
+    # has to covert $1 to \1 and \$ to just $
+    # XXX: WIP
     method subst-re(Regex $target, $replacement, Bool :$g, Bool :$i)~ on {
         Debian {
             $self.${
@@ -289,9 +282,13 @@ constant $awk-subst-re =
         Any {
             $self.${
                 awk -v 'RS=^$' -v "g={$g ?? 'g' !! '1'}" -v "IGNORECASE=$i"
-                :T($target)
-                :R($replacement)
-                $awk-subst-re
+                :T($target) :R($replacement) Q⟪
+                END {
+                    R = gensub(/([^\\]|^)((\\{2})*)\$([0-9&])/, "\\1\\2\\\\\\4", "g", ENVIRON["R"]);
+                    R = gensub(/((\\*)\\)?\\[$]/,"\\2$","g",R);
+                    R = gensub(ENVIRON["T"], R, g);
+                    printf "%s", R
+                }⟫
             }
         }
     }
