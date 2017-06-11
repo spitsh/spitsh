@@ -1,6 +1,12 @@
 use Test;
 
-plan 6;
+plan 8;
+
+my $pid = start sleep 1000;
+ok $pid,'pid exists after starting it';
+kill $pid;
+sleep 1;
+nok $pid, 'pid is gone after killing it';
 
 is eval{
     start {
