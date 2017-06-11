@@ -43,7 +43,7 @@ augment PID {
         }
     }
 
-    method wait { wait $self }
+    method wait? ${wait $self}
 }
 
 augment List[PID] {
