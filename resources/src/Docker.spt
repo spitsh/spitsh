@@ -88,7 +88,7 @@ augment Docker {
         ${ $*docker cp $from "$self:$to" !>error('🐳-copy')}
     }
 
-    method remove? { ${ $*docker rm -f $self >X} }
+    method remove? { $self-->List[Docker].remove }
 
     method running? {
         ${ $*docker inspect -f '{{.State.Status}}' $self } eq 'running';
@@ -140,10 +140,29 @@ augment Docker {
 
 augment DockerImg {
     method exists? { ${ $*docker image inspect $self *>X } }
-    method remove? ${ $*docker rmi $self >debug('🐳remove') !>X}
+    method remove? { $self-->List[DockerImg].remove }
     method Bool { $self.exists }
     method tag ($tag)^ {
         info "Tagging $self as $tag";
         ${$*docker tag $self $tag !>fatal('🐳-tag')} ?? $tag !! ()
+    }
+    static method list -->List[DockerImg] {
+        ${$*docker images | sed -n '1!p' |
+          awk '{ if($1 == "<none>"){ print $3 } else { print $1($2 == "<none>" ? "" : ":"$2) }}'
+         }
+    }
+}
+
+augment List[Docker] {
+    method remove? {
+        debug "Removing containers: {$self.join(',')}";
+        ${ $*docker rm -f @$self >X}
+    }
+}
+
+augment List[DockerImg] {
+    method remove? {
+        debug "Removing images: {$self.join(',')}";
+        ${ $*docker rmi @$self >debug('🐳-rmi') !>warn('🐳-rmi') }
     }
 }
