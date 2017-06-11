@@ -22,10 +22,10 @@ class Host is Str {
     }
 
     method read-port(Int $port)~ {
-        ${ $*socat -u "TCP:$self:$port" -}
+        ${ $*socat !>warn -u "TCP:$self:$port" -}
     }
 
     method write-port(Int $port, $message)~ {
-        $message.${ $*socat - "TCP:$self:$port"};
+        $message.${ $*socat !>warn - "TCP:$self:$port"}
     }
 }
