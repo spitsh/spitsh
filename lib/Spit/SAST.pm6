@@ -600,6 +600,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
     has SAST @.write;
     has SAST @.append;
     has SAST %.set-env;
+    has Spit::Type $!type;
 
     method stage2($ctx) is default {
         $_ .= do-stage2(tStr) for ($!pipe-in,|@.nodes,|%!set-env.values).grep(*.defined);
@@ -624,7 +625,7 @@ class SAST::Cmd is SAST::MutableChildren is rw {
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
 
-    method type { $.ctx !=== tAny ?? $.ctx !! tStr }
+    method type { $!type ||= ($.ctx !=== tAny ?? $.ctx !! tStr) }
 }
 
 class SAST::Coerce is SAST::MutableChildren {
