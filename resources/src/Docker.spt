@@ -58,11 +58,10 @@ augment Docker {
         ${ $*docker run -i --rm hello-world >debug('🐳:hell-world') !>debug('🐳:hello-world') };
     }
 
-    static method tmp($from, :@args, :$mount-socket)-->Docker {
-        Docker.create($from, :@args, :$mount-socket)
-              .append-to($?docker-cleanup);
+    method cleanup -->Docker {
+        $?docker-cleanup.push($self);
         END {
-            ${$*docker rm -f @($?docker-cleanup.slurp) *>X};
+            $?docker-cleanup.slurp-->List[Docker].remove;
             $?docker-cleanup.remove;
         }
     }
