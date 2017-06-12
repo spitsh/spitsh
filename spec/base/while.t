@@ -113,10 +113,9 @@ class Foo is Int {
         method bad-pipe-loop~ {
             my $k = 0;
             while $k < 4 {
-                $self.${ grep $k };
                 $k++;
+                $self.${ grep $k };
             }
-            "";
         }
     }
 
