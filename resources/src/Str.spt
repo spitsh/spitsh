@@ -194,7 +194,7 @@ augment Str {
                 @/ = {
                     my $i = 0;
                     $i++ while $i < 10 and $self.${
-                        awk :$r -v 'RS=^$' -v "i=$i" Q⟪
+                        awk :$r -v 'RS=^$' -v "i=$i" q⟪
                             {
                                 $0 = gensub(ENVIRON["r"], "§\\\\"i"§",1);
                                 print gensub(/^[^§]*§|§[^§]*$/,"","G");
