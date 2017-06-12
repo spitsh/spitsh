@@ -80,7 +80,7 @@ augment List {
 
     #| Returns the result of removing the `\n` between each line and
     #| replacing it with a new separtor.
-    method join(#|[The separator to join on]$sep)~ {
+    method join(#|[The separator to join on]$sep?)~ {
         $self.${awk :s($sep) '{if(NR != 1) printf "%s", ENVIRON["s"]; printf "%s", $0}'}
     }
 
