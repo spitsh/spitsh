@@ -68,6 +68,7 @@
         "src/Port.spt",
         "src/Log.spt",
         "src/env.spt",
+        "src/SSH.spt",
         "core-lib/Test.spt",
         "tools/harness.spt",
         "tools/spit-helper.spt"

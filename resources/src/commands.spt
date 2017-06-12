@@ -32,16 +32,6 @@ constant Pkg $*Pkg-openssh-client = on {
     RHEL   { 'openssh-clients' }
 }
 
-constant Cmd $*ssh = on {
-    Any {
-        Cmd<ssh> or
-          $*Pkg-openssh-client.install && 'ssh';
-    }
-    Spit-Helper { 'ssh' }
-}
-
-constant Cmd $*ssh-keygen = ($*ssh; 'ssh-keygen');
-
 constant $*jq-repo = GitHubRepo<stedolan/jq>;
 
 my HTTP $?jq-download-url  = 'https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32-no-oniguruma';

@@ -1,4 +1,4 @@
-class Host is Str {
+augment Host {
 
     method connectable(Port $port, Int :$timeout = 1)? on {
         Alpine {
@@ -27,5 +27,30 @@ class Host is Str {
 
     method write-port(Int $port, $message)~ {
         $message.${ $*socat !>warn - "TCP:$self:$port"}
+    }
+
+    method ssh-exec($src,
+                    :$user = 'root',
+                    :$port = 22,
+                    :$identity,
+                    :@options,
+                    :@host-key-algorithms,
+                    Bool :$verbose)~ {
+        my $ssh-host = "$user@$self";
+        # XXX: Until we figure out how to make the ssh connection wait
+        # for logging to finish
+        “trap 'sleep 1; exit 1' TERM; $src”.${
+            $*ssh !>warn("🐡:$ssh-host")
+            ("-i$_" if $identity)
+            ('-vvv' if $verbose)
+            -p $port
+            ("-o$_" for @options)
+            ("-oHostKeyAlgorithms=" ~ .join if @host-key-algorithms)
+            "$ssh-host" sh
+        }
+    }
+
+    method ssh-keyscan(:$port = 22, :$type, Bool :$verbose) -->List[SSH-known-host] {
+        ${ $*ssh-keyscan !>X -p $port ("-t$_" if $type)  $self }
     }
 }

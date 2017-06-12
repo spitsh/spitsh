@@ -15,4 +15,5 @@ class Pair {} # is Str is primitive
 class JSON { } # is Str is primitive
 class DateTime { }
 class HTTP {}
+class Host {}
 enum-class OS { }
