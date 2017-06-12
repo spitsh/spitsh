@@ -139,7 +139,7 @@ method compile-redirection(@cmd-body, $cmd) {
     for @redirs -> $default-lhs, $sym, @list {
         for @list -> $lhs,$rhs {
             my $lhs-ct := $lhs.compile-time;
-            # FIXME: Empty isn't a valid FD. It should be empty.
+            # FIXME: Empty isn't a valid FD. It should not get here if it's Empty.
             next if $rhs.compile-time ~~ Empty;
             $eval = True without $lhs-ct;
             @redir.push: list ($lhs-ct ~~ $default-lhs ?? '' !! self.arg($lhs));
