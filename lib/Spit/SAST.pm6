@@ -109,6 +109,7 @@ role SAST is rw {
     method child-deps { self.depends }
     method all-depends { |@.extra-depends, |self.depends  }
     method type {...} # The type for type checking
+    method original-type { $.type } # .type before it's modified by SAST::Force
     method ostensible-type { self.type } # The the type that the thing looks like
     method deep-clone { self.clone }
     method deep-first(\needle) { self if self ~~ needle }
@@ -160,8 +161,9 @@ role SAST is rw {
 
     method force($type, $itemize) {
         self does SAST::Force unless self ~~ SAST::Force;
-        self.type = $type;
-        self.itemize = $itemize;
+        $.original-type = $.type;
+        $.type = $type;
+        $.itemize = $itemize;
         self;
     }
 }
@@ -169,6 +171,12 @@ role SAST is rw {
 my role SAST::Force {
     has $.type is rw;
     has $.itemize is rw;
+    has $.original-type is rw;
+}
+
+role SAST::Noisy {
+    has $.null is rw;
+    method silence-condition {...}
 }
 
 role SAST::Assignable {
@@ -598,7 +606,7 @@ class SAST::Elem is SAST::MutableChildren does SAST::Assignable {
     method spit-gist { $.elem-of.spit-gist ~ '[' ~ $!index.spit-gist ~ ']' }
 }
 
-class SAST::Cmd is SAST::MutableChildren is rw {
+class SAST::Cmd is SAST::MutableChildren does SAST::Noisy is rw {
     has SAST $.pipe-in;
     has SAST @.in;
     has SAST @.write;
@@ -629,7 +637,12 @@ class SAST::Cmd is SAST::MutableChildren is rw {
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
 
-    method type { $!type ||= ($.ctx !=== tAny ?? $.ctx !! tStr) }
+    method silence-condition {
+        $.ctx === tAny && $.original-type !=== tAny && $.original-type !=== tBool
+          && not @.write;
+    }
+
+    method type { $!type ||= $.ctx }
 }
 
 class SAST::Coerce is SAST::MutableChildren {
@@ -767,11 +780,6 @@ class SAST::SubDeclare is SAST::RoutineDeclare {
     method declarator { 'sub' }
 }
 
-role SAST::Noisy {
-    has $.null is rw;
-    method silence-condition {...}
-}
-
 class SAST::Call  is SAST::Children does SAST::Noisy {
     has SAST:D %.named;
     has SAST:D @.pos;
@@ -804,7 +812,7 @@ class SAST::Call  is SAST::Children does SAST::Noisy {
     method clone(|c){ callwith(|c,:@!pos,:%!named) }
 
     method silence-condition {
-        $.ctx === tAny && $.type !=== tAny && $.type !=== tBool
+        $.ctx === tAny && $.original-type !=== tAny && $.original-type !=== tBool
     }
 
     method depends { $.declaration, }

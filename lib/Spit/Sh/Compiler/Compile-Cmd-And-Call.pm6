@@ -148,6 +148,9 @@ method compile-redirection(@cmd-body, $cmd) {
                               ($rhs.compile-time ~~ -1 ?? '-' !! |self.arg($rhs));
         }
     }
+
+    with $cmd.null { @redir.push: '', '>&', self.arg($_) }
+
     if $eval {
         'eval ',escape(|@cmd-body," "),
         |@redir.map(-> $in,$sym,$out { |$in,escape($sym, $out.flat) }).flat;
