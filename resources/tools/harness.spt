@@ -20,7 +20,7 @@ if $*run.contains('packages') {
 
 if $*run.contains('docker') {
     for @*on {
-        my $test = Docker.tmp($_, :mount-socket);
+        my $test = Docker.create($_, :mount-socket).cleanup;
         $test.start-sleep;
         ${$*spit prove ('-v' if $*verbose) "-D=$test" "--os=$_" 'spec/docker/'};
     }
