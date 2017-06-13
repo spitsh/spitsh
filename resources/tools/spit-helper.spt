@@ -9,7 +9,6 @@ constant $build = eval(os => $*build-os, :log){
     ok ${$*git --version    >info}, 'git version';
     ok ${jq --version       >info}, 'jq version';
     ok ${$*ssh -V          !>info}, 'ssh version';
-    ok ${$*tcpdump --version !>info}, 'tcpdump version';
     ok ${$*socat -V >X} &&
           ${$*socat -V | head -n2 >info:socat}, 'socat version';
 };
