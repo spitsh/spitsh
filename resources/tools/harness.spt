@@ -1,32 +1,60 @@
-constant $*run = <base packages docker helper>;
+constant $*run = <base packages commands transport json ssh http-client docker helper>;
 constant @*on       = <alpine centos debian>;
 constant $*verbose = True;
 constant $*spit = Cmd<spit>;
+constant $*jobs = 0;
 
-
-Cmd<docker> || die "spit harness requires the docker cli";
+ok Cmd<docker>, 'docker cli is available';
 
 ok $*spit, 'spit command exists';
 
 ${set -e};
 
+my $d-on = "-d={@*on.join(',')}";
+my @v = ('-v' if $*verbose);
+my @run = \${$*spit prove @v $d-on ("-j=$_" if $*jobs) };
+
+
 if $*run.contains('base') {
-    ${$*spit prove ('-v' if $*verbose) 'spec/base' "-d={@*on.join(',')}"};
+    ${@run 'spec/base'};
 }
 
 if $*run.contains('packages') {
-    ${$*spit prove ('-v' if $*verbose) 'spec/packages' "-d={@*on.join(',')}"};
+    ${@run 'spec/packages'};
 }
 
-if $*run.contains('docker') {
-    for @*on {
-        my $test = Docker.create($_, :mount-socket).cleanup;
-        $test.start-sleep;
-        ${$*spit prove ('-v' if $*verbose) "-D=$test" "--os=$_" 'spec/docker/'};
+if $*run.contains('transport') {
+    ${@run 'spec/transport'}
+}
+
+if $*run.contains('json') {
+    ${@run 'spec/json'}
+}
+
+if $*run.contains('ssh') {
+    ${@run 'spec/ssh'}
+}
+
+# Runs all the tests in the same container
+sub continue-in-container($path, :$mount-socket) {
+    for @*on -> $os {
+        my $container = Docker.create($os, :$mount-socket).cleanup;
+        $container.start-sleep;
+        ${$*spit prove ('-v' if $*verbose) "-D=$container" "--os=$os" $path};
+        $container.remove;
     }
 }
 
+if $*run.contains('http-client') {
+    continue-in-container('spec/http-client');
+}
+
+
+if $*run.contains('docker') {
+    continue-in-container('spec/docker', :mount-socket);
+}
+
 if $*run.contains('helper') {
-    ok ${$*spit helper build >$*OUT}, 'helper build';
+    ok ${$*spit helper build *>info}, 'helper build';
     ok DockerImg("spit-helper:$?spit-version"), 'helper exists';
 }
