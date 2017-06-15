@@ -84,8 +84,14 @@ augment Docker {
     method exists? ${ $*docker container inspect $self *>X }
     method Bool    { $self.exists }
 
-    method copy($from,$to) {
-        ${ $*docker cp $from "$self:$to" !>error('🐳-copy')}
+    method copy($from, File $to) -->File {
+        ${ $*docker cp $from "$self:$to" !>error('🐳-copy')};
+        $to.add($from);
+    }
+
+    method copy-from($from,$to) --> File {
+        ${ $*docker cp "$self:$from" $to !>error('🐳-copy-from')};
+        $to;
     }
 
     method remove? { $self-->List[Docker].remove }
