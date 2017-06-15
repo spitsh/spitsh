@@ -102,7 +102,7 @@ augment Docker {
 
     method start-sleep {
         debug "Starting docker container $self with sleep";
-        'while true; do sleep 1; done'.${ $*docker start $self };
+        'while true; do sleep 1; done'.${ $*docker start $self >X !>error("🐳-start")};
     }
 
     method exec(Str $eval)? {
