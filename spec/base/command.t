@@ -1,4 +1,4 @@
-use Test; plan 29;
+use Test; plan 30;
 
 is ${printf "foo"},"foo","cmd works as a value";
 ok ?${true},"cmd status true";
@@ -62,4 +62,14 @@ my $a = <one two three>;
 {
     is ${ "brintf".subst('b','p') 'hello world' }, 'hello world',
       'methodcall wtih args in command';
+}
+
+{
+    is eval{
+        my @cmd = \${printf};
+        @cmd.push: '%s-%s';
+        @cmd.push: 'foo bar';
+        @cmd.push: 'baz';
+        print ${@cmd};
+    }.${sh}, 'foo bar-baz', 'edge case where IFS not being included';
 }
