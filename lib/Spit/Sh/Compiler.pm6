@@ -161,9 +161,21 @@ method compile-nodes(@sast,:$one-line,:$indent,:$no-empty) {
     return @chunk;
 }
 
-method space-then-arg(SAST:D $_) {
-    if $_ !~~ SAST::Empty or .itemize {
-        ' ', self.arg($_).itemize(.itemize)
+method arglist(@list) {
+    flat @list.map: {
+        (' ' if $++ ),
+        (
+            if !.itemize and $_ ~~  SAST::Empty {
+                Empty
+            }
+            elsif !.itemize and $_ ~~  SAST::List {
+                self.arglist(.children);
+            }
+            else {
+                self.scaf('?IFS') unless .itemize;
+                self.arg($_).itemize(.itemize);
+            }
+        )
     }
 }
 
@@ -593,7 +605,7 @@ multi method cap-stdout(SAST::Itemize:D $_) { self.cap-stdout($_[0]) }
 #!List
 multi method cap-stdout(SAST::List:D $_) {
     if .children > 1 {
-        self.scaf('list'),|.children.map({ self.space-then-arg($_) }).flat;
+        self.scaf('list'),' ',|self.arglist(.children);
     } else {
         self.cap-stdout(.children[0]);
     }

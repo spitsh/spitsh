@@ -112,11 +112,7 @@ multi method node(SAST::Cmd:D $cmd, :$tight) {
         self.compile-redirection(@cmd-body,$cmd);
     } else {
         my @in = $cmd.in;
-        my @cmd-body  = |$cmd.nodes.map({ $++
-                                          ?? self.space-then-arg($_)
-                                          !! self.arg($_).itemize(.itemize) }
-                                       ).flat;
-
+        my @cmd-body  = |self.arglist($cmd.nodes);
         my $full-cmd := |self.compile-redirection(@cmd-body,$cmd);
 
         my $pipe := self.pipe-input($cmd.pipe-in);
