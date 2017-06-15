@@ -15,9 +15,11 @@ class GitURL {
         say ${ $*git status };
     }
     method clone(#|[Path to clone the repo to] :$to)-->File {
-        my $clone-into = ${ $*git clone $self @$to !>~ };
-        ok $? , "$self: $clone-into";
-        $clone-into.${sed ‘s/Cloning into '\(.*\)'.*/\1/’};
+        info "starting git clone $self";
+        my $_to = $to || $self.name;
+        ok ${ $*git clone $self $_to !>debug('git-clone') },
+           "$self cloned";
+        $_to;
     }
 
     #| Gets the last section of the url without its extension. This is
