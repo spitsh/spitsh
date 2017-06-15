@@ -86,6 +86,10 @@ Options:
 
   --RUN
     Runs the output on this computer's /bin/sh. # Be careful :^)
+
+  -x
+    Puts 'set -x' into the script which tells the shell to print
+    commands and their arguments as they are executed.
 END
 
 constant $eval-usage = q:to/END/;
@@ -219,12 +223,13 @@ my class commands {
                    :$target,
                    :$opts,
                    :$no-inline,
+                   :$x,
                   ) {
-        compile(($file.IO.slurp orelse .throw), :$debug, :$target, :$opts, :$no-inline, name => $file).gist;
+        compile(($file.IO.slurp orelse .throw), :$x, :$debug, :$target, :$opts, :$no-inline, name => $file).gist;
     }
 
-    method eval(Str:D $src, :$debug, :$target, :$opts, :$no-inline) {
-        compile($src, :$debug, :$target, :$opts, :$no-inline, name => "eval").gist;
+    method eval(Str:D $src, :$debug, :$target, :$opts, :$no-inline, :$x) {
+        compile($src, :$debug, :$target, :$opts, :$no-inline, :$x, name => "eval").gist;
     }
 
     method prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,

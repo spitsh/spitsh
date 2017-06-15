@@ -12,6 +12,7 @@ sub compile  ($input is copy,
               :$name is required,
               :$no-inline,
               :$one-block,
+              :$x,
               *%,
              ) is export {
     my \start-compile = now if $debug;
@@ -71,7 +72,7 @@ sub compile  ($input is copy,
         if $input.stage3-done {
             note "$name compiling.." if $debug;
             my \before = now;
-            $input = $compiler.compile($input, :$one-block);
+            $input = $compiler.compile($input, :$one-block, :$x);
             note "$name compiling ✔ {now - before}" if $debug;
         }
 

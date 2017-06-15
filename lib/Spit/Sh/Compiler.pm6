@@ -84,7 +84,7 @@ method scaf($name) {
 }
 
 has $!composed-for;
-method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
+method compile(SAST::CompUnit:D $CU, :$one-block, :$x --> Str:D) {
     my $*pad = '';
     my $*depends = $CU.depends-on;
     my ShellElement:D @compiled;
@@ -123,6 +123,7 @@ method compile(SAST::CompUnit:D $CU, :$one-block --> Str:D) {
         @compiled.append('END()',|self.maybe-oneline-block(@END),"\n","trap END EXIT\n",);
     }
 
+    @compiled.push(“set -x\n”) if $x;
     @compiled.append(|@run,"\n") if @run;
     @compiled.join("");
 }
