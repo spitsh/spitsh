@@ -188,7 +188,7 @@ proto method node($node) {
 proto method arg($node) {
     #note "arg: {$node.^name}";
     self.check-stage3($node);
-    {*}.itemize(True)
+    {*};
 }
 
 proto method cond($node) {
