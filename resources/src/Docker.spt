@@ -116,31 +116,39 @@ augment Docker {
     }
 
     method commit(
-        $name,
+DockerImg $image,
         :$tag,
-        :$cmd,
+        :@cmd,
         :$env,
-        :$entrypoint,
+        :@entrypoint,
         :$expose,
         :$label,
         :$onbuild,
         :$user,
         :$volume,
-        :$workdir
+        :$workdir,
+   Bool :$remove-old
     )-->DockerImg {
-        my DockerImg $img-name = $name ~ (":$_" if $tag);
-        info "Committing $self as $img-name";
-        ${$*docker commit >X !>fatal('🐳-commit')
-          ("-c=CMD $_" if $cmd )
-          ("-c=ENV $_" if $env )
-          ("-c=ENTRYPOINT $_" if $entrypoint)
-          ("-c=EXPOSE $_" if $expose)
-          ("-c=USER $_" if $user)
-          ("-c=VOLUME $_" if $volume)
-          ("-c=WORKDIR $_" if $workdir)
-          $self
-          $img-name
-         } ?? $img-name !! ();
+        if $remove-old and $image {
+            info "Removing previously existing $image";
+            $image.remove;
+        }
+        info "Committing $self as $image";
+
+        my @args = \${
+            ("-c=CMD " ~ .JSON if @cmd )
+            ("-c=ENV $_" if $env )
+            ("-c=ENTRYPOINT " ~ .JSON if @entrypoint)
+            ("-c=EXPOSE $_" if $expose)
+            ("-c=USER $_" if $user)
+            ("-c=VOLUME $_" if $volume)
+            ("-c=WORKDIR $_" if $workdir)
+            $self
+            $image
+        };
+
+        debug "docker commit with ‘{@args.join('’, ‘')}’";
+        ${$*docker commit >X !>fatal('🐳-commit') @args} ?? $image !! ();
     }
 }
 
