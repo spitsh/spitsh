@@ -191,8 +191,8 @@ augment DockerImg {
 
 augment List[Docker] {
     method remove? {
-        debug "Removing containers: {$self.join(',')}";
-        ${ $*docker rm -f @$self >X}
+        debug "Removing containers: {$self.join(',')}" if $self;
+        ${ $*docker rm -f @$self *>X }
     }
 }
 
