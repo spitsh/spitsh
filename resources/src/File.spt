@@ -326,3 +326,5 @@ augment File {
     }
 
 }
+
+sub cd(File $dir){ $dir.cd }
