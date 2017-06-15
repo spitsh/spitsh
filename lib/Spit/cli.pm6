@@ -467,8 +467,7 @@ sub exec-docker($container, *%) {
 sub write-docker($docker,$p,$shell) {
     my \before = now;
     note "writing output to docker.." if $*debug;
-    $docker.write($shell.encode('utf8'));
-    sleep 0.1; # RT#122722
+    await $docker.write($shell.encode('utf8'));
     $docker.close-stdin;
     my $proc = await $p;
     note("writing output to docker ✔ {now - before}") if $*debug;
