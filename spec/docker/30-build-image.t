@@ -20,7 +20,7 @@ plan 12;
     ok $img.exists, '.commit means the image exists';
     ok $img,        'DockerImg.Bool means .exists (true)';
     {
-        my $tagged = $img.tag('run_test:goof');
+        my $tagged = $img.add-tag('goof');
         is $tagged, 'run_test:goof', 'tag returned what it was given';
         ok $tagged, 'tagged image exists';
         ok $tagged.remove, 'tagged image removed';

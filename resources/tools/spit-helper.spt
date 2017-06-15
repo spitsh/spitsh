@@ -29,9 +29,8 @@ given Docker.create('alpine', :name<spit-helper-builder>, :mount-socket).cleanup
         .remove;
     }
 
-    if .commit($*image-name, :$*tag) -> $image {
-        $image.tag("$*image-name:latest");
-
+    if .commit($*image-name) -> $image {
+        $image.add-tag("latest");
     } else {
         die "Failed to build $*image-name";
     }

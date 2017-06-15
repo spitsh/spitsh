@@ -142,10 +142,25 @@ augment DockerImg {
     method exists? { ${ $*docker image inspect $self *>X } }
     method remove? { $self-->List[DockerImg].remove }
     method Bool { $self.exists }
-    method tag ($tag)^ {
-        info "Tagging $self as $tag";
-        ${$*docker tag $self $tag !>fatal('🐳-tag')} ?? $tag !! ()
+    method add-tag ($tag)^ {
+        my $tagged-name = "{$self.name}:$tag";
+        info "Tagging $self with $tagged-name";
+        ${$*docker tag $self $tagged-name !>fatal('🐳-tag')} ?? $tagged-name !! ()
     }
+
+    method alias-tag(DockerImg $name)^ {
+        info "Tagging $self with $name";
+        ${$*docker tag $self $name !>fatal('🐳-tag')} ?? $name !! ()
+    }
+
+    method name~ {
+        $self.${sed -r 's/(.*):.*/\1/'}
+    }
+
+    method tag~ {
+        $self.${sed 's/.*://;t;s/.*/latest/' }
+    }
+
     static method list -->List[DockerImg] {
         ${$*docker images | sed -n '1!p' |
           awk '{ if($1 == "<none>"){ print $3 } else { print $1($2 == "<none>" ? "" : ":"$2) }}'
