@@ -95,7 +95,7 @@ class SSH-keypair is Pair[File,File] {
 # SSHds with different configuration locations
 class SSHd {
 
-    static method run(:$port = 22, :$debug) {
+    static method run(:$port = 22, Bool :$debug) {
         # I don't even...https://github.com/moby/moby/issues/19351
         if $*os ~~ Debian { File</var/run/sshd>.mkdir }
 
