@@ -35,14 +35,14 @@ augment Host {
                     :$identity,
                     :@options,
                     :@host-key-algorithms,
-                    Bool :$verbose)~ {
+                    Bool :$debug)~ {
         my $ssh-host = "$user@$self";
         # XXX: Until we figure out how to make the ssh connection wait
         # for logging to finish
         “trap 'sleep 1; exit 1' TERM; $src”.${
             $*ssh !>warn("🐡:$ssh-host")
             ("-i$_" if $identity)
-            ('-vvv' if $verbose)
+            ('-vvv' if $debug)
             -p $port
             ("-o$_" for @options)
             ("-oHostKeyAlgorithms=" ~ .join if @host-key-algorithms)
@@ -50,7 +50,13 @@ augment Host {
         }
     }
 
-    method ssh-keyscan(:$port = 22, :$type, Bool :$verbose) -->List[SSH-known-host] {
-        ${ $*ssh-keyscan !>X -p $port ("-t$_" if $type)  $self }
+    method ssh-keyscan(:$port = 22, :$type = 'rsa,ecdsa,ed25519', Bool :$debug) -->List[SSH-known-host]
+    ${
+        $*ssh-keyscan !>debug('🐡🔑🔎')
+        ('-v' if $debug)
+        -p $port
+        -t $type
+        $self
     }
+
 }
