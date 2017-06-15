@@ -35,18 +35,21 @@ augment Str {
                             -v "level_sym={@*log-symbols[$level]}"
                             -v "level=$level"
                             -v "path=$_path"
-(｢length() == 0 { next }
-{
-  if ($0 ~ /^([^|]+\|){3}/) {
-    print gensub(/^(([^|]+\|){2})([^|]+\|)/, "\\1"path"/\\3",1)
-  } else {
-    "date '+｣ ~  $*log-date-format ~ ｢'" | getline date;
-    printf "%s|%s|%s|%s\n",date,level_sym,path,$0;
-  }
-  if(level == 0)
-    die = 1
-}
-END { if(die){ system("kill ｣ ~ $?PID ~ ｢")}} ｣)
+                            -v "pid=$?PID"
+                            -v "date_format=$*log-date-format"
+                            Q⟪
+                                length() == 0 { next }
+                                {
+                                    if ($0 ~ /^([^|]+\|){3}/) {
+                                        print gensub(/^(([^|]+\|){2})([^|]+\|)/, "\\1"path"/\\3",1)
+                                    } else {
+                                        "date '+"date_format"'" | getline date;
+                                        printf "%s|%s|%s|%s\n",date,level_sym,path,$0;
+                                    }
+                                    if(level == 0)
+                                        die = 1
+                                }
+                                END { if(die){ system("kill "pid) } }⟫
                         }
                     }
                     GNU {
