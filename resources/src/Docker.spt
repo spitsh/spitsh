@@ -73,7 +73,7 @@ augment Docker {
         Bool :$mount-socket
     ) -->Docker {
         my $id = ${
-            $*docker create -i
+            $*docker create -i !>error('🐳-create')
             ("--name=$_" if $name)
             ("-v=$*docker-socket:$*docker-socket" if $mount-socket)
             @args $from sh -c ':;sh'
