@@ -63,7 +63,7 @@ class SSH-keypair is Pair[File,File] {
      method private-key~             { $self.key.slurp }
      method type~                    { $self.public-key.type }
      method keytype~                 { $self.public-key.keytype }
-     method remove                  ${rm $self.key $self.value}
+     method remove?                  ${rm $self.key $self.value !>X}
      method exists?                  { $self.key and $self.value }
      method Bool                     { $self.exists }
      method public-key -->SSH-publickey { $self.value.slurp-->SSH-publickey }
