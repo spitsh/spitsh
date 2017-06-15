@@ -24,7 +24,7 @@ Host.local.ssh-keyscan(:$*port).add;
 ok $*ssh-known-hosts.contains($ed25519.public-key.key),
   '.ssh-keyscan.add added ed25519 key';
 
-ok $*ssh-known-hosts.contains($ed25519.public-key.key),
+ok $*ssh-known-hosts.contains($ecdsa.public-key.key),
   '.ssh-keyscan.add added ecdsa key';
 
 my $res = Host.local.ssh-exec(
