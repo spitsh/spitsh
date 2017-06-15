@@ -8,6 +8,11 @@ my $ecdsa   = SSH-keypair.tmp(type => 'ecdsa' );
 
 my $client-pair = SSH-keypair.tmp;
 
+# remove other types of keys from the server so we get presented
+# with one of the above
+SSHd.get-keypair('rsa').remove;
+
+
 SSHd.authorize-key($client-pair.public-key);
 
 for $ed25519, $ecdsa { SSHd.set-keypair($_) }
