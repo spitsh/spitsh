@@ -180,6 +180,13 @@ augment DockerImg {
           awk '{ if($1 == "<none>"){ print $3 } else { print $1($2 == "<none>" ? "" : ":"$2) }}'
          }
     }
+    method copy-from($from,$to) -->File {
+        debug "copying $from in $self to $to";
+        my $tmp = Docker.create($self);
+        $tmp.copy-from($from,$to);
+        ${ $*docker rm -f $tmp >X};
+        $to;
+    }
 }
 
 augment List[Docker] {
