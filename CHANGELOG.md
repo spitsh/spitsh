@@ -1,3 +1,57 @@
+## 0.0.30
+
+- Move return type sigils from back to front of routine declaration:
+  `sub ~foo($a) { ... }` is now `sub foo($a)~`.
+- **NOTICE** `*` return type sigil to `^`. `*` has a new meaning.
+  - `^` represents whatever class I'm in better than `*`
+  - `*` now means return whatever context I'm in
+- **New Feature**: Logging, $*log/--log turn on logginng:
+  ```
+  Jun 16 01:42:50|ℹ|👻|Updating package list because it doesn't exist at /var/cache/apk/
+  Jun 16 01:42:50|❔|📦|fetch http://dl-cdn.alpinelinux.org/alpine/v3.5/main/x86_64/APKINDEX.tar.gz
+  Jun 16 01:42:50|❔|📦|fetch http://dl-cdn.alpinelinux.org/alpine/v3.5/community/x86_64/APKINDEX.tar.gz
+  Jun 16 01:42:50|❔|📦|v3.5.2-101-g231b864869 [http://dl-cdn.alpinelinux.org/alpine/v3.5/main]
+  ```
+- **New Feature**: q{..}, qq{...} and Q{...} are now "sheardocs",
+  which get rid of leading whitespace up to the first non-whitespace
+  character after the first newline
+  ```
+      Q{
+        one
+        two
+        three
+      }
+  ```
+  Is "one\ntwo\nthree\n". This is still a WIP and may change.
+
+- **New Feature**: ssh support through new classes:
+  - `SSHd` with methods to start and interact with the sshd command
+  - `SSH-keypair` with method to create, delete and interact with SSH-keypairs
+  - `SSH-publickey` with methods to inspect a SSH public key
+- **New Feature**: `start` statement prefix, which starts an asynchronous process
+  ```
+  my $pid = start sleep 5;
+  say "I don't have to wait for sleep!";
+  say "It's process is $pid";
+  ```
+  Still a WIP. Problems .wait'ing on them because the wait shell
+  builtin only waits for direct children. In the above example it
+  works but it won't if the pid comes from a subshell.
+
+- **New Feature**: `HTTP.request`. Fully featured HTTP user-agent based
+  on curl. Vanilla GET request:
+  ```perl6
+  my $resp = HTTP("httpbin.org/bytes/42").request('GET');
+  ok $resp.is-success, '.is-success';
+  ok $resp.code == 200, 'code is 200';
+  is $resp.message, 'OK', '.message is OK';
+  ok $resp.body.bytes == 42, '.body.bytes is right';
+  ok $resp.body-size == 42, '.body-size is the same';
+  is $resp.req-headers.host, 'httpbin.org', '.req-headers.host';
+  is $resp.http-version, '1.1', '.http-version';
+  ```
+
+
 ## 0.0.29
 
 - **NOTICE**: routine return type syntax has changed:
