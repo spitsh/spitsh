@@ -30,7 +30,7 @@ given Docker.create('alpine', :name<spit-helper-builder>, :mount-socket).cleanup
     }
 
     if .commit($*image-name) -> $image {
-        $image.add-tag("latest");
+        $image.add-tag($*tag);
     } else {
         die "Failed to build $*image-name";
     }
