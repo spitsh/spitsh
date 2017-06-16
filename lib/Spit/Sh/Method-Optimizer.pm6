@@ -19,6 +19,9 @@ has $!JSON-AT-PATH;
 has $!JSON-LIST;
 has $!JSON-KEYS;
 has $!JSON-VALUES;
+has $!JSON-SET-POS;
+has $!JSON-SET-KEY;
+has $!JSON-SET-PATH;
 
 method ENUMC-ACCEPTS  { $!ENUMC-ACCEPTS  //= tEnumClass.^find-spit-method: 'ACCEPTS' }
 method ENUMC-NAME     { $!ENUMC-NAME     //= tEnumClass.^find-spit-method: 'name'    }
@@ -31,6 +34,9 @@ method JSON-AT-PATH   { $!JSON-AT-PATH   //= tJSON.^find-spit-method:      'at-p
 method JSON-LIST      { $!JSON-LIST      //= tJSON.^find-spit-method:      'List'    }
 method JSON-KEYS      { $!JSON-KEYS      //= tJSON.^find-spit-method:      'keys'    }
 method JSON-VALUES    { $!JSON-VALUES    //= tJSON.^find-spit-method:      'values'  }
+method JSON-SET-POS   { $!JSON-SET-POS   //= tJSON.^find-spit-method:      'set-pos' }
+method JSON-SET-KEY   { $!JSON-SET-KEY   //= tJSON.^find-spit-method:      'set-key' }
+method JSON-SET-PATH  { $!JSON-SET-PATH  //= tJSON.^find-spit-method:      'set-path'}
 
 # Dirty way of creating a synthetic SAST::SVal.
 # Our fake Match objects shouldn't matter because we
@@ -41,37 +47,66 @@ sub sval(Str $str) {
     );
 }
 
+use JSON::Fast;
+sub jq-arg($arg is raw, @pos is raw) {
+    my $name = (97 + ((@pos.elems - 1)/3).Int).chr;
+    @pos.append: sval('--arg'), sval($name), $arg;
+    $name;
+}
+
+sub json-key($arg is raw, $path is raw, @pos is raw) {
+    with $arg.compile-time {
+        when /^<.ident>$/ {
+            $path.unshift(sval('.'),$arg)
+        }
+        default {
+            # escape " and \"
+            $path.unshift: sval('['), sval(.&to-json), sval(']')
+        }
+    } else {
+        my $name = jq-arg($arg, @pos);
+        $path.unshift: sval(“[\$$name]”);
+    }
+}
+
+sub json-value($value is raw, $path is raw, @pos is raw) {
+    if $value.type ~~ tJSON {
+        $path.push: sval('='), $value;
+    } else {
+        with $value.compile-time {
+            $path.push: sval '=' ~ .&to-json;
+        } else {
+            my $name = jq-arg($value, @pos);
+            $path.push: sval "=\$$name";
+        }
+    }
+}
+
 # Each method-optimize is responsible for calling self.walk($THIS.invocant).
 # It isn't done automatically so we can inspect JSON methods and optimize them into
 # one single call to jq before .walk'ing them.
+
 multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
     my $cur = $THIS;
+    # The arguments to jq
     my @pos;
-    while my $at-key = ($decl === self.JSON-AT-KEY) or
-          my $at-pos = ($decl === self.JSON-AT-POS) or
-          my $list   = ($decl  === self.JSON-LIST)  or
-          my $keys   = ($decl === self.JSON-KEYS)   or
-                       ($decl === self.JSON-VALUES)
+    # path is the jq path like jq '.foo.bar[0]'
+    my $path := @pos[0];
+    my $set;
+    while my $at-key = ($decl === self.JSON-AT-KEY)   or
+          my $at-pos = ($decl === self.JSON-AT-POS)   or
+          my $list   = ($decl  === self.JSON-LIST)    or
+          my $keys   = ($decl === self.JSON-KEYS)     or
+          my $values =  ($decl === self.JSON-VALUES)  or
+          my $set-pos = ($decl === self.JSON-SET-POS) or
+          my $set-key = ($decl === self.JSON-SET-KEY)
     {
         my $arg := $cur.pos[0];
         self.walk($arg) if $arg;
-        my $path := @pos[0];
-        $path //= ($arg || $cur).stage3-node(SAST::Concat);
+        $path //= ($arg || $cur).stage2-node(SAST::Concat);
 
         if $at-key {
-            with $arg.compile-time {
-                when /^<.ident>$/ {
-                    $path.unshift(sval('.'),$arg)
-                }
-                default {
-                                # escape " and \"
-                    $path.unshift: sval('["'), sval(S!'\\'<?before '"'>|'"'!\\$/!), sval('"]')
-                }
-            } else {
-                my $name = (97 + ((@pos.elems - 1)/3).Int).chr;
-                $path.unshift: sval(“[\$$name]”);
-                @pos.append: sval('--arg'), sval($name), $arg;
-            }
+            json-key($arg,$path,@pos);
         }
         elsif $at-pos {
             $path.unshift(sval('['), $arg, sval(']'));
@@ -83,8 +118,24 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
         elsif $keys {
             $path.unshift(sval('|keys[]'));
         }
-        else {
+        elsif $values {
             $path.unshift(sval('|values[]'));
+        }
+        elsif $set-pos {
+            $set = True;
+            my $value := $cur.pos[1];
+            self.walk($value);
+            # note unshift vs is irrelevant here because set-*
+            # will always be first
+            $path.unshift(sval('['), $arg, sval(']'));
+            json-value($value,$path,@pos);
+        }
+        elsif $set-key {
+            $set = True;
+            my $value := $cur.pos[1];
+            self.walk($value);
+            json-key($arg, $path, @pos);
+            json-value($value, $path, @pos);
         }
 
         $cur = $cur.invocant;
@@ -96,15 +147,18 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
     }
 
     if @pos {
-        @pos[0].unshift(sval('.')) unless @pos[0][0].val eq '.';
+        $path.unshift(sval('.')) unless $path[0].val eq '.';
+        self.walk($path);
+        my $method = $set ?? self.JSON-SET-PATH !! self.JSON-AT-PATH;
         $THIS .= stage2-node(
             SAST::MethodCall,
-            name => 'at-path',
-            declaration => self.JSON-AT-PATH,
+            name => $method.name,
+            declaration => $method,
             :@pos,
             $cur,
         );
         self.walk($THIS.invocant);
+        self.walk($THIS);
         True;
     }
     else { callsame }
