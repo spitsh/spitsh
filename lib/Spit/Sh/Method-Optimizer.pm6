@@ -22,6 +22,8 @@ has $!JSON-VALUES;
 has $!JSON-SET-POS;
 has $!JSON-SET-KEY;
 has $!JSON-SET-PATH;
+has $!JSON-MERGE;
+has $!JSON-ACCEPTS;
 
 method ENUMC-ACCEPTS  { $!ENUMC-ACCEPTS  //= tEnumClass.^find-spit-method: 'ACCEPTS' }
 method ENUMC-NAME     { $!ENUMC-NAME     //= tEnumClass.^find-spit-method: 'name'    }
@@ -37,6 +39,8 @@ method JSON-VALUES    { $!JSON-VALUES    //= tJSON.^find-spit-method:      'valu
 method JSON-SET-POS   { $!JSON-SET-POS   //= tJSON.^find-spit-method:      'set-pos' }
 method JSON-SET-KEY   { $!JSON-SET-KEY   //= tJSON.^find-spit-method:      'set-key' }
 method JSON-SET-PATH  { $!JSON-SET-PATH  //= tJSON.^find-spit-method:      'set-path'}
+method JSON-MERGE     { $!JSON-MERGE     //= tJSON.^find-spit-method:      'merge'   }
+method JSON-ACCEPTS   { $!JSON-ACCEPTS   //= tJSON.^find-spit-method:      'ACCEPTS' }
 
 # Dirty way of creating a synthetic SAST::SVal.
 # Our fake Match objects shouldn't matter because we
@@ -93,35 +97,28 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
     # path is the jq path like jq '.foo.bar[0]'
     my $path := @pos[0];
     my $set;
-    while my $at-key = ($decl === self.JSON-AT-KEY)   or
-          my $at-pos = ($decl === self.JSON-AT-POS)   or
-          my $list   = ($decl  === self.JSON-LIST)    or
-          my $keys   = ($decl === self.JSON-KEYS)     or
-          my $values =  ($decl === self.JSON-VALUES)  or
-          my $set-pos = ($decl === self.JSON-SET-POS) or
-          my $set-key = ($decl === self.JSON-SET-KEY)
-    {
+    while $decl and $decl.class-type ~~ tJSON {
         my $arg := $cur.pos[0];
         self.walk($arg) if $arg;
         $path //= ($arg || $cur).stage2-node(SAST::Concat);
 
-        if $at-key {
+        if $decl === self.JSON-AT-KEY {
             json-key($arg,$path,@pos);
         }
-        elsif $at-pos {
+        elsif $decl === self.JSON-AT-POS {
             $path.unshift(sval('['), $arg, sval(']'));
         }
 
-        elsif $list {
+        elsif $decl === self.JSON-LIST {
             $path.unshift(sval('[]'));
         }
-        elsif $keys {
+        elsif $decl === self.JSON-KEYS {
             $path.unshift(sval('|keys[]'));
         }
-        elsif $values {
+        elsif $decl === self.JSON-VALUES {
             $path.unshift(sval('|values[]'));
         }
-        elsif $set-pos {
+        elsif $decl === self.JSON-SET-POS {
             $set = True;
             my $value := $cur.pos[1];
             self.walk($value);
@@ -130,12 +127,22 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
             $path.unshift(sval('['), $arg, sval(']'));
             json-value($value,$path,@pos);
         }
-        elsif $set-key {
+        elsif $decl === self.JSON-SET-KEY {
             $set = True;
             my $value := $cur.pos[1];
             self.walk($value);
             json-key($arg, $path, @pos);
             json-value($value, $path, @pos);
+        }
+        elsif $decl === self.JSON-MERGE {
+            # need | if merge isn't the first thing we visit
+            $path.unshift: sval(' * '), $arg, (sval('|') if $path.elems)
+        }
+        elsif $decl === self.JSON-ACCEPTS {
+            $path.unshift: sval(' == '), $arg;
+        } else {
+            $decl = Nil;
+            next;
         }
 
         $cur = $cur.invocant;
@@ -146,7 +153,7 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
         }
     }
 
-    if @pos {
+    if $path.elems {
         $path.unshift(sval('.')) unless $path[0].val eq '.';
         self.walk($path);
         my $method = $set ?? self.JSON-SET-PATH !! self.JSON-AT-PATH;

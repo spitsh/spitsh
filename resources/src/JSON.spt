@@ -4,13 +4,16 @@ augment JSON { # is Str is primitive
 
     # These are all dealt with in the composer. Chained method calls
     # are all rolled into a single call to at-path or set-path
-    method at-key($key)-->JSON is native { }
-    method at-pos(Int $pos)-->JSON is native { }
+    method at-key($key)^               is native {}
+    method at-pos(Int $pos)^           is native {}
     method set-key($key, $value) is rw is native {}
     method set-pos($pos, $value) is rw is native {}
-    method keys@  is native {}
-    method values@ is native {}
-    method List is native {}
+    method keys@                       is native {}
+    method values@                     is native {}
+    method List                        is native {}
+    method merge(JSON $object)^        is native {}
+    method ACCEPTS(JSON $b)?           is native {}
+
     method at-path(*@args)* {
         $self.${ $*jq -cr @args }
     }
