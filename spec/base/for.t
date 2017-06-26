@@ -1,6 +1,6 @@
 use Test;
 
-plan 43;
+plan 45;
 
 for <one two three> {
 
@@ -166,8 +166,17 @@ is ${ printf '%s-%s-%s' ($_ for <one two three>) }, 'one-two-three',
   'for flattens in slurpy context';
 
 pass "statement-mod for $_" for ^3;
+{
+    is ($_ * 2 if $_ > 2 for 1..5), <6 8 10>, 'grep-like for loop';
 
-is ($_ * 2 if $_ > 2 for 1..5), <6 8 10>, 'grep-like for loop';
+    is ( .substr(4)  if .uc.starts-with('FOO:') for <foo:bar foo:baz bar:ber> ),
+      <BAR BAZ>, 'grep/map like for loop with topicalizable inner if statement';
+}
+
+{
+    is ("{.key}:{.value}" for one => "two", three => "four", five => "six").join(','),
+      'one:two,three:four,five:six', '"{.key}{.value}" for ...';
+}
 
 {
     my @a = <1 2 3>;

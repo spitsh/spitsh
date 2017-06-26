@@ -1,6 +1,6 @@
 use Test;
 
-plan 50;
+plan 51;
 
 if True {
    pass "basic if works";
@@ -225,6 +225,11 @@ if $true and $false {
         my $foo = "bar";
         is ($_ if $foo), "bar", '$_ as value from if';
     }
+}
+
+{
+    my $thing = "foo";
+    is ("thing:{.uc}" if $thing), 'thing:FOO', '"thing:{...}" if $thing';
 }
 
 {

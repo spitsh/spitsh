@@ -48,15 +48,28 @@ method statement($/) {
     make $stmt;
 }
 
+
+# Statement modifers like:
+# say "foo:{.uc}" if $foo
+# need a lexical scope on the LHS controlled by the if statement in
+# order to make sure $_ in '{.uc}' is set to the if statement's topic.
+# Since we only find this out after the LHS expression has been parsed we
+# need to fix it up afterwards.
+sub fixup-scopes($_, :$wrong!, :$right!) {
+    when SAST::Block    { .outer = $right if .outer === $wrong }
+    when SAST::Children { .&fixup-scopes(:$wrong,:$right)  for .children }
+}
+
 method EXPR-and-mod ($/) {
     my $expr = $<EXPR>.ast;
-    my $*CURPAD = CALLERS::<$*CURPAD>;
+
+    my $CURPAD = $*CURPAD;
     my $loop;
 
     with $<statement-mod-loop> {
         $loop = .ast;
         $loop.ann<statement-mod> = True;
-        $loop.block = SAST::Block.new(outer => $*CURPAD);
+        $loop.block = SAST::Block.new(outer => $CURPAD);
     }
 
     with $<statement-mod-cond> {
@@ -64,13 +77,17 @@ method EXPR-and-mod ($/) {
         $cond.ann<statement-mod> = True;
         if $loop {
             $cond.then = SAST::Block.new($expr,outer => $loop.block);
+            fixup-scopes  $expr, wrong => $CURPAD, right => $cond.then;
+            fixup-scopes  $cond, wrong => $CURPAD, right => $loop.block;
             $loop.block.push($cond);
             $expr = $loop;
         } else {
-            $cond.then = SAST::Block.new($expr,outer => $*CURPAD);
+            $cond.then = SAST::Block.new($expr,outer => $CURPAD);
+            fixup-scopes  $expr, wrong => $CURPAD, right => $cond.then;
             $expr = $cond;
         }
     } elsif $loop {
+        fixup-scopes  $expr, wrong => $CURPAD, right => $loop.block;
         $loop.block.push($expr);
         $expr = $loop;
     }
