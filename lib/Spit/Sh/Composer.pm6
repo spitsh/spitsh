@@ -434,7 +434,6 @@ heart decoration, wilted flower,love letter,rosette, white flower
 
 multi method walk(SAST::Eval:D $THIS is rw) {
     my %opts = $THIS.opts;
-    %opts<os> //= SAST::Type.new(class-type => $.os,match => $THIS.match);
 
     for %opts.kv -> $name, $opt is rw {
         my $ct = $opt.compile-time;
@@ -453,6 +452,9 @@ multi method walk(SAST::Eval:D $THIS is rw) {
             )
         }
     }
+
+    # let locally defined options override the outer definitions
+    %opts = |%.opts, |%opts;
 
     $ = (require Spit::Compile <&compile>);
     my $compiled = $THIS.stage3-node(
