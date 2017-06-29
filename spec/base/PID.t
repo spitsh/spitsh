@@ -39,11 +39,11 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
     ok $pid.children == 3, '.children';
     ok $pid.descendants == 9, '.descendants';
 
-    # If you don't kill $pid as well you get zombies
-    kill $pid, $pid.descendants;
-
+    # Kill all the descendant processes which should allow the parent to exit
+    kill $pid.descendants;
     sleep 1;
-    nok $pid, '.Bool is .exists (False)';
+
+    nok $pid, '.Bool is .exists (False) after the parent should have exited';
     ok $pid.children    == 0, '.children after killing';
     ok $pid.descendants == 0, '.descendants after killing';
 }
