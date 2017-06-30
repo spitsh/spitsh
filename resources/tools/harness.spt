@@ -38,7 +38,7 @@ if $*run.contains('ssh') {
 # Runs all the tests in the same container
 sub continue-in-container($path, :$mount-socket) {
     for @*on -> $os {
-        my $container = Docker.create($os, :$mount-socket).cleanup;
+        my $container = Docker.create($os, :$mount-socket);
         $container.start-sleep;
         ${$*spit prove ('-v' if $*verbose) "-D=$container" "--os=$os" $path};
         $container.remove;
