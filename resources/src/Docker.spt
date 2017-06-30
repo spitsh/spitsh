@@ -34,7 +34,7 @@ augment Docker {
 
     static method latest-build-tgz-url-->HTTP {
         my $latest-v = Docker.latest-build-ver;
-        "https://get.docker.com/builds/Linux/x86_64/docker-{$latest-v}.tgz";
+        "https://download.docker.com/linux/static/stable/x86_64/docker-{$latest-v}.tgz";
     }
     static method install-cli-->File {
         my $url = Docker.latest-build-tgz-url;
