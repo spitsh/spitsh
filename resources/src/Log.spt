@@ -1,8 +1,8 @@
 my FD $*LOG = $*ERR;
 constant $*log-level = 4;
 constant $*log = False;
-constant $*log-default-path = '👻';
-constant @*log-symbols = <☠     ❗    ⚠    ℹ   ❔>;
+constant $*log-default-path = "👻";
+constant @*log-symbols = "☠","❗", "⚠", "ⓘ", "❔";
 constant @*log-levels  = <fatal error warn info debug>;
 constant $*log-date-format = '%b %d %T';
 

@@ -665,7 +665,10 @@ grammar Spit::Grammar is Spit::Lang {
             | $<log>=(
                 <log-level>
                 [
-                    || ':' $<literal-path>=[<.identifier> || <:So>]+
+                    || ':' [
+                        || $<symbol-path>=<:So>
+                        || $<literal-path>=<.identifier>
+                        || <.invalid('Symbol path. Only accepts a single unicode Symbol (So) or identifier')>]
                     || '(' $<empty-path>=\s* ')'
                     || $<path>=<.wrap: '(', ')', 'log path', token { <R=.EXPR> }>
                  ]?

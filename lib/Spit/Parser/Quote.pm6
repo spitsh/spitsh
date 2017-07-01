@@ -133,6 +133,7 @@ grammar Spit::Quote::qq is Spit::Quote {
     }
     token elem:sym<§> { <.sym> }
     token elem:sigily { <spit-sigily> }
+    token elem:emojish { <:So> }
 }
 
 class Spit::Quote::qq-Actions is Spit::Quote::Actions {
@@ -153,4 +154,5 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
         make SAST::Var.new(name => '*sed-delimiter', sigil => '$');
     }
     method elem:sigily ($/)  { make $<spit-sigily>.ast }
+    method elem:emojish ($/) { make $/.Str ~ "\c[ZERO WIDTH SPACE]" }
 }

@@ -110,8 +110,8 @@ nok "foo" ~~ /ar$/,'basic re match (false)';
 
 {
     {
-        if "👻👻👻".match(/👻(👻)👻/) {
-            is @/[0], "👻👻👻", 'spooks in match';
+        if '👻👻👻'.match(/👻(👻)👻/) {
+            is @/[0], '👻👻👻', 'spooks in match';
             is @/[1], "\c[GHOST]", 'spook in the capture';
         }
     }
