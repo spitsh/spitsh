@@ -427,13 +427,13 @@ multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
     callsame;
 }
 
-my @placeholders = BEGIN lazy flat "\c[
+constant @placeholders = ("\c[
 bouquet, revolving hearts,  blossom, two hearts, sunflower,growing heart,
 rose, heart with arrow, cherry blossom, beating heart, tulip,
 broken heart,  sparkling heart, hibiscus,blue heart, green heart, kiss mark,
 yellow heart, purple heart, black heart, heart with ribbon,
 heart decoration, wilted flower,love letter,rosette, white flower
-]".comb xx ∞;
+]".comb xx ∞).flat.Array;
 
 
 multi method walk(SAST::Eval:D $THIS is rw) {

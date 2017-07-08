@@ -464,24 +464,24 @@ multi method arg (SAST::BVal:D $_) { .val ?? '1' !! '""' }
 multi method cond(SAST::BVal:D $_) { .val ?? 'true' !! 'false' }
 multi method int-expr(SAST::BVal $ where { .val === False } ) { '0' }
 
-my @cats = BEGIN flat lazy qqw{
+constant @cats = (qqw{
     \c[smiling cat face with open mouth]
-    \c[grinning cat face with smiling eyes]
     \c[cat face with tears of joy]
     \c[smiling cat face with heart-shaped eyes]
     \c[cat face with wry smile]
     \c[kissing cat face with closed eyes]
     \c[weary cat face]
+    \c[grinning cat face with smiling eyes]
     \c[crying cat face]
     \c[pouting cat face]
     \c[cat]
     \c[cat face]
     \c[tiger face]
     \c[lion face]
-} xx ∞;
+} xx ∞).flat.Array;
 
 
-my @cat-names = BEGIN flat lazy %?RESOURCES<cat-names.txt>.slurp.split("\n") xx ∞;
+constant @cat-names = (%?RESOURCES<cat-names.txt>.slurp.split("\n") xx ∞).flat.Array;
 has $!debian;
 # There are three situations that determine whether we heredoc
 # 1. The string ends in a newline and you want it to stay that way
