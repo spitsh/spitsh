@@ -411,10 +411,13 @@ multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
             my $cu = compile(
                 $val.val,
                 :target<stage1>,
-                :$outer,name => $val.name
+                :$outer,
+                name => $val.name
             );
             my $block = $cu.block;
             $val = $block;
+        } else {
+            $val .= deep-clone;
         }
         my $*CURPAD = $outer;
         $val .= do-stage2($THIS.type);
