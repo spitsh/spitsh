@@ -16,6 +16,7 @@
         "Spit::Repo"           : "lib/Spit/Repo.pm6",
         "Spit::Stage2-Util"    : "lib/Spit/Stage2-Util.pm6",
         "Spit::SAST"           : "lib/Spit/SAST.pm6",
+        "Spit::Sastify"        : "lib/Spit/Sastify.pm6",
         "Spit::Exceptions"     : "lib/Spit/Exceptions.pm6",
         "Spit::SETTING"        : "lib/Spit/SETTING.pm6",
         "Spit::cli"            : "lib/Spit/cli.pm6",

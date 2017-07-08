@@ -6,6 +6,7 @@ use Spit::Metamodel;
 need Spit::OptsParser;
 need Spit::Sh::Method-Optimizer;
 need Spit::Sh::Call-Inliner;
+use Spit::Sastify;
 
 unit class Spit::Sh::Composer does Method-Optimizer does Call-Inliner;
 
