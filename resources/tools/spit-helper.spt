@@ -24,12 +24,10 @@ given Docker.create('alpine', :name<spit-helper-builder>, :mount-socket).cleanup
     # run the build script
     ok .exec($build), 'build script ran successfully';
 
-    if DockerImg.list.grep(/^spit-helper:/) {
-        info 'Removing old spit-helper images';
-        .remove;
-    }
+    info 'Removing old spit-helper images';
+    DockerImg.images(has-labels => 'spit-helper').remove;
 
-    if .commit($*image-name) -> $image {
+    if .commit(name => $*image-name, labels => ('spit-helper' => $*tag)) -> $image {
         $image.add-tag($*tag);
     } else {
         die "Failed to build $*image-name";

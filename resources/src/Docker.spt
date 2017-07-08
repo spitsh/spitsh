@@ -23,6 +23,7 @@ constant Cmd $*docker = on {
 constant $*moby-github = GitHubRepo<moby/moby>;
 
 constant File $?docker-cleanup = ${mktemp};
+constant File $?docker-img-cleanup = ${mktemp};
 
 augment Docker {
 
@@ -76,6 +77,7 @@ augment Docker {
             $*docker create -i !>error('🐳-create')
             ("--name=$_" if $name)
             ("-v=$*docker-socket:$*docker-socket" if $mount-socket)
+            --entrypoint ''
             @args $from sh -c ':;sh'
         }.substr(0,12); # 12 is a sufficient length of hash
         $name || $id;
@@ -116,24 +118,23 @@ augment Docker {
     }
 
     method commit(
-DockerImg $image,
-        :$tag,
-        :@cmd,
-        :$env,
-        :@entrypoint,
-        :$expose,
-        :$label,
-        :$onbuild,
-        :$user,
-        :$volume,
-        :$workdir,
-   Bool :$remove-old
+DockerImg :$name,
+          :$tag,
+          :@cmd,
+          :$env,
+          :@entrypoint,
+          :$expose,
+     Pair :@labels,
+          :$onbuild,
+          :$user,
+          :$volume,
+          :$workdir,
+     Bool :$remove-old
     )-->DockerImg {
-        if $remove-old and $image {
-            info "Removing previously existing $image";
-            $image.remove;
+        if $remove-old and $name.exists {
+            info "Removing previously existing $name";
+            $name.remove;
         }
-        info "Committing $self as $image";
 
         my @args = \${
             ("-c=CMD " ~ .JSON if @cmd )
@@ -143,28 +144,36 @@ DockerImg $image,
             ("-c=USER $_" if $user)
             ("-c=VOLUME $_" if $volume)
             ("-c=WORKDIR $_" if $workdir)
+            (if @labels {
+                '-c=LABEL ' ~ (“{.key}="{.value}"” for @labels).join(" ")
+            })
             $self
-            $image
+            @$name
         };
 
-        debug "docker commit with ‘{@args.join('’, ‘')}’";
-        ${$*docker commit >X !>fatal('🐳-commit') @args} ?? $image !! ();
+        debug "docker commit: ‘{@args.join('’, ‘')}’";
+        my $image = ${$*docker commit  !>fatal('🐳-commit') @args |
+                      sed -r 's/^sha256:(.{12}).*/\1/'};
+        $name || $image;
     }
 }
 
 augment DockerImg {
-    method exists? { ${ $*docker image inspect $self *>X } }
+    method exists? { ~$self and ${ $*docker image inspect $self *>X } }
     method remove? { $self-->List[DockerImg].remove }
     method Bool { $self.exists }
-    method add-tag ($tag)^ {
-        my $tagged-name = "{$self.name}:$tag";
-        info "Tagging $self with $tagged-name";
-        ${$*docker tag $self $tagged-name !>fatal('🐳-tag')} ?? $tagged-name !! ()
-    }
 
-    method alias-tag(DockerImg $name)^ {
-        info "Tagging $self with $name";
-        ${$*docker tag $self $name !>fatal('🐳-tag')} ?? $name !! ()
+    method cleanup^ {
+        $?docker-img-cleanup.push: $self;
+        END {
+            $?docker-img-cleanup.slurp-->List[DockerImg].remove;
+            $?docker-cleanup.remove;
+        }
+    }
+    method add-tag ($tag)^ {
+        my $tagged-name = $tag.contains(':') ?? $tag !! "{$self.name}:$tag";
+        debug "Tagging $self with $tagged-name";
+        ${$*docker tag $self $tagged-name !>fatal('🐳-tag')} ?? $tagged-name !! ()
     }
 
     method name~ {
@@ -175,17 +184,39 @@ augment DockerImg {
         $self.${sed 's/.*://;t;s/.*/latest/' }
     }
 
-    static method list -->List[DockerImg] {
-        ${$*docker images | sed -n '1!p' |
-          awk '{ if($1 == "<none>"){ print $3 } else { print $1($2 == "<none>" ? "" : ":"$2) }}'
-         }
+    method id -->DockerImg ${ $*docker image inspect $self '-f={{.Id}}' !>error }
+
+    method tags -->List[DockerImg] ${
+        $*docker image inspect $self
+        ｢-f={{range $i, $e := .RepoTags}}{{if $i}}{{"\n"}}{{end}}{{$e}}{{end}}｣
     }
+
     method copy-from($from,$to) -->File {
         debug "copying $from in $self to $to";
         my $tmp = Docker.create($self);
         $tmp.copy-from($from,$to);
         ${ $*docker rm -f $tmp >X};
         $to;
+    }
+
+    method labels --> List[Pair] {
+        ${$*docker image inspect
+          '-f={{range $key, $value := .Config.Labels}}{{print $key "\t" $value "\n"}}{{end}}'
+          $self
+         }
+    }
+
+    static method images(
+        :@has-labels,
+        Pair :@labels,
+        Bool :$dangling,
+        :$reference
+    ) --> List[DockerImg] ${
+            $*docker images -qa
+            ("-f=label={.key}={.value}" for @labels)
+            ("-f=label=$_" for @has-labels)
+            ("-f=dangling=true" if $dangling)
+            ("-f=reference=$_" if $reference)
     }
 }
 

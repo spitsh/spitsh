@@ -13,7 +13,7 @@ plan 12;
     ok  $b.exec( eval{$foo.touch} ),  '.run file touched';
     ok  $b.exec( eval{$foo.exists} ), '.run check file exists';
 
-    my $img = $b.commit('run_test');
+    my $img = $b.commit(name => 'run_test');
 
     $b.remove;
 

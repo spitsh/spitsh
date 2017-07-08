@@ -8,6 +8,6 @@ given DockerImg<foo:bar> {
 }
 
 given DockerImg<fedora/httpd:version1.0> {
-    is .tag, 'version1.0';
-    is .name, 'fedora/httpd';
+    is .tag, 'version1.0','.tag # version1.0';
+    is .name, 'fedora/httpd', '.name # fedora/http';
 }
