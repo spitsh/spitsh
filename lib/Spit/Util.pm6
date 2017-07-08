@@ -72,3 +72,6 @@ sub SETTING-lookup(SymbolType \symbol-type, $name) is export(:SETTING-lookup) {
     require Spit::PRECOMP <$SETTING>;
     $SETTING.lookup(symbol-type, $name);
 }
+
+# removes ansicolors from text
+sub colorstrip($_) is export(:colorstrip) { S:g/\e\[ <[0..9;]>+ m// }

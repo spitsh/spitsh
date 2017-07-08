@@ -1,7 +1,8 @@
 use Spit::Compile;
 use Test;
 use Spit::Exceptions;
-use Terminal::ANSIColor;
+use Spit::Util :colorstrip;
+
 plan 13;
 
 my $name = 'syntax-tests';

@@ -1,5 +1,13 @@
 use Spit::Constants;
-use Terminal::ANSIColor;
+
+my constant GRAY     = "\e[38;5;242m";
+my constant YELLOW   = "\e[33m";
+my constant GREEN    = "\e[32m";
+my constant RED      = "\e[31m";
+my constant RESET    = "\e[0m";
+my constant ON_RED   = "\e[41m";
+my constant BOLD     = "\e[1m";
+my constant BOLD_OFF = "\e[22m";
 
 multi line-start(Match:D $match,Str:D $orig = $match.orig) {
     $orig.substr(0,$match.from).lines.elems;
@@ -67,8 +75,6 @@ sub gen-ctx(+@marks,
     return @lines.join("\n");
 }
 
-my constant \GRAY = color("242");
-my constant \YELLOW = color("yellow");
 
 class SX is Exception is rw {
     has $.message;
@@ -91,17 +97,17 @@ class SX is Exception is rw {
 
     method gist {
         my $snippet := gen-ctx :before(GRAY), :after(RESET),
-        ${ :before(RESET() ~ $.mark-before), :after($.mark-after ~ RESET() ~ GRAY), :$.match },
+        ${ :before(RESET ~ $.mark-before), :after($.mark-after ~ RESET ~ GRAY), :$.match },
         |self.extra-marks;
 
         self.ERROR ~ " $.message\n$!cu-name:$!line\n$snippet";
     }
 
-    method mark-before { color("on_red") }
+    method mark-before { ON_RED }
     method mark-after  { '' }
     method extra-marks { Empty }
 
-    method ERROR { colored("ERROR","red") ~ " while compiling $!cu-name:"}
+    method ERROR { RED ~ "ERROR" ~ RESET ~ " while compiling $!cu-name:"}
 }
 
 class SX::Unbalanced is SX {
@@ -113,18 +119,18 @@ class SX::Unbalanced is SX {
         my $o-line = $.opener.&line-start;
         if $.line - $o-line < 8 {
             my $snippet := gen-ctx :lines(8), :before(GRAY), :after(RESET),
-            ${ :before(YELLOW ~ BOLD()),
-               :after(BOLD_OFF() ~ RESET), match => $!opener },
-            ${ :after(colored(colored(" $!closer↩","green"),"bold") ~  GRAY), :$.match};
+            ${ :before(YELLOW ~ BOLD),
+               :after(BOLD_OFF ~ RESET), match => $!opener },
+            ${ :after(BOLD ~ GREEN ~ " $!closer↩" ~ RESET ~  GRAY), :$.match};
             self.ERROR ~ " $.message." ~
             "\n$.cu-name:$o-line\n$snippet";
         } else {
             my $o-snippet = gen-ctx :lines(4), :before(GRAY), :after(RESET),
-            ${ :before(YELLOW ~ BOLD()),
-               :after(BOLD_OFF() ~ RESET), match => $!opener };
+            ${ :before(YELLOW ~ BOLD),
+               :after(BOLD_OFF ~ RESET), match => $!opener };
             my $c-snippet = gen-ctx :after(RESET), :lines(4),
                :yada(GRAY ~  "====line:$.line===" ~ RESET),
-            ${ :after(colored(colored(" $!closer↩","green"),"bold") ~ GRAY), :$.match };
+               ${ :after(BOLD ~ GREEN ~ " $!closer↩" ~ RESET ~ GRAY), :$.match };
 
             self.ERROR ~ " $.message\n" ~
             "$.cu-name:$o-line\n$o-snippet\n" ~
@@ -150,7 +156,7 @@ class SX::TypeCheck is SX {
 class SX::Invalid is SX {
     has $.invalid;
     method mark-before { '' }
-    method mark-after { colored('➧','red') }
+    method mark-after { RED ~ '➧' ~ RESET }
     method message { "Invalid $!invalid." }
 }
 
@@ -162,9 +168,9 @@ class SX::Expected is SX {
     method mark-before { '' }
     method mark-after {
         if $!hint {
-            colored("$!hint↩",'green');
+            GREEN ~ "$!hint↩" ~ RESET
         } else {
-            colored('➧','red')
+            RED ~ '➧' ~ RESET;
         }
     }
 }
@@ -241,7 +247,7 @@ class SX::Undeclared is SX {
         "$desc '$name' hasn't been declared.";
     }
 
-    method mark-before { colored('➧','red') }
+    method mark-before { RED ~ '➧' ~ RESET }
 }
 
 class SX::UndeclaredSpecial is SX {
@@ -277,7 +283,7 @@ class SX::BadCall::WrongNumber is SX::BadCall {
 
     method mark-after {
         if $!got !== 0  and $!got < $!expected {
-            colored(", $.hint↩",'green');
+            GREEN ~ ", $.hint↩" ~ RESET
         }
     }
 
@@ -292,7 +298,7 @@ class SX::BadCall::WrongNumber is SX::BadCall {
                 $hint = " $.hint↩";
             }
 
-            (${ :after(colored($hint,'green')), :$from, :to($from) },)
+            (${ :after(GREEN ~ $hint ~ RESET), :$from, :to($from) },)
         }
     }
 }

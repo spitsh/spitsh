@@ -36,7 +36,7 @@
         "Spit::Parser::Regex" : "lib/Spit/Parser/Regex.pm6",
         "Spit::Parser::Quote"   : "lib/Spit/Parser/Quote.pm6"
     },
-    "depends" : ["DispatchMap","JSON5::Tiny","Terminal::ANSIColor", "JSON::Fast"],
+    "depends" : ["DispatchMap","JSON5::Tiny", "JSON::Fast"],
     "resources" : [
         "reserved.txt",
         "cat-names.txt",
