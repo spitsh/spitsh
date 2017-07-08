@@ -1006,7 +1006,7 @@ method redirection($/) {
         my $path = $log<empty-path> ??
           $*SETTING.lookup(SCALAR, '*log-default-path').gen-reference(match => $log<empty-path>)
           !! (
-              $log<symbol-path> andthen SAST::SVal.new(val => "$_\c[ZERO WIDTH SPACE]")
+              $log<symbol-path> andthen SAST::SVal.new(val => "$_ ")
               or
               $log<literal-path> andthen SAST::SVal.new(val => .Str)
               or

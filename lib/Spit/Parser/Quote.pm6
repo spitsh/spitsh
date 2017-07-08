@@ -154,5 +154,5 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
         make SAST::Var.new(name => '*sed-delimiter', sigil => '$');
     }
     method elem:sigily ($/)  { make $<spit-sigily>.ast }
-    method elem:emojish ($/) { make $/.Str ~ "\c[ZERO WIDTH SPACE]" }
+    method elem:emojish ($/) { make $/.Str ~ " " }
 }
