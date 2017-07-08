@@ -1,406 +1,297 @@
+use Getopt::Parse;
 use Spit::Compile;
-use Spit::OptsParser;
 use Spit::Util :spit-version;
+use Spit::Sastify;
+use Spit::Docker;
+use Spit::OptsParser;
 need Spit::Repo;
 
-sub parse-args(@args) {
-    my (@pos,%named);
-    for @args {
-        when s/^'--'// {
-            if m/([\w|'-']+)['='(.*)]?/ {
-                %named{$/[0].Str} = ( ($/[1] andthen .Str) || True);
-            } else {
-                die "badly formatted option";
-            }
-        }
-        when s/^'-'// {
-            when /(<[a..zA..Z]>)'='(.*)/ {
-                %named{$/[0].Str} = $/[1].Str;
-            }
-            when /(<[a..zA..Z]>)+/ {
-                %named{$_} = True for $/[0];
-            }
-            default {
-                die "invalidly formatted option $_";
-            }
-        }
-        default { @pos.push($_) }
-    }
-
-    @pos,%named;
-}
-
-constant $compile-options = q:to/END/;
-Options:
-  --debug
-    Output debugging information + timings for each compilation stage.
-
-  -d --in-docker[=<image>]
-    Pipes script into a docker container derived from <image>. This
-    automatically sets the 'os' option based on the image name (if it can)
-    unless you specify another in --opts or --os. The container is removed
-    after execution.
-
-  -D --in-container=<id>
-    Runs the script in an already running docker container by execing
-    A new `/bin/sh` process inside it.
-
-  -h --in-helper
-    Runs the script in the spit-helper image.
-
-  -i --interactive
-    Compile a script where $*interactive will be set to whether STDIN is
-    a tty. Short for --opts='{ "interactive" : ": $?IN.tty" }'.
-
-  -I --force-interactive
-    Compile a script where $*ineractive will be set to True. Short for
-    --opts='{ "interactive" : true }'
-
-  --no-inline
-    Turns inlining off for routine calls.
-
-  -o --opts=<json>
-    A JSON object where the keys are the option names and the values
-    the option values. If a value starts with ':' the rest is evaluated
-    as a Spit expression in the context of the option's declaration.
-
-  -f --opts-file=<file.json>
-    A file containing a JSON object interpreted in the same way as --opts
-
-  --os=<os name> (default: debian)
-    Shortcut for --o='{ "os" : ": OS<debian>" }'
-
-  --log
-    Shortcut for --o='{ "log" : true }'
-
-  -s --mount-docker-socket
-    Mounts /var/run/docker.sock into the container.
-
-  --target=<stage name>
-    Sets the compilation stage to finish at:  Can be any of:
-      - parse:   A .gist of the match object from parsing the program.
-      - stage1:  A .gist of the SAST tree after parsing (BROKEN)
-      - stage2:  A .gist of the SAST tree after contextualisation.
-      - stage3:  A .gist of the SAST tree after composition.
-      - compile: The compiled shell script (default)
-
-  --RUN
-    Runs the output on this computer's /bin/sh. # Be careful :^)
-
-  -x
-    Puts 'set -x' into the script which tells the shell to print
-    commands and their arguments as they are executed.
-END
-
-constant $eval-usage = q:to/END/;
-Usage: spit eval PROGRAM [OPTIONS]
-
-Evaluate PROGRAM as spit code
-
-\qq[$compile-options]
-
-Examples:
-  spit eval 'say "hello world"'
-  # compile and run in docker
-  spit eval -d 'say "hello world"'
-  spit eval -d=centos 'say $*os.name'
-  # compile for alpine
-  spit eval --os=alpine 'say $*os.name'
-END
-
-constant $compile-usage = q:to/END/;
-Usage: spit compile FILE [OPTIOS]
-
-Compiles FILE as spit code
-
-\qq[$compile-options]
-
-Examples:
-  spit compile my_program.spt
-  # compile and run in docker
-  spit compile -d my_program.spt
-  spit compile -d=centos my_program.spt
-  # compile for alpine
-  spit compile --os=alpine my_program.spt
-END
-
-constant $prove-usage = q:to/END/;
-Usage: spit prove PATH [OPTIONS]
-
-Compiles and executes spit test files in docker containers under prove.
-This command is just quick way of writing something like:
-
-   for os in debian centos; do
-       prove -r -e "spit -d=$os compile" spec/base/sanity.t || exit 1;
-   done
-
-   Which is similar to running:
-
-   spit prove spec/base/sanity.t -d=debian,centos
-
-Options:
-  -d --in-docker=<image list>
-    Docker images to derive containers from to execute the scripts under
-    prove. Multiple image names must be comma separated. If the image name
-    matches an OS then --os will automatically be set.
-
-  -D --in-container=<id list>
-    Docker containers to execute the scripts under prove using `docker exec`.
-    Multiple container ids must be comma separated. The containers must
-    already be running.
-
-  -h --in-helper
-    Run the tests in the spit-helper Docker image.
-
-  -j --jobs=<number>
-    The number of jobs that prove should run.
-
-  --os=<os name>
-    Pass --os to the underlying `spit compile`
-
-  -s --mount-docker-socket
-    Mounts /var/run/docker.sock inside the containers.
-
-  -v --verbose
-    Pass --verbose to the underlying prove(1) command.
-
-Examples:
-  spit prove mytest.t
-  spit prove t/
-  spit prove -d=centos,alpine t/
-END
-
-constant $helper-usage = q:to/END/;
-Usage: spit helper [build|clean]
-
-Builds, removes or upgrades the spit-helper docker image. spit-helper
-is a small docker image pre-built with useful utilties for deploying
-shell scripts.
-
-Sub-commands:
-  build    builds the latest spit-helper
-
-  remove   removes the spit-helper image
-           (--force uses 'docker rmi -f')
-
-  upgrade  removes an old spit-helper image
-END
-
-constant $general-usage = q:to/END/;
-Spook in the Shell compiler v\qq[{spit-version}]
-
-Usage: spit [COMMAND|PATH]
-
-If the first argument contains '/' or '.' it's assumed to be a PATH and is
-run with the compile command.
-
-Options:
-  --help     Print this help message
-  --version  Print version by itself
-
-Commands:
-  compile  Compile a file as spit code
-  eval     Compile a string as spit code
-  prove    Run prove(1) with test files written in spit
-  helper   build/remove/update the spit-helper image
-
-run 'spit COMMAND --help' for more information about a command
-END
-
-my constant %usage = %(
-    eval => $eval-usage,
-    compile => $compile-usage,
-    general => $general-usage,
-    prove   => $prove-usage,
-    helper  => $helper-usage,
+constant @opts = (
+    opt(
+        :name<version>,
+        on-use => { say spit-version(); exit 0 },
+        desc => 'Print version',
+    ),
 );
 
 my constant $helper-image = "spit-helper:{spit-version}";
 
-my class commands {
-    method compile(Str:D $file,
-                   :$debug,
-                   :$target,
-                   :$opts,
-                   :$no-inline,
-                   :$x,
-                  ) {
-        compile(($file.IO.slurp orelse .throw), :$x, :$debug, :$target, :$opts, :$no-inline, name => $file).gist;
-    }
+constant $match-os = anon token {
+    :my $os;
+    <word>
+    <?{ $os = sast-os($<word>.Str, match => $<word>); $os }>
+    { $/.make: $os }
+};
 
-    method eval(Str:D $src, :$debug, :$target, :$opts, :$no-inline, :$x) {
-        compile($src, :$debug, :$target, :$opts, :$no-inline, :$x, name => "eval").gist;
-    }
-
-    method prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
-                 :$mount-docker-socket, :$jobs, :$os, :$opts,
-                 :$verbose
-                ) {
-
-        my @runs = |($in-docker andthen .split(',').map: { "-d=$_" }),
-                   |($in-container andthen .split(',').map({"-D=$_"})),
-                   |($in-helper andthen '-h');
-
-        for @runs {
-            my @run =
-            "prove", ("-j$_" with $jobs),('-v' if $verbose),'-r', '-e',
-            "$*EXECUTABLE $*PROGRAM $_ " ~
-              ("--os=$os " if $os) ~
-              ("--opts=$opts " if $opts) ~
-              "compile{' -s' if $mount-docker-socket}",
-            $path;
-            note "running: ", @run.perl;
-            my $run = run @run;
-            exit $run.exitcode unless $run.exitcode == 0;
+constant @compilation-opts =
+opt(
+    name => 'in-docker',
+    alias => 'd',
+    match => 'str',
+    value-default => 'alpine',
+    desc => 'Run in a container derived from <image>',
+    placeholder => 'image',
+    on-use => -> $in-docker, %res {
+        %res<in-docker> = $in-docker;
+        %res<os> //=  do if $in-docker ~~ m/<!after ':'> [\w|'-']+ <!before '/'>/ {
+            sast-os($/.Str, match => $/)
         }
     }
+),
+opt(
+    name => 'in-helper',
+    alias => 'h',
+    desc => 'Run in a container derived from the spit-helper image',
+),
+opt(
+    name => 'in-container',
+    alias => 'D',
+    desc => 'Run in an existing docker container',
+    match => 'str',
+    placeholder => 'id'
+),
+opt(
+    name => 'docker-socket',
+    alias => 's',
+    desc => 'Mounts /var/run/docker.sock into the container'
+),
+opt(
+    name => 'RUN',
+    desc => ‘Run on this computer's /bin/sh. (Be careful)’
+),
+opt(
+    name => 'opts-file',
+    alias => 'f',
+    desc => 'JSON file to read options from',
+    placeholder => 'opts.json'
+),
+opt(
+    name => 'target',
+    desc => 'Sets the compilation stage to finish at. Can be: parse, stage1, stage2, stage3 or compile',
+    placeholder => 'stage',
+    match => /'stage'<[1..3]>|'parse'|'compile'/,
+    default => 'compile',
+),
+opt(
+    name => 'debug',
+    desc => 'Output debugging info + timtings for each compilation stage',
+),
+opt(
+    name => 'no-inline',
+    desc => 'Turns off call inlining for debugging purposes'
+),
+opt(
+    name => 'xtrace',
+    alias => 'x',
+    desc =>  'Puts "set -x" into the script'
+),
+opt(
+    name => 'log',
+    desc => 'Shortcut to set $*log to true',
+),
+opt(
+    name => 'os',
+    desc => 'Shortcut to set $*os',
+    match => $match-os,
+    placeholder => 'os name',
+    default => sast-os('alpine', match => Match.new),
+),
+opt(
+    name => 'opts',
+    alias => 'o',
+    placeholder => 'key:value',
+    match => token {
+        $<key>=<.identifier> [
+            | ':' $<value>=(<int>|| <str> || '')
+            | '=' $<expr>=<.str>
+        ]?
+        {
+            my $val := do with $<value> {
+                when .<int>  { sastify .<int>.Str }
+                when .<str>  { sastify .<str>.Str }
+                when ''      { sastify False }
+                default      {  }
+            }
+            orwith $<expr> {
+                late-parse(.Str)
+            }
+            else {
+                sastify(True);
+            }
 
-    method helper($_) {
-        when 'build' {
-            my ($helper-builder, $p) = start-docker('alpine', :mount-docker-socket);
-            my $build-helper-src =  %?RESOURCES<tools/spit-helper.spt>.absolute.IO;
-            my $compile = compile(
-                $build-helper-src.slurp,
-                name => $build-helper-src,
-                opts => {
-                    os => late-parse('Alpine'),
-                    log => late-parse('True')
-                }
-            );
-            write-docker($helper-builder, $p, $compile);
+            $/.make: Pair.new($<key>.Str, $val);
         }
-        when 'remove' {
-            exit (run 'docker', 'rmi', $helper-image).exitcode;
-        }
-        default {
-            fail-print-usage('helper');
-        }
+    },
+    desc => 'Options as JSON',
+    on-use => -> $pair, %res {
+        %res<opts>{$pair.key}  = $pair.value;
     }
-}
+);
 
-sub fail-print-usage($section = "general") {
-    note %usage{$section}; exit 1;
-}
 
-sub combine-options($opts?, :@files) {
+constant @commands = (
+    {
+        name => 'compile',
+        desc => 'Compile a file as spit code',
+        long-desc => q:to/END/,
+        Compile a file as spit code and print it to stdout.
+        Optionally run the resulting shell script in a docker
+        container or on the machine itself.
+        END
+        opts => @compilation-opts,
+        pos => [pos(
+            name => 'src-file',
+            match => 'existing-file'
+        ),],
+        example => q:to/END/,
+        spit compile my_program.spt
+        # compile and run in docker
+        spit compile -d my_program.spt
+        spit compile -d=centos my_program.spt
+        # compile for alpine
+        spit compile --os=alpine my_program.spt
+        END
+    },
+    {
+        name => 'eval',
+        desc => 'Compile a string as spit code',
+        opts => @compilation-opts,
+        pos => [pos(name => 'src')],
+        example => q:to/END/,
+        spit eval 'say "hello world"'
+        # compile and run in docker
+        spit eval 'say "hello world"' -d
+        spit eval 'say $*os.name' -d=centos
+        # compile for alpine
+        spit eval 'say $*os.name' o--os=alpine
+        END
+    },
+    {
+        name => 'prove',
+        desc => 'Run prove(1) over spit test files',
+        pos => [ pos(name => 'path')],
+        opts => [
+          opt(
+              name => 'in-docker',
+              match => 'str',
+              alias => 'd',
+              desc => 'Run tests in containers derived from a comma separated list of docker images',
+          ),
+          opt(
+              name => 'in-container',
+              match => 'str',
+              alias => 'D',
+              desc => 'Run tests in a comma separated list of existing docker containers',
+          ),
+          opt(
+              name => 'verbose',
+              alias => 'v',
+              desc => 'Run prove with -v'
+          ),
+          opt(
+              name => 'jobs',
+              alias => 'j',
+              desc => 'The number of prove jobs',
+              match => 'uint',
+          ),
+          opt(
+              name => 'docker-socket',
+              alias => 's',
+              desc => 'Mount /var/run/docker.sock in containers specified by --in-docker',
+          ),
+          opt(
+              name => 'os',
+              match => $match-os,
+              desc => 'Compile the tests for particular OS',
+          )
+        ]
+    },
+    {
+        name => 'helper',
+        desc => 'Build/remove/update the spit-helper image',
+        long-desc => q:to/END/,
+        Builds, removes or upgrades the spit-helper docker image. spit-helper
+        is a small docker image pre-built with useful utilties for deploying
+        shell scripts.
+        END
+        commands => (
+           { name => 'build', desc => 'Builds the spit-helper docker image' },
+           { name => 'clean', desc => 'Removes all spit-hepler docker images'}
+        )
+    },
+);
 
-    my %opts = do if (my $local = "./.spitsh.json".IO).e {
-        $local.&parse-opts;
-    }
+constant $pre-usage = '';
 
-    for @files {
-        %opts.append: flat .IO.&parse-opts;
-    }
-
-    my %cli = ($opts andthen .&parse-opts);
-    %opts.append(%cli);
-    %opts;
-}
+constant $parser = Getopt::Parse.new(
+    command => %(
+        name => 'spit',
+        :@opts,
+        :@commands,
+        pos => [pos(
+            name => "src-file",
+            match => 'existing-file',
+            :!required,
+            implicit-command => 'compile'
+        )],
+    ),
+    :$pre-usage,
+    opt-color-alternate => ( '', "\e[38;5;125m")
+).gen-usage;
 
 sub do-main() is export {
-    my (@pos,%named) := parse-args(@*ARGS);
+    my %cli := $parser.get-opts();
 
-    if %named<version>:exists { say spit-version(); exit(0) }
-
-    if not @pos {
-        fail-print-usage;
-    } else {
-        %named<opts> //= %named<o>;
-        %named<opts-file> //= %named<f>;
-        given @pos[0] {
-            when %named<help>:exists { print %usage{$_} // %usage<general> }
-            when 'compile'|'eval' {
-                @pos[1]:exists or fail-print-usage($_);
-                compile-or-eval(@pos.shift, @pos, %named);
+    given %cli<commands>[0] {
+        when 'eval' {
+            compile-src(%cli<src>, %cli, name => 'eval')
+        }
+        when 'compile' {
+            compile-src(
+                (%cli<src-file>.IO.slurp orelse .throw),
+                %cli,
+                name => %cli<src-file>
+            )
+        }
+        when 'prove' {
+            if not %cli<in-docker in-container in-helper>:v {
+                %cli<in-docker> = 'alpine';
             }
-            when 'prove' {
-                @pos[1]:exists or fail-print-usage($_);
-                %named<jobs> //= %named<j>;
-                %named<mount-docker-socket> //= %named<s>;
-                %named<verbose> //= %named<v>;
-                my $in-docker = %named<in-docker> // %named<d>;
-                my $in-container = %named<in-container> // %named<D>;
-                my $in-helper    = %named<in-helper> // %named<h>;
-                $in-docker =  'debian' unless ($in-docker|$in-container) ~~ Str:D or $in-helper;
-                commands.prove(@pos[1], :$in-docker, :$in-container, :$in-helper, |%named);
-            }
-            when 'helper' {
-                commands.helper(@pos[1]);
-            }
-            when *.contains(<. />.any) {
-                compile-or-eval('compile', @pos, %named);
-            }
-            default { note %usage<general> }
+            my %tmp = %cli<in-docker docker-socket in-container in-helper jobs verbose>:p;
+            prove(%cli<path>, |%tmp);
+        }
+        when 'helper' {
+            helper(%cli<commands>[1]);
+        }
+        default {
+            note $parser.usage();
+            exit(1);
         }
     }
 }
 
-sub compile-or-eval($command, @pos, %named) {
-    %named<opts> = combine-options(%named<opts>, files => (%named<opts-file> // Empty,));
+sub compile-src($src, %cli, :$name) {
     my @*repos = [
         Spit::Repo::File.new,
         Spit::Repo::Core.new
     ];
-    %named<in-docker> //= %named<d>;
-    %named<in-container> //= %named<D>;
-    %named<in-helper> //= %named<h>;
-    %named<interactive> //= %named<i>;
-    %named<force-interactive> //= %named<I>;
-    %named<in-docker> = 'debian' if %named<in-docker> === True;
-    %named<target> //= 'compile';
-    %named<mount-docker-socket> //= %named<s> //= %named<in-helper>;
-    my $*debug = %named<debug>;
 
-    with %named<log> {
-        %named<opts><log> = late-parse('True');
-    }
-    with %named<os> {
-        %named<opts><os> //= late-parse("OS<$_>")
-    }
+    my %opts.append(%cli<opts>.pairs);
 
-    with %named<interactive> {
-        %named<opts><interactive> = late-parse('$?IN.tty');
-    } else {
-        if %named<force-interactive> {
-            %named<opts><interactive> = late-parse('True');
-        }
+    %opts<os> //= %cli<os>;
+
+    my ($docker,$promise) = do with %cli<in-docker> {
+        start-docker $_, |(%cli<docker-socket>:p);
+    }
+    orwith %cli<in-helper> {
+        %opts<os> = sast-os 'Spit-Helper', match => Match.new;
+        start-docker $helper-image, :docker-socket;
+    }
+    orwith %cli<in-container> {
+        exec-docker $_;
     }
 
-    my ($docker,$promise) = do
-    with %named<in-docker> {
-        if m/<!after ':'> [\w|'-']+ <!before '/'>/ -> $os {
-            %named<opts><os> //= Spit::LateParse.new(
-                val => "OS<$os>",
-                match => $/,
-            );
-        }
-        if %named<target> eq 'compile' {
-            start-docker $_, |%named;
-        }
-    }
-    orwith %named<in-container> {
-
-        if %named<target> eq 'compile' {
-            exec-docker $_, |%named;
-        }
-    }
-    orwith %named<in-helper> {
-        %named<opts><os> = Spit::LateParse.new(val => 'OS<spit-helper>');
-        if docker-image-exists($helper-image) {
-            start-docker $helper-image, :mount-docker-socket, |%named;
-        } else {
-            die "$helper-image doesn't exist. Run `spit helper build` to create it";
-        }
-    }
-
-    my $res = try given $command {
-        when 'compile' {
-            commands.compile(@pos[0], |%named);
-        }
-        when 'eval' {
-            commands.eval(@pos[0],|%named);
-        }
-    };
+    try my $shell = compile($src, |%(%cli<target no-inline>:p), :%opts, :$name).gist;
 
     if $! {
         .kill(SIGTERM) with $docker;
@@ -409,67 +300,58 @@ sub compile-or-eval($command, @pos, %named) {
     }
 
     if $docker {
-        exit (write-docker $docker,$promise,$res).exitcode;
-    } elsif %named<RUN> {
-        exit (run 'sh','-c', $res).exitcode;
+        write-docker $docker, $promise, $shell;
+    } elsif %cli<RUN> {
+        exit (run 'sh', '-c', $shell).exitcode;
     } else {
-        print $res;
+        print $shell;
     }
 }
 
-constant $docker-socket = '/var/run/docker.sock';
+sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
+             :$docker-socket, :$jobs, :$opts, :$verbose
+            ) {
 
-my @containers;
+    my @runs = |($in-docker andthen .split(',').map: { "-d=$_" }),
+    |($in-container andthen .split(',').map({"-D=$_"})),
+    |($in-helper andthen '-h');
 
-sub cleanup-containers {
-    once do {
-        signal(SIGINT,SIGTERM).tap: {
-            note "$_ recieved killing container";
-            .kill(SIGTERM) for @containers;
-            exit(0);
+    for @runs {
+        my @run =
+        "prove", ("-j$_" with $jobs),('-v' if $verbose),'-r', '-e',
+        "$*EXECUTABLE $*PROGRAM " ~
+                                  ("--opts=$opts " if $opts) ~
+                                  "compile{' -s' if $docker-socket} $_",
+        $path;
+        note "running: ", @run.perl;
+        my $run = run @run;
+        exit $run.exitcode unless $run.exitcode == 0;
+    }
+}
+
+
+sub helper($_) {
+    when 'build' {
+        my ($helper-builder, $p) = start-docker('alpine', :docker-socket);
+        my $build-helper-src =  %?RESOURCES<tools/spit-helper.spt>.absolute.IO;
+        my $compile = compile(
+            $build-helper-src.slurp,
+            name => $build-helper-src,
+            opts => {
+                os => sast-os('alpine'),
+                log => sastify(True),
+            }
+        );
+        write-docker($helper-builder, $p, $compile);
+    }
+    when 'clean' {
+        my @images = (run 'docker', 'images', '-f=label=spit-helper', '-q', :out).
+                     out.slurp(:close).split("\n").grep(*.so).unique;
+
+        if @images {
+            exit (run 'docker', 'rmi', '-f', @images).exitcode;
+        } else {
+            say 'No spit-helper images';
         }
     }
-}
-
-sub docker-image-exists($name) {
-    run('docker', 'image', 'inspect', $name,:!out).exitcode == 0;
-}
-
-sub start-docker($image is copy, :$mount-docker-socket, *%) {
-    my $mount := do if $mount-docker-socket {
-        $docker-socket.IO.e or
-            die "can't find $docker-socket to mount inside container";
-
-        ('-v', "$docker-socket:$docker-socket");
-    };
-
-    # SEE: https://gist.github.com/LLFourn/70b70b7e26b5e57de7894eefee3c97e1
-    # For an explanation of this:
-    my @args = 'docker','run',|$mount,'-i','--rm',$image,'sh', '-c',
-      ‘mkfifo stdin; trap 'kill $!; wait $!' TERM; trap 'rm stdin' EXIT; sh<stdin & cat>stdin; wait $!’;
-    note "starting docker with {@args[1..*].gist}" if $*debug;
-    my $docker = Proc::Async.new(|@args, :w);
-    cleanup-containers();
-    @containers.push($docker);
-    my $p = $docker.start;
-
-    ($docker, $p);
-}
-
-sub exec-docker($container, *%) {
-    my @args = 'docker', 'exec', '-i', $container, 'sh';
-    note "starting docker with {@args[1..*].gist}" if $*debug;
-    my $docker = Proc::Async.new(|@args, :w);
-    my $p := $docker.start;
-    ($docker, $p);
-}
-
-sub write-docker($docker,$p,$shell) {
-    my \before = now;
-    note "writing output to docker.." if $*debug;
-    await $docker.write($shell.encode('utf8'));
-    $docker.close-stdin;
-    my $proc = await $p;
-    note("writing output to docker ✔ {now - before}") if $*debug;
-    $proc;
 }
