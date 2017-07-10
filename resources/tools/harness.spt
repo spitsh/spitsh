@@ -15,23 +15,23 @@ my @v = ('-v' if $*verbose);
 my @run = \${$*spit prove @v $d-on ("-j=$_" if $*jobs) };
 
 
-if $*run.contains('base') {
+if $*run.first('base') {
     ${@run 'spec/base'};
 }
 
-if $*run.contains('packages') {
+if $*run.first('packages') {
     ${@run 'spec/packages'};
 }
 
-if $*run.contains('transport') {
+if $*run.first('transport') {
     ${@run 'spec/transport'}
 }
 
-if $*run.contains('json') {
+if $*run.first('json') {
     ${@run 'spec/json'}
 }
 
-if $*run.contains('ssh') {
+if $*run.first('ssh') {
     ${@run 'spec/ssh'}
 }
 
@@ -45,16 +45,16 @@ sub continue-in-container($path, :$mount-socket) {
     }
 }
 
-if $*run.contains('http-client') {
+if $*run.first('http-client') {
     continue-in-container('spec/http-client');
 }
 
 
-if $*run.contains('docker') {
+if $*run.first('docker') {
     continue-in-container('spec/docker', :mount-socket);
 }
 
-if $*run.contains('helper') {
+if $*run.first('helper') {
     ok ${$*spit helper build *>info}, 'helper build';
     ok DockerImg("spit-helper:$?spit-version"), 'helper exists';
 }
