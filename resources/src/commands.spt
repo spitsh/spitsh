@@ -63,3 +63,23 @@ constant Cmd $*netstat = on {
     RHEL { Pkg<net-tools>.ensure-install; 'netstat' }
     Alpine { 'netstat' }
 }
+
+constant Pkg $*Pkg-ssl = on {
+    Alpine { 'libressl' }
+    Debian { 'openssl'  }
+    RHEL   { 'openssl'  }
+}
+
+constant Cmd $*ssl = {
+    $*Pkg-ssl.ensure-install;
+    'openssl'
+}
+
+constant Cmd $*gpg = Cmd<gpg>.ensure-install;
+
+constant $*tcpdump = Cmd<tcpdump>.ensure-install;
+
+constant $*perl = on {
+    Debian { 'perl' }
+    Any    { Cmd<perl>.ensure-install }
+}
