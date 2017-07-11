@@ -1804,3 +1804,19 @@ class SAST::OutputToLog is SAST::Children {
     method children { $!path // Empty, $!level // Empty }
     method type { tFile }
 }
+
+class SAST::OptionVal is SAST::Children {
+    has Sigil:D $.sigil is required;
+    has SAST:D $.name is required;
+    has $.pad;
+
+    method type { type-from-sigil($!sigil) }
+
+    method stage2($) {
+        $!pad = $*CURPAD;
+        $!name .= do-stage2(tStr);
+        self;
+    }
+
+    method children { $!name, }
+}

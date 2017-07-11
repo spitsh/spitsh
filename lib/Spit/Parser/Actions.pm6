@@ -553,7 +553,11 @@ method term:var ($/)   { make $<var>.ast }
 method var ($/)   {
     with $<special-var> {
         make .ast;
-    } else {
+    }
+    orwith $<option> {
+        make SAST::OptionVal.new(sigil => $<sigil>.Str, name => .<angle-quote>.ast);
+    }
+    else {
         my $name = $<name>.Str;
         if $name eq '?PID' and $<sigil> eq '$' {
             make SAST::CurrentPID.new

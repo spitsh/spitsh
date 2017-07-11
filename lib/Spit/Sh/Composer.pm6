@@ -403,9 +403,8 @@ multi method walk(SAST::Given:D $THIS is rw) {
     }
 }
 
-multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
-    if %!opts{$THIS.bare-name} -> $val is copy {
-        my $outer = $THIS.declared-in;
+method get-opt-value(Str:D $name, SAST::Block:D :$outer!) is raw {
+    if %!opts{$name} -> $val is copy {
         if $val ~~ Spit::LateParse {
             $ = ?(require Spit::Compile <&compile>);
             my $cu = compile(
@@ -419,12 +418,37 @@ multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
         } else {
             $val .= deep-clone;
         }
-        my $*CURPAD = $outer;
+        $val;
+    } else {
+        Nil
+    }
+}
+multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
+    if self.get-opt-value($THIS.bare-name, outer => $THIS.declared-in) -> $val is raw
+    {
+        my $*CURPAD = $THIS.declared-in;
         $val .= do-stage2($THIS.type);
         self.walk($val);
         $THIS.assign = $val;
     }
     callsame;
+}
+
+multi method walk(SAST::OptionVal:D $THIS is rw) {
+    with $THIS.name.compile-time {
+        if self.get-opt-value(.Str, outer => $THIS.pad) -> $val is raw
+        {
+            my $*CURPAD = $THIS.pad;
+            $val .= do-stage2($THIS.ctx);
+            self.walk($val);
+            $THIS = $val;
+        } else {
+            $THIS .= stage3-node(SAST::Empty);
+        }
+    } else {
+        SX.new(message => ‘Option's name must be known at compile time’,
+               match => $THIS.match).throw;
+    }
 }
 
 constant @placeholders = ("\c[
