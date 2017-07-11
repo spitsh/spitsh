@@ -22,6 +22,14 @@ augment List[Pair] {
         }
     }
 
+    method key-for($value) -->Elem-Type[0] {
+        $self.${
+            awk :$value '-F\t'
+            ｢$2==ENVIRON["value"]{ printf "%s", $1; exit }｣
+        }
+    }
+
+
 constant $set-key =
 ｢{if($1==ENVIRON["key"]){
   printf "%s\t%s\n", $1,ENVIRON["value"]; found=1

@@ -1,6 +1,6 @@
 use Test;
 
-plan 39;
+plan 40;
 
 {
     my $a = one => "two";
@@ -40,6 +40,8 @@ plan 39;
     ok @a<two> ~~ Int, '@a<one> ~~ Int';
     is @a<two>, 2, '@a<two>';
     is @a<two> + @a<one>, @a<three>, '@a<two> + @<one>';
+
+    is @a.key-for(3), 'three', '.key-for';
 
     is @a.keys, <one two three>, '.keys';
     ok @a.keys ~~ List[Str], '.keys ~~ List[Str]';
