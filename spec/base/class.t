@@ -16,7 +16,7 @@ plan 26;
     is Bar
        .doit(),"bar", 'method call with \n before the dot';
     is Bar.
-       doit(),"bar", 'method call with \n after teh dot';
+       doit(),"bar", 'method call with \n after the dot';
 }
 
 

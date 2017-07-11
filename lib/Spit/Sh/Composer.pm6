@@ -371,7 +371,7 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
         without $decl.pipe-vote {
             $decl.start-pipe-vote; # sets it to 1
         }
-        # If the the no vote here is balanced by a yes vote
+        # If the no vote here is balanced by a yes vote
         # then it will get piped. Any further no votes will mean
         # no piping (only the first yes vote is counted).
         $decl.vote-pipe-no;
