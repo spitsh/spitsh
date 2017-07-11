@@ -10,7 +10,7 @@ use Test; plan 5;
 
     is @log[0].path, 'printf', '>fatal .path is the command';
     is @log[0].message, 'you die now', '>fatal .message';
-    is @log[0].level, @*log-symbols[0], '>fatal .level';
+    is @log[0].level-name, 'fatal', '>fatal .level';
     nok @log[1], ‘thing after >fatal log shouldn't get printed’;
 }
 

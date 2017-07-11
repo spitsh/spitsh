@@ -1045,11 +1045,11 @@ method redirection($/) {
 
 method log-level($/) {
     make SAST::IVal.new: val => do given $/.Str {
-        when 'fatal' { 0 }
-        when 'error' { 1 }
-        when 'warn'  { 2 }
-        when 'info'  { 3 }
-        when 'debug' { 4 }
+        when 'fatal' { 5 }
+        when 'error' { 4 }
+        when 'warn'  { 3 }
+        when 'info'  { 2 }
+        when 'debug' { 1 }
     };
 }
 

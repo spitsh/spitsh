@@ -55,7 +55,7 @@ plan 13;
 {
     my Log $log = eval(:log){ ${printf '%s' 'hello world' >info()} }.${sh !>~ >X};
 
-    is $log.path, $*log-default-path, '>info() sets to path to $*log-default-path';
+    is $log.path, $:log-default-path, '>info() sets to path to $:log-default-path';
 }
 
 {

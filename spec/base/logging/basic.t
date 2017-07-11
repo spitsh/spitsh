@@ -1,20 +1,28 @@
 use Test;
 
-plan 16;
+plan 24;
 
 {
     my Log @log = eval(:log){
-        error 'hello error';
-        warn 'hello warn';
-        info 'hello info';
         debug 'hello debug';
+        info 'hello info';
+        warn 'hello warn';
+        error 'hello error';
     }.${sh !>~ >X};
 
-    for 1..^@*log-symbols -> $i {
-        my $level = @*log-levels[$i];
-        ok @log[$i-1].date, "Log.date ($level)";
-        is @log[$i-1].level, @*log-symbols[$i], "log $level symbol ($level)";
-        is @log[$i-1].path, $*log-default-path, "log default path ($level)";
-        is @log[$i-1].message, "hello $level", "log message ($level)";
+    my $i = 0;
+    my @levels = @:log-levels;
+    @levels.shift;
+    @levels.pop;
+    for @levels {
+        my $level-name = .key;
+        my $sym        = .value;
+        ok @log[$i].date, "Log.date ($level-name)";
+        is @log[$i].level-name, $level-name, ".level-name symbol ($level-name)";
+        is @log[$i].level-sym, $sym,         ".level-sym ($level-name)";
+        is @log[$i].level, ($i + 1),         ".level ($level-name)";
+        is @log[$i].path, $:log-default-path, ".path ($level-name)";
+        is @log[$i].message, "hello $level-name", "log message ($level-name)";
+        $i++;
     }
 }

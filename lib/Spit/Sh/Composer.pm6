@@ -172,8 +172,7 @@ multi method walk(SAST::Cmd:D $THIS is rw) {
 multi method walk(SAST::OutputToLog:D $THIS is rw) {
     if not $.log {
         $THIS = do given $THIS.level.compile-time {
-            when * <= 2  { self.ERR(match => $THIS.match) }
-            when * <= 3  { self.OUT(match => $THIS.match) }
+            when * >= 2  { self.ERR(match => $THIS.match) }
             default      { self.NULL(match => $THIS.match) }
         }
     }
