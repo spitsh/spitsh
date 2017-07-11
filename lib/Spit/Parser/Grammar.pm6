@@ -380,6 +380,7 @@ grammar Spit::Grammar is Spit::Lang {
                 |$<name>='~' <?{ $<sigil>.Str eq '$' }>
               ]
             | <?after '$'> <special-var>
+            | $<option>=(':' <angle-quote>)
         ]
     }
 
@@ -387,7 +388,7 @@ grammar Spit::Grammar is Spit::Lang {
     token special-var:sym<?> { <sym> }
 
     proto token twigil {*}
-    token twigil:sym<*> { <sym> }
+    token twigil:sym<:> { <sym> }
     token twigil:sym<?> { <sym> }
 
     token term:circumfix { <circumfix> }

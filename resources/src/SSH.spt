@@ -1,4 +1,4 @@
-constant Cmd $*sshd is export = {
+constant Cmd $:sshd is export = {
     on {
         Alpine { Pkg<openssh>.ensure-install }
         Any    { Pkg<openssh-server>.ensure-install }
@@ -6,19 +6,19 @@ constant Cmd $*sshd is export = {
     Cmd<sshd>.path;
 }
 
-constant Cmd $*ssh = on {
+constant Cmd $:ssh = on {
     Any {
         Cmd<ssh> or
-        $*Pkg-openssh-client.install && 'ssh';
+        $:Pkg-openssh-client.install && 'ssh';
     }
     Spit-Helper { 'ssh' }
 }
 
-constant Cmd $*ssh-keygen = ($*ssh; 'ssh-keygen');
-constant Cmd $*ssh-keyscan = ($*ssh; 'ssh-keyscan');
-constant $*ssh-known-hosts is export = $*HOME.add('.ssh').mkdir.add('known_hosts');
-constant $*ssh-conf-dir = File</etc/ssh>;
-constant $*authorized_keys is export = $*HOME.add('.ssh').mkdir.add('authorized_keys');
+constant Cmd $:ssh-keygen = ($:ssh; 'ssh-keygen');
+constant Cmd $:ssh-keyscan = ($:ssh; 'ssh-keyscan');
+constant $:ssh-known-hosts is export = $:HOME.add('.ssh').mkdir.add('known_hosts');
+constant $:ssh-conf-dir = File</etc/ssh>;
+constant $:authorized_keys is export = $:HOME.add('.ssh').mkdir.add('authorized_keys');
 
 class SSH-known-host is Str is primitive { }
 
@@ -54,7 +54,7 @@ augment SSH-known-host  {
 }
 
 augment List[SSH-known-host] {
-    method add { $*ssh-known-hosts.push: $self }
+    method add { $:ssh-known-hosts.push: $self }
 }
 
 class SSH-keypair is Pair[File,File] {
@@ -71,11 +71,11 @@ class SSH-keypair is Pair[File,File] {
      static method new(
          :$type,
          Int :$bits,
-         :$path = "$*HOME/.ssh/{Str.random}"
+         :$path = "$:HOME/.ssh/{Str.random}"
      )^
      {
          ${
-             $*ssh-keygen -q -N ''
+             $:ssh-keygen -q -N ''
              "-f$path"
              ("-t$_" if $type)
              ("-b$_" if ~$bits)
@@ -97,15 +97,15 @@ class SSHd {
 
     static method run(:$port = 22, Bool :$debug) {
         # I don't even...https://github.com/moby/moby/issues/19351
-        if $*os ~~ Debian { File</var/run/sshd>.mkdir }
+        if $:os ~~ Debian { File</var/run/sshd>.mkdir }
 
-        ${$*sshd >debug:🐡 !>warn:🐡 ('-ddd' if $debug) -p $port}
+        ${$:sshd >debug:🐡 !>warn:🐡 ('-ddd' if $debug) -p $port}
     }
 
-    static method generate-missing-keys ${ $*ssh-keygen -A >debug:🐡 !>warn:🐡 }
+    static method generate-missing-keys ${ $:ssh-keygen -A >debug:🐡 !>warn:🐡 }
 
     static method get-keypair($type) -->SSH-keypair {
-        $*ssh-conf-dir.add("ssh_host_{$type}_key") => $*ssh-conf-dir.add("ssh_host_{$type}_key.pub")
+        $:ssh-conf-dir.add("ssh_host_{$type}_key") => $:ssh-conf-dir.add("ssh_host_{$type}_key.pub")
     }
 
     static method set-keypair(SSH-keypair $new) {
@@ -115,10 +115,10 @@ class SSHd {
     }
 
     static method authorize-key(SSH-publickey $key){
-        $*authorized_keys.push: "{$key.keytype} {$key.key}";
+        $:authorized_keys.push: "{$key.keytype} {$key.key}";
     }
 
     static method config -->File {
-        $*ssh-conf-dir.add('sshd_config');
+        $:ssh-conf-dir.add('sshd_config');
     }
 }

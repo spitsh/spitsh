@@ -4,7 +4,7 @@ plan 2;
 
 my $installed-before = ?Cmd<jq>;
 
-is '{ "foo" : "bar" }'.${$*jq -r '.foo'}, 'bar', '.foo';
+is '{ "foo" : "bar" }'.${$:jq -r '.foo'}, 'bar', '.foo';
 
 CHECK-CLEAN {
     ok Cmd<jq>.exists eq $installed-before,

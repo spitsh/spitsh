@@ -1,6 +1,6 @@
-constant Int $*pkglist-stale = 60*60*24;
+constant Int $:pkglist-stale = 60*60*24;
 
-constant File $*pkglist-path = on {
+constant File $:pkglist-path = on {
     Debian { "/var/lib/apt/lists/"  }
     Alpine { "/var/cache/apk/"  }
     RHEL   { "/var/cache/yum"  }
@@ -30,11 +30,11 @@ class Pkg {
 
     static method last-updated-->DateTime on {
         Debian {
-            $*pkglist-path
+            $:pkglist-path
               .add("deb.debian.org_debian_dists_{Debian.release-name}_Release")
               .ctime;
         }
-        Alpine { $*pkglist-path.find(name => '*.gz')[0].ctime }
+        Alpine { $:pkglist-path.find(name => '*.gz')[0].ctime }
         RHEL ${
             date -d
             ${
@@ -48,11 +48,11 @@ class Pkg {
 
     static method check-update? {
         my $last-updated = Pkg.last-updated;
-        if !$last-updated || now().posix - $last-updated.posix > $*pkglist-stale {
+        if !$last-updated || now().posix - $last-updated.posix > $:pkglist-stale {
             info "Updating package list because it " ~ (
                 $last-updated
                   ?? "was last updated at $last-updated"
-                  !! "doesn't exist at $*pkglist-path"
+                  !! "doesn't exist at $:pkglist-path"
             );
             Pkg.update-pkglist;
         }

@@ -8,17 +8,17 @@ sub list(*$list)@ is no-inline {
 
 # Internal helper for echoing values
 sub e($str)~     ${printf '%s' $str}
-#| Prints its argument to `$*OUT` with a newline
-sub say($str)?   ${printf '%s\\n' $str > $*OUT}
-#| Prints its argument to `$*ERR` with a newline.
+#| Prints its argument to `$:OUT` with a newline
+sub say($str)?   ${printf '%s\\n' $str > $:OUT}
+#| Prints its argument to `$:ERR` with a newline.
 sub note($str)?  ${printf '%s\\n' $str >! }
-#| Prints its argument to `$*OUT` with no newline.
-sub print($str)? ${printf '%s' $str > $*OUT }
+#| Prints its argument to `$:OUT` with no newline.
+sub print($str)? ${printf '%s' $str > $:OUT }
 
-constant $*log-die-path = '💀';
+constant $:log-die-path = '💀';
 #| Prints the message to stdout and then exits
 sub die($str)*  {
-    $*log ?? ("$str".log(0, $*log-die-path); ())
+    $:log ?? ("$str".log(0, $:log-die-path); ())
           !! (note($str) && $?PID.kill; ())
 }
 
@@ -28,7 +28,7 @@ sub die($str)*  {
 sub sleep(Int $seconds) { ${sleep $seconds} }
 
 #| Prompts the user with a yes/no question and returns a Bool with the
-#| answer. If `$*interactive` is false then it will just return the default.
+#| answer. If `$:interactive` is false then it will just return the default.
 #|{
     if prompt("Did the chicken come before the egg?", :default(True)) {
         say "wrong, the egg came before the chicken.";
@@ -39,7 +39,7 @@ sub sleep(Int $seconds) { ${sleep $seconds} }
 sub prompt(
     #|[The question to pose to the user]Str $question,
     #|[The default answer] Bool :$default)? {
-    if $*interactive {
+    if $:interactive {
         my $yn = $default ?? '[Y/n]' !! '[y/N]';
         say "👻 $question $yn";
         $?IN.get;

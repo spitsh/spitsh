@@ -22,11 +22,11 @@ augment Host {
     }
 
     method read-port(Int $port)~ {
-        ${ $*socat !>warn -u "TCP:$self:$port" -}
+        ${ $:socat !>warn -u "TCP:$self:$port" -}
     }
 
     method write-port(Int $port, $message)~ {
-        $message.${ $*socat !>warn - "TCP:$self:$port"}
+        $message.${ $:socat !>warn - "TCP:$self:$port"}
     }
 
     method ssh-exec($src,
@@ -40,7 +40,7 @@ augment Host {
         # XXX: Until we figure out how to make the ssh connection wait
         # for logging to finish
         “trap 'sleep 1; exit 1' TERM; $src”.${
-            $*ssh !>warn("🐡:$ssh-host")
+            $:ssh !>warn("🐡:$ssh-host")
             ("-i$_" if $identity)
             ('-vvv' if $debug)
             -p $port
@@ -52,7 +52,7 @@ augment Host {
 
     method ssh-keyscan(:$port = 22, :$type = 'rsa,ecdsa,ed25519', Bool :$debug) -->List[SSH-known-host]
     ${
-        $*ssh-keyscan !>debug('🐡🔑🔎')
+        $:ssh-keyscan !>debug('🐡🔑🔎')
         ('-v' if $debug)
         -p $port
         -t $type

@@ -16,10 +16,10 @@ is compile(
 
 is compile(
     name => "no double curl",
-    Q{ say $*curl }
+    Q{ say $:curl }
 ).match(/'curl='/,:g).elems,1,'only one declaration of curl';
 
 nok compile(
     name => 'no double newline',
-    'say $*NULL; die "herp"'
-).contains("\n\n"), ‘depending on $*NULL twice doesn't create a gap’;
+    'say $:NULL; die "herp"'
+).contains("\n\n"), ‘depending on $:NULL twice doesn't create a gap’;

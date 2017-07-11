@@ -3,27 +3,27 @@ constant FD $?IN = 0;
 
 #| Whether the script should be compiled as an interactive script.
 #| Defaults to False.
-constant $*interactive = False;
+constant $:interactive = False;
 
 my $~;
 
 #|File descriptor connected to the STDOUT of the script by default.
-#|{ $*OUT.write("hello world") # same as print("hello world") }
-constant $*OUT = {
+#|{ $:OUT.write("hello world") # same as print("hello world") }
+constant $:OUT = {
     FD<1>.dup(3);
     FD<3>;
 }
 
 #| File descriptor connected to the STDERR of the script.  '!' is a
-#| short alias for `$*ERR` in `${..}` commands.
+#| short alias for `$:ERR` in `${..}` commands.
 #|{
-    $*ERR.write("something to script's stderr");
-    ${printf "allo earth" > $*ERR};
+    $:ERR.write("something to script's stderr");
+    ${printf "allo earth" > $:ERR};
     ${printf "allo earth" >!}; #shorthand
-    ${ls '/I/dont/exist' !> $*OUT}; #redirect STDERR to script's STDOUT
+    ${ls '/I/dont/exist' !> $:OUT}; #redirect STDERR to script's STDOUT
     my $error = ${ls '/I/dont/exist' !>~}; # capture STDERR into return value of cmd
 }
-constant FD $*ERR = 2;
+constant FD $:ERR = 2;
 #|File descriptor used to represent the STDOUT of a cmd inside the
 #|script rather than the script itself. '~' is a short alias for
 #|`$?CAP` in `${..}` commands.
@@ -37,19 +37,19 @@ constant FD $?CAP = 1;
 constant File $?devnull = '/dev/null';
 
 #|File descriptor redirected to '/dev/null' by default. 'X' is a short
-#|alias for `$*NULL` in `${..}` commands.
+#|alias for `$:NULL` in `${..}` commands.
 #|{
     if ${command -v perl >X} {
         say "perl exists";
     }
 }
-constant $*NULL = {
+constant $:NULL = {
     FD<4>.open-w($?devnull);
     FD<4>;
 }
 #| The maximum file descriptor number that can be open or can be
 #| expressed within the shell interpreter.
-constant FD $*max-fd = on {
+constant FD $:max-fd = on {
     Debian { 9 }
     Alpine { 255 }
     RHEL   { 9  }
@@ -68,7 +68,7 @@ augment FD {
     static method next-free-->FD {
         my $fdi = $?min-fd;
         $fdi++ while File("/proc/$?PID/fd/$fdi");
-        $fdi <= $*max-fd ?? $fdi !! die "All $*max-fd file descriptors depleted";
+        $fdi <= $:max-fd ?? $fdi !! die "All $:max-fd file descriptors depleted";
     }
 
     #| Opens a file for writing from this file descriptor.
@@ -134,7 +134,7 @@ augment FD {
 
     #| Returns whether this file descriptor is linked to a terminal.
     #|{
-        say $*OUT.tty;  #probably true
+        say $:OUT.tty;  #probably true
         say FD<42>.tty; #probably false
     }
     method tty? { ${test -t $self} }

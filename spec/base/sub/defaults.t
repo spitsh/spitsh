@@ -29,9 +29,9 @@ plan 11;
     is baz("foo", "bar"), "FOO BAR",
       ‘2 pos transformed: doesn't get set if arg is passed’;
 
-    sub call-default($a = baz("win"), :$b = $*os.name )~ { "{$a.lc} $b" }
+    sub call-default($a = baz("win"), :$b = $:os.name )~ { "{$a.lc} $b" }
 
-    is call-default(), "win foo {$*os.name}", '1 pos 1 named: default are calls';
+    is call-default(), "win foo {$:os.name}", '1 pos 1 named: default are calls';
 }
 
 {

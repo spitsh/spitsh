@@ -1,6 +1,6 @@
 use Test; plan 4;
 
-my $pkg1 = $*Pkg-openssh-client;
+my $pkg1 = $:Pkg-openssh-client;
 my $pkg2 = Pkg<socat>;
 
 

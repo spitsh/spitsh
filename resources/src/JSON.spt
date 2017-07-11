@@ -1,6 +1,6 @@
 #| The JSON class represents any valid JSON;
 augment JSON { # is Str is primitive
-    method pretty-->JSON { $self.${$*jq} }
+    method pretty-->JSON { $self.${$:jq} }
 
     # These are all dealt with in the composer. Chained method calls
     # are all rolled into a single call to at-path or set-path
@@ -15,14 +15,14 @@ augment JSON { # is Str is primitive
     method ACCEPTS(JSON $b)?           is native {}
 
     method at-path(*@args)* {
-        $self.${ $*jq -cr @args }
+        $self.${ $:jq -cr @args }
     }
     method set-path(*@args)* is rw {
-        $self.${ $*jq -c @args }
+        $self.${ $:jq -c @args }
     }
 
-    method defined? { $self.${$*jq -e '.' *>X} }
-    method Bool?    { $self.defined && $self.${$*jq '.'}-->Str.Bool }
+    method defined? { $self.${$:jq -e '.' *>X} }
+    method Bool?    { $self.defined && $self.${$:jq '.'}-->Str.Bool }
     static method null^ { 'null'-->JSON }
 }
 
@@ -42,6 +42,6 @@ sub j-object(JSON *$json)-->JSON {
 
 augment List[JSON] {
     method sort($key)^ {
-        $self.${$*jq -rcs "sort_by(.$key)|.[]"}
+        $self.${$:jq -rcs "sort_by(.$key)|.[]"}
     }
 }

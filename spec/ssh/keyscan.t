@@ -1,6 +1,6 @@
 use Test; plan 4;
 
-my $*port = 4242;
+my $:port = 4242;
 
 # for the server
 my $ed25519 = SSH-keypair.tmp(type => 'ed25519');
@@ -17,23 +17,23 @@ SSHd.authorize-key($client-pair.public-key);
 
 for $ed25519, $ecdsa { SSHd.set-keypair($_) }
 
-my $server-pid = start SSHd.run(:$*port);
+my $server-pid = start SSHd.run(:$:port);
 
 sleep 1;
 
-ok Host.local.wait-connectable($*port, :timeout(1)), '.run started the ssh server';
+ok Host.local.wait-connectable($:port, :timeout(1)), '.run started the ssh server';
 
-Host.local.ssh-keyscan(:$*port).add;
+Host.local.ssh-keyscan(:$:port).add;
 
 
-ok $*ssh-known-hosts.contains($ed25519.public-key.key),
+ok $:ssh-known-hosts.contains($ed25519.public-key.key),
   '.ssh-keyscan.add added ed25519 key';
 
-ok $*ssh-known-hosts.contains($ecdsa.public-key.key),
+ok $:ssh-known-hosts.contains($ecdsa.public-key.key),
   '.ssh-keyscan.add added ecdsa key';
 
 my $res = Host.local.ssh-exec(
-    :$*port,
+    :$:port,
     identity => $client-pair.private-key-file,
     # need to force the server to use one of the public key we added
     host-key-algorithms => $ed25519.keytype,

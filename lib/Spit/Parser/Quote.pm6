@@ -112,7 +112,7 @@ class Spit::Quote::q-Actions is Spit::Quote::Actions {
     }
 
     method elem:sym<§> ($/) {
-        make SAST::Var.new(name => '*sed-delimiter', sigil => '$');
+        make SAST::Var.new(name => ':sed-delimiter', sigil => '$');
     }
 }
 
@@ -151,7 +151,7 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
     method backslash:literal ($/) { make $/.Str }
     method elem:escaped ($/) { make $<backslash>.ast }
     method elem:sym<§> ($/) {
-        make SAST::Var.new(name => '*sed-delimiter', sigil => '$');
+        make SAST::Var.new(name => ':sed-delimiter', sigil => '$');
     }
     method elem:sigily ($/)  { make $<spit-sigily>.ast }
     method elem:emojish ($/) { make $/.Str ~ " " }

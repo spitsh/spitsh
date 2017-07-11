@@ -18,12 +18,12 @@ is ${printf 'foo' >X },'','>X';
 is ${printf 'foo' >()}, 'foo','>()';
 
 {
-    my $data = eval{ $*OUT.write("1"); $*ERR.write("2") };
+    my $data = eval{ $:OUT.write("1"); $:ERR.write("2") };
 
     is $data.${sh *>X},'','*>X';
     is $data.${sh *>~},"12",'*>~';
     is $data.${sh !>~ >X},'2','>X !>~';
-    is $data.${sh !>$?CAP >$*NULL},'2','!>$?CAP >$*NULL';
+    is $data.${sh !>$?CAP >$:NULL},'2','!>$?CAP >$:NULL';
 }
 
 my $a = <one two three>;

@@ -1,9 +1,9 @@
 #| The git command. Referencing this ensures that the git command is
 #| installed.
 #|{
-    say ${ $*git status }
+    say ${ $:git status }
 }
-constant $*git = Cmd<git>.ensure-install;
+constant $:git = Cmd<git>.ensure-install;
 
 
 #| GitURL represents something that can be passed to `git clone`.
@@ -12,12 +12,12 @@ class GitURL {
     #| cloned directory.
     #|{
         GitURL<https://github.com/spitsh/spitsh.git/>.clone.cd;
-        say ${ $*git status };
+        say ${ $:git status };
     }
     method clone(#|[Path to clone the repo to] :$to)-->File {
         info "starting git clone $self";
         my $_to = $to || $self.name;
-        ok ${ $*git clone $self $_to !>debug('git-clone') },
+        ok ${ $:git clone $self $_to !>debug('git-clone') },
            "$self cloned";
         $_to;
     }
@@ -36,7 +36,7 @@ class GitHubRepo {
     #| Clones the GitHubRepo.
     #|{
         GitHubRepo<spitsh/spitsh>.clone.cd;
-        say ${ $*git status };
+        say ${ $:git status };
     }
     method clone(#|[Path to clone the repo to] :$to)-->File {
         $self.url.clone(:$to);

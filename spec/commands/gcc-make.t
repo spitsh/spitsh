@@ -30,12 +30,12 @@ clean:
 	$(RM) hello
 };
 
-ok ${ $*gcc-make }, 'make ran';
+ok ${ $:gcc-make }, 'make ran';
 
 my $exec = File<./hello>;
 ok $exec, 'executable created';
 $exec.chmod(500);
 is ${ $exec }, "hello world", 'executable ran';
 
-ok ${ $*gcc-make clean }, 'make clean';
+ok ${ $:gcc-make clean }, 'make clean';
 nok $exec, 'executable removed';

@@ -42,7 +42,7 @@ class HTTP-response is List[Pair] {
 
 augment HTTP {
     method get~ {
-        ${ $*curl -fSsL $self }
+        ${ $:curl -fSsL $self }
     }
 
     method add($path) -->HTTP {
@@ -51,13 +51,13 @@ augment HTTP {
 
     method get-file(:$to)-->File {
         ${
-            $*curl -fSsL -w '%{filename_effective}'
+            $:curl -fSsL -w '%{filename_effective}'
             ($to ?? "-o$to" !! '-O') $self
         }
     }
 
     method redirect-url-->HTTP {
-        ${ $*curl -Isw '%{redirect_url}' -o '/dev/null' $self }
+        ${ $:curl -Isw '%{redirect_url}' -o '/dev/null' $self }
     }
 
     method is-https? {
@@ -84,7 +84,7 @@ augment HTTP {
         my $req-headers = File.tmp;
         debug "HTTP⟹$method $self";
         my $response = ${
-            $*curl -svL
+            $:curl -svL
             -X $method
             --max-redir ($max-redirects || 0)
             !> $req-headers

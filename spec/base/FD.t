@@ -61,7 +61,7 @@ plan 18;
     if $getc.getc(2) {
         is $~, 'oo', 'getc(2) reads 2 chars to $~';
     }
-    if $*os ~~ Debian {
+    if $:os ~~ Debian {
         skip ‘can't read newline with getc with debian yet’,1;
     } else {
         if $getc.getc(1) {
@@ -79,7 +79,7 @@ plan 18;
     my FD @fds;
     my FD $next;
     my $count = 0;
-    while $next < $*max-fd {
+    while $next < $:max-fd {
         $next .= next-free;
         my $tmpfile = File.tmp;
         $tmpfile.write($count++);

@@ -378,7 +378,7 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 
     method depends { $.declaration, }
 
-    method is-option  { $!name.starts-with('*') }
+    method is-option  { $!name.starts-with(':') }
 
     method gen-reference(:$match!,|c){
         SAST::Var.new(:$.name,:$.sigil,:$match,:$.declaration,|c);
@@ -387,7 +387,7 @@ class SAST::Var is SAST::Children does SAST::Assignable {
     method desc { "Assignment to $.spit-gist" }
 
     method itemize { itemize-from-sigil($!sigil) }
-    method bare-name  { $.name.subst(/^<[*?]>/,'') }
+    method bare-name  { $.name.subst(/^<[:?]>/,'') }
 }
 
 class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {

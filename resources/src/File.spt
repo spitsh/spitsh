@@ -238,7 +238,7 @@ augment File {
 
     #| Returns a list of children that match the criteria.
     #|{
-        given File("$*HOME/src/spitsh/resources/src") {
+        given File("$:HOME/src/spitsh/resources/src") {
             my $loc = 0;
             for .find(name => /\.spt$/) { # or just *.spt
                 $loc += .lines;

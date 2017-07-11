@@ -44,7 +44,7 @@ enum-class BSD is UNIXish { }
 #| the OS the script is running on (There is currently no way of knowing that).
 #| It is always known at script composition time. So a script like this:
 #|{
-    given $*os {
+    given $:os {
         say "I wonder what kind of OS I'm on...?";
         when Debian {
             say "It's some kind of Debian:";
@@ -63,4 +63,4 @@ enum-class BSD is UNIXish { }
     say "It's some kind of Debian:"
     say "It's some other kind of Ubuntu XD"
 }
-constant OS $*os = Debian;
+constant OS $:os = Debian;

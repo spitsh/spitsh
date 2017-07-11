@@ -113,7 +113,7 @@ plan 44;
     my $canary = 0;
     sub check-re-enter+ is return-by-var {
         my $foo = ++$canary;
-        $*NULL.write($foo);
+        $:NULL.write($foo);
         $foo;
     }
 

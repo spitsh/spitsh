@@ -149,7 +149,7 @@ plan 21;
 }
 
 {
-    is (given $*os {
+    is (given $:os {
            when UNIXish { "unix" }
            when Any     { "any" if True }
        }), 'unix', 'weird parsing bug';

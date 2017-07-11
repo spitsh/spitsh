@@ -1,7 +1,7 @@
 #| The curl command. Referencing this ensures that curl is
 #| installed.
-#|{ say ${ $*curl -V } }
-constant Cmd $*curl = on {
+#|{ say ${ $:curl -V } }
+constant Cmd $:curl = on {
     Spit-Helper { 'curl' }
     RHEL { 'curl' }
     Debian {
@@ -11,7 +11,7 @@ constant Cmd $*curl = on {
     Alpine { Cmd<curl>.ensure-install }
 }
 
-constant Cmd $*wget = on {
+constant Cmd $:wget = on {
     Any { Cmd<wget>.ensure-install }
     Alpine {
         Pkg<wget openssl ca-certificates>.install;
@@ -19,25 +19,25 @@ constant Cmd $*wget = on {
     }
 }
 
-constant Cmd $*gcc-make = on {
+constant Cmd $:gcc-make = on {
     Debian { Pkg<gcc make libc-dev>.install; 'make' }
     RHEL   { Pkg<gcc make glibc-devel>.install; 'make' }
     Alpine { Pkg<gcc make libc-dev>.install;    'make' }
 }
 
 
-constant Pkg $*Pkg-openssh-client = on {
+constant Pkg $:Pkg-openssh-client = on {
     Alpine { 'openssh-client'  }
     Debian { 'openssh-client'  }
     RHEL   { 'openssh-clients' }
 }
 
-constant $*jq-repo = GitHubRepo<stedolan/jq>;
+constant $:jq-repo = GitHubRepo<stedolan/jq>;
 
 my HTTP $?jq-download-url  = 'https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32-no-oniguruma';
 my $?jq-sha256sum = '264118228c08abf4db8d9e907b9638914f3eadb5cd50dc1471a84463f7991be0';
 
-constant Cmd $*jq = on {
+constant Cmd $:jq = on {
     Linux {
         Cmd<jq> or (
             given $?jq-download-url.get-file(to => File.tmp) {
@@ -50,36 +50,36 @@ constant Cmd $*jq = on {
     Spit-Helper { 'jq' }
 }
 
-constant Cmd $*socat = on {
+constant Cmd $:socat = on {
     Any { Cmd<socat>.ensure-install }
     Spit-Helper { 'socat' }
 }
 
-constant Cmd $*ss = on {
+constant Cmd $:ss = on {
     Debian { 'ss' }
 }
 
-constant Cmd $*netstat = on {
+constant Cmd $:netstat = on {
     RHEL { Pkg<net-tools>.ensure-install; 'netstat' }
     Alpine { 'netstat' }
 }
 
-constant Pkg $*Pkg-ssl = on {
+constant Pkg $:Pkg-ssl = on {
     Alpine { 'libressl' }
     Debian { 'openssl'  }
     RHEL   { 'openssl'  }
 }
 
-constant Cmd $*ssl = {
-    $*Pkg-ssl.ensure-install;
+constant Cmd $:ssl = {
+    $:Pkg-ssl.ensure-install;
     'openssl'
 }
 
-constant Cmd $*gpg = Cmd<gpg>.ensure-install;
+constant Cmd $:gpg = Cmd<gpg>.ensure-install;
 
-constant $*tcpdump = Cmd<tcpdump>.ensure-install;
+constant $:tcpdump = Cmd<tcpdump>.ensure-install;
 
-constant $*perl = on {
+constant $:perl = on {
     Debian { 'perl' }
     Any    { Cmd<perl>.ensure-install }
 }

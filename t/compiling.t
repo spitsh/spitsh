@@ -14,5 +14,5 @@ nok compile(name => 'no list echoing into grep', Q{
 
 nok compile( name => ‘eval cat doesn't echo’, Q{
     my $foo = "bar";
-    note eval(:$foo){ constant $*foo; print $*foo };
+    note eval(:$foo){ constant $:foo; print $:foo };
 }).contains('$(e "$(cat'), ‘eval cat doesn't echo’;

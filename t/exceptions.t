@@ -30,11 +30,11 @@ throws-like { compile('foo()',:$name) },
 #             SX::Undeclared,'undeclared class',
 #             message => "name 'Foo' hasn't been declared.";
 
-throws-like { compile('say $*foo',:$name) },
+throws-like { compile('say $:foo',:$name) },
             SX::Undeclared,'undeclared option',
             message => "Option 'foo' hasn't been declared.";
 
-# throws-like { compile('my $*foo; say $*foo', :$name) },
+# throws-like { compile('my $:foo; say $:foo', :$name) },
 #             SX::RequiredOption,"required option not set",
 #             message => "Option foo used but no value provided for it and it doesn't have default.";
 
