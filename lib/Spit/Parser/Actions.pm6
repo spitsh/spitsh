@@ -996,29 +996,39 @@ method redirection($/) {
     );
 
     my $dst = $<dst>;
-    my $gen-dst = $dst<null>
-    ?? { $*SETTING.lookup(SCALAR,'*NULL').gen-reference(match => $dst<null>)  }
-    !! $dst<cap>
-    ?? { $*SETTING.lookup(SCALAR,'?CAP').gen-reference(match => $dst<cap>)    }
-    !! $dst<err>
-    ?? { $*SETTING.lookup(SCALAR,'*ERR').gen-reference(match => $dst<err>) }
-    !! $dst<fd>
-    ?? { $dst<fd>.ast.deep-clone }
-    !! {
-        my $log   = $dst<log>;
-        my $level = $log<log-level>.ast;
-        my $path = $log<empty-path> ??
-          $*SETTING.lookup(SCALAR, '*log-default-path').gen-reference(match => $log<empty-path>)
-          !! (
-              $log<symbol-path> andthen SAST::SVal.new(val => "$_ ")
-              or
-              $log<literal-path> andthen SAST::SVal.new(val => .Str)
-              or
-              $log<path> andthen .ast
-          );
 
-        SAST::OutputToLog.new(:$path, :$level);
-    }
+    my @log-levels = do with $dst<log> {
+        #  >info/warn results in <log-level>, <err-log-level>
+        # *>info results in <log-level>, <log-level>
+        if .<err-log-level> {
+            @src-fd.push(make-fd(2));
+            .<log-level>, (.<err-log-level> ?? .<err-log-level> !! .<log-level>);
+        } else {
+            .<log-level>, .<log-level>;
+        }
+    };
+
+    my $gen-dst =
+       $dst<null>   ?? { $*SETTING.lookup(SCALAR,':NULL').gen-reference(match => $dst<null>)  }
+       !! $dst<cap> ?? { $*SETTING.lookup(SCALAR,'?CAP').gen-reference(match => $dst<cap>) }
+       !! $dst<err> ?? { $*SETTING.lookup(SCALAR,':ERR').gen-reference(match => $dst<err>) }
+                       # only clone on the second invocation if any
+       !! $dst<fd>  ?? { $++ ?? $dst<fd>.ast !! $dst<fd>.ast.deep-clone }
+       !! {
+           my $log   = $dst<log>;
+
+           my $level = @log-levels[$++].ast; # get the next log level
+           my $path = $log<empty-path> ??
+             $*SETTING.lookup(SCALAR, ':log-default-path').gen-reference(match => $log<empty-path>)
+             !! (
+               $log<symbol-path> andthen SAST::SVal.new(val => "$_ ")
+               or
+               $log<literal-path> andthen SAST::SVal.new(val => .Str)
+               or
+               $log<path> andthen ($++ ?? .ast !! .ast.deep-clone);
+             );
+           SAST::OutputToLog.new(:$path, :$level);
+       }
 
     my (@write,@append,@in);
     for @src-fd -> $src-fd {

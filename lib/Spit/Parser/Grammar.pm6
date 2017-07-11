@@ -664,7 +664,7 @@ grammar Spit::Grammar is Spit::Lang {
             | $<cap>='~'
             | $<err>='!'
             | $<log>=(
-                <log-level>
+                <log-level> ['/' $<err-log-level>=<.log-level>]?
                 [
                     || ':' [
                         || $<symbol-path>=<:So>
