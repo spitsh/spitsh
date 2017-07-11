@@ -120,12 +120,9 @@ role SAST is rw {
             |args,
         )
     }
-    method is-invocant {
-        self ~~ SAST::Var
-        && (my $d := self.declaration) ~~ SAST::Invocant
-        && $d
-        || Nil;
-    }
+    # return $self SAST::Invocant if this is it
+    method is-self { Nil }
+
     method uses-Str-Bool {
         self.type.^find-spit-method('Bool') === tStr.^find-spit-method('Bool');
     }
@@ -372,6 +369,10 @@ class SAST::Var is SAST::Children does SAST::Assignable {
         $!declaration //= $*CURPAD.lookup(self.symbol-type,$!name,:$.match);
     }
 
+    method is-self {
+        $!declaration ~~ SAST::Invocant ?? $!declaration !! Nil;
+    }
+
     method type { self.declaration.type }
 
     method children { list $.assign // Empty  }
@@ -615,9 +616,10 @@ class SAST::Cmd is SAST::MutableChildren does SAST::Noisy is rw {
             self.make-new(SX,message => ‘command can't be empty’).throw;
         }
 
-        if (my $invocant = ($!pipe-in andthen .is-invocant)) and $*no-pipe {
+        if (my $invocant = ($!pipe-in andthen .is-self)) and $*no-pipe {
             $invocant.cancel-pipe-vote;
         }
+        $!type = $ctx;
         self;
     }
 
@@ -850,7 +852,7 @@ class SAST::MethodCall is SAST::Call is SAST::MutableChildren {
             SX.new(message => q|Instance method called on a type.|,:$.match).throw;
         }
 
-        if not $is-type and $*no-pipe and (my $outer-invocant = $.invocant.is-invocant) {
+        if not $is-type and $*no-pipe and (my $outer-invocant = $.invocant.is-self) {
             $outer-invocant.cancel-pipe-vote;
         }
         callsame;

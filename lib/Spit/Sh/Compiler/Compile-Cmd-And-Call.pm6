@@ -15,7 +15,7 @@ method pipe-input(
     if $input andthen
     # If the method body we're in is already having its $self piped
     # then the pipe is implicit and we don't need to do anything.
-    !($input.is-invocant andthen .piped)
+    !($input.is-self andthen .piped)
     {
         if self.try-heredoc($input) -> ($delim, $body) {
             # Our input can be heredoc'd with cat.

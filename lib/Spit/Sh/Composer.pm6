@@ -163,7 +163,7 @@ multi method walk(SAST::Cmd:D $THIS is rw) {
         }
     }
 
-    if ($THIS.pipe-in andthen .is-invocant) -> $invocant {
+    if ($THIS.pipe-in andthen .is-self) -> $invocant {
         # vote to pipe the invocant
         $invocant.vote-pipe-yes;
     }
@@ -662,13 +662,21 @@ multi  method walk(SAST::Call:D $THIS is rw, :$accept = True) {
     # When we get here all inlining and replacement is done.
     # There's no chance of it disappearing anymore so time to vote.
     if $THIS ~~ SAST::MethodCall {
-        # Is the call's invocant the $self of the method block we're in?
-        if (my $invocant = ($THIS.invocant andthen .is-invocant))
-           # AND should the method we're calling be piped to?
-           and ($THIS.declaration.invocant andthen .piped)
-        {
-            # If so, vote for piping the method we're in's $self
-            $invocant.vote-pipe-yes;
+
+        # should the method we're calling be piped to?
+        if ($THIS.declaration.invocant andthen .piped) {
+            # Is the call's invocant the $self of the method block we're in?
+            if  ($THIS.invocant andthen .is-self) -> $self
+            {
+                # If so, vote for piping the method we're in's $self
+                $self.vote-pipe-yes;
+            }
+            # Are any of the args to this piped method $self?
+            elsif $THIS.deep-first(*.is-self) -> $self
+            {
+                # if so we *can't* pipe that $self
+                $self.declaration.vote-pipe-no;
+            }
         }
     }
 }
