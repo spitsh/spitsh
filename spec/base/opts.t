@@ -1,6 +1,5 @@
-use Test;
+use Test; plan 5;
 
-plan 3;
 {
     my $:foo = "foo";
     is $:foo,'foo',"option set correctly";
