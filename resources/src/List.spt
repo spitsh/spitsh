@@ -103,4 +103,9 @@ augment List {
     method pick($n = 1)-->Elem-Type {
         $self.${ shuf -n $n }
     }
+
+    method pairs -->List[Pair[Int,Elem-Type]] {
+        $self.${ awk '{print NR-1"\t"$0}' }
+    }
+
 }
