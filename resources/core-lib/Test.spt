@@ -11,10 +11,10 @@ sub ok (Bool $res,$msg?) is export {
         !! say "not ok {++$TEST_COUNT} - $msg";
 }
 
-sub is  ($a,$b,$msg?) is export {
-    $a eq $b
+sub is  ($got ,$expected, $msg?) is export {
+    $got eq $expected
         ?? say "ok {++$TEST_COUNT} - $msg"
-        !! say "not ok {++$TEST_COUNT} - $msg. Expected '$b' but got '$a'";
+        !! say "not ok {++$TEST_COUNT} - $msg. Expected '$expected' but got '$got'";
 }
 
 sub nok (Bool $res,$msg?) is export { ok !$res,$msg }
