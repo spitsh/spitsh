@@ -235,8 +235,8 @@ class SX::Undeclared is SX {
     method message {
         my $desc;
         my $name = $!name;
-        if $!name.starts-with('*') {
-            $name ~~ s/^'*'//;
+        if $!name.starts-with(':') {
+            $name ~~ s/^':'//;
             $desc = 'Option';
         } else {
             $desc = $.type.gist.wordcase;
