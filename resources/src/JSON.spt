@@ -6,6 +6,7 @@ augment JSON { # is Str is primitive
     # are all rolled into a single call to at-path or set-path
     method at-key($key)^               is native {}
     method at-pos(Int $pos)^           is native {}
+    method at-list-pos(Int @pos)^      is native {}
     method set-key($key, $value) is rw is native {}
     method set-pos($pos, $value) is rw is native {}
     method keys@                       is native {}

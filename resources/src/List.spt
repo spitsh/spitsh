@@ -22,6 +22,12 @@ augment List {
     method at-pos(#|[the index to return the line at]Int $i)-->Elem-Type {
         $self.${sed -n ($i+1 ~ 'p') | tr -d '\n'} # this should be awk
     }
+
+    method at-list-pos(Int @pos) --> List[Elem-Type] {
+        # converts the indexes to a sed expression
+        # like (0,3) -> 1p;4p;
+        $self.${sed -n @pos.${ awk '{printf $0 + 1"p;"}' } };
+    }
     #| `set-pos` is the internal method called which you set a list
     #| element using the postcircumfix syntax `[..]`.
     #|{

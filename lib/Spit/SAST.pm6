@@ -46,12 +46,15 @@ role SAST is rw {
     has %.ann; # a place to put stuff that doesn't fit anywhere
     has $.stage2-done is rw;
     has $.stage3-done is rw;
+    has $.ignore-stage2 is rw;
     has $.cloned is rw;
     has Spit::Type $.ctx is rw; # The type context the object was put in in stage2
     has $.included is rw;
     has @.extra-depends;
 
     method do-stage2(Spit::Type \ctx,:$desc,|args){
+        return self if $.ignore-stage2;
+
         SX::BugTrace.new(
             desc => "do-stage2 called on {self.WHICH} twice",
             node => self,
@@ -439,6 +442,7 @@ class SAST::ConstantDecl is SAST::VarDecl {
 
 class SAST::Stmts is SAST::MutableChildren does SAST::Dependable {
     has Bool:D $.auto-inline is rw = True;
+    has $!type;
 
     method stage2($ctx,:$desc,:$loop,:$!auto-inline = True) is default {
         my $last-stmt := self.last-stmt;
@@ -451,6 +455,8 @@ class SAST::Stmts is SAST::MutableChildren does SAST::Dependable {
             }
             $last-stmt .= do-stage2($ctx,:desc<return value of block>);
         }
+
+        $!type = (self.returns andthen .type or tAny);
         self;
     }
 
@@ -476,13 +482,7 @@ class SAST::Stmts is SAST::MutableChildren does SAST::Dependable {
         }
     }
 
-    method type {
-        if self.returns -> $_ {
-            .type
-        } else {
-            tAny;
-        }
-    }
+    method type { $!type }
 
     method itemize { self.last-stmt  andthen .itemize or False }
 }
@@ -570,7 +570,26 @@ class SAST::Elem is SAST::MutableChildren does SAST::Assignable {
 
     method stage2($ctx) {
         SX::NYI.new(feature => 'element assignment modifiers',node => $_).throw with $.assign-mod;
-        my $method-end = $!index-type ~~ tInt ?? 'pos' !! 'key';
+        my $method-end = do given $!index-type {
+            when tInt {
+                $!index .= do-stage2(tStr);
+                $!index.ignore-stage2 = True;
+                given $!index.type {
+                    when tListp(tInt)  { 'list-pos' }
+                    when tInt          { 'pos' }
+                    default            {
+                        SX::TypeCheck.new(
+                            node => $!index,
+                            desc => 'List index',
+                            got => $_.^name,
+                            expected => 'Int or List[Int]',
+                        ).throw
+                    }
+                }
+            }
+            when tStr { 'key' }
+        };
+
         my $method = do if $.assign {
             SAST::MethodCall.new(
                 name => "set-$method-end",
@@ -1258,8 +1277,8 @@ class SAST::List is SAST::MutableChildren {
 
     method compile-time {
         list do for @.children {
-            return Nil unless .compile-time.defined;
-            $_;
+            return Nil unless (my $ct = .compile-time).defined;
+            $ct;
         }
     }
     method itemize { False }
@@ -1399,10 +1418,11 @@ class SAST::While is SAST::Children {
         $!cond .= do-stage2(tBool,:desc<while conditional>);
         generate-topic-var(var => $!topic-var,:$!cond,blocks => ($!block,));
         $!block .= do-stage2($ctx,:desc<while block return value>,:loop,:!auto-inline);
+        $!type = tListp($!block.type);
         self;
     }
     method children { $!cond,$!block,($!topic-var // Empty) }
-    method type { $!type ||= tListp($!block.type) }
+    method type { $!type }
     method itemize { False }
 }
 
@@ -1468,11 +1488,12 @@ class SAST::For is SAST::Children {
         $!block.declare: $!iter-var;
         my $*no-pipe = True;
         $!block .= do-stage2($ctx, :loop, :!auto-inline);
+        $!type = tListp($!block.type);
         self;
     }
 
     method children { $!list,$!block,$!iter-var }
-    method type { $!type ||= tListp($!block.type) }
+    method type { $!type }
     method itemize { False }
 }
 

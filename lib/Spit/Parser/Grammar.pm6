@@ -541,7 +541,7 @@ grammar Spit::Grammar is Spit::Lang {
     token postfix:sym<[ ]> { <!after \s> <index-accessor> }
 
     token index-accessor {
-        $<EXPR>=<.wrap: '[',']','index accessor', token { <R=.EXPR> }>
+        $<EXPR>=<.wrap: '[',']','index accessor', rule { '' <R=.EXPR> }>
     }
 
     token postfix:sym<{ }> { <!after \s> <key-accessor> }

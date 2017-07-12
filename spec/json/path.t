@@ -1,4 +1,4 @@
-use Test; plan 14;
+use Test; plan 16;
 
 {
     my $json = {
@@ -38,6 +38,12 @@ use Test; plan 14;
     is $json.keys[1], "one", '.keys[1]';
     is $json<five>[1].values, <nine ten>, '.values';
     is $json<five>[1].values[0], "nine", '.values[0]';
+
+    {
+        is $json<five>[0]<eight>[0,2], ["hoo","kaz"], '[0,2]';
+        my @a = <0 2>;
+        is $json<five>[0]<eight>[@a], ["hoo","kaz"], '[@a]';
+    }
 
     nok ?$json<special><doesnt><exist>, 'non-existing JSON in Bool context';
     nok ?$json<special><nullio>, ‘null is false’;

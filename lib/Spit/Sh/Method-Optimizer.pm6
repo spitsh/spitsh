@@ -11,8 +11,10 @@ use Spit::Metamodel;
 has $!ENUMC-ACCEPTS;
 has $!ENUMC-NAME;
 has $!STR-BOOL;
+has $!STR-JSON;
 has $!STR-MATCH;
 has $!STR-SUBST-EVAL;
+has $!LIST-JOIN;
 has $!JSON-AT-POS;
 has $!JSON-AT-KEY;
 has $!JSON-AT-PATH;
@@ -24,12 +26,15 @@ has $!JSON-SET-KEY;
 has $!JSON-SET-PATH;
 has $!JSON-MERGE;
 has $!JSON-ACCEPTS;
+has $!JSON-AT-LIST-POS;
 
 method ENUMC-ACCEPTS  { $!ENUMC-ACCEPTS  //= tEnumClass.^find-spit-method: 'ACCEPTS' }
 method ENUMC-NAME     { $!ENUMC-NAME     //= tEnumClass.^find-spit-method: 'name'    }
 method STR-MATCHES    { $!STR-MATCH      //= tStr.^find-spit-method:       'match'   }
-method STR-BOOL       { $!STR-BOOL       //= tBool.^find-spit-method:      'Bool'    }
+method STR-BOOL       { $!STR-BOOL       //= tStr.^find-spit-method:       'Bool'    }
+method STR-JSON       { $!STR-JSON       //= tStr.^find-spit-method:      'JSON'    }
 method STR-SUBST-EVAL { $!STR-SUBST-EVAL //= tStr.^find-spit-method:    'subst-eval' }
+method LIST-JOIN      { $!LIST-JOIN      //= tList.^find-spit-method:      'join'    }
 method JSON-AT-POS    { $!JSON-AT-POS    //= tJSON.^find-spit-method:      'at-pos'  }
 method JSON-AT-KEY    { $!JSON-AT-KEY    //= tJSON.^find-spit-method:      'at-key'  }
 method JSON-AT-PATH   { $!JSON-AT-PATH   //= tJSON.^find-spit-method:      'at-path' }
@@ -41,6 +46,7 @@ method JSON-SET-KEY   { $!JSON-SET-KEY   //= tJSON.^find-spit-method:      'set-
 method JSON-SET-PATH  { $!JSON-SET-PATH  //= tJSON.^find-spit-method:      'set-path'}
 method JSON-MERGE     { $!JSON-MERGE     //= tJSON.^find-spit-method:      'merge'   }
 method JSON-ACCEPTS   { $!JSON-ACCEPTS   //= tJSON.^find-spit-method:      'ACCEPTS' }
+method JSON-AT-LIST-POS { $!JSON-AT-LIST-POS //= tJSON.^find-spit-method: 'at-list-pos'  }
 
 # Dirty way of creating a synthetic SAST::SVal.
 # Our fake Match objects shouldn't matter because we
@@ -108,7 +114,17 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
         elsif $decl === self.JSON-AT-POS {
             $path.unshift(sval('['), $arg, sval(']'));
         }
-
+        elsif $decl === self.JSON-AT-LIST-POS {
+            my $join = $arg.stage2-node(
+                SAST::MethodCall,
+                name => 'join',
+                declaration => self.LIST-JOIN,
+                pos => sval(','),
+                $arg,
+            );
+            self.walk($join);
+            $path.unshift(sval('|[.['),$join,sval(']]'));
+        }
         elsif $decl === self.JSON-LIST {
             $path.unshift(sval('[]'));
         }
@@ -203,13 +219,34 @@ multi method method-optimize(tEnumClass, $THIS is rw, $decl) {
 
 multi method method-optimize(tStr, $THIS is rw, $decl){
     self.walk($THIS.invocant);
+    my $ct = $THIS.invocant.compile-time;
+    return True unless $ct.defined;
+
     if $decl === self.STR-BOOL
-       and (my $ct = $THIS.invocant.compile-time).defined
     {
         $THIS .= stage3-node(SAST::BVal, val => ?$ct);
         False
-    } else {
+    }
+    elsif $decl === self.STR-JSON {
+        $THIS .= stage3-node(SAST::SVal, val => $ct.&to-json);
+        False;
+    }
+    else {
         True;
+    }
+}
+
+multi method method-optimize(tList, $THIS is rw, $decl) {
+    self.walk($THIS.invocant);
+    if $decl === self.LIST-JOIN
+       and (my $ct = $THIS.invocant.compile-time).defined
+       and (my $joiner = $THIS.pos[0].compile-time).defined
+    {
+        $THIS .= stage3-node(SAST::SVal, val => $ct.join($joiner));
+        False
+    }
+    else {
+        True
     }
 }
 
