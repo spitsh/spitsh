@@ -366,14 +366,14 @@ class Getopt::Parse {
         $.grammar.parse($str,args => \(:%.command)).ast;
     }
 
-    my constant $help = {
+    my $help = BEGIN %(
         name => 'help',
         match => 'bool',
         on-use => -> | {
             say &*gen-usage() and exit(0)
         },
         desc => 'Print help',
-    };
+    );
 
     method TWEAK {
         %!command<name> //= $*PROGRAM-NAME;

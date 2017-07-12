@@ -1,4 +1,4 @@
-#!/usr/bin/env perl6
+#!/usr/bin/env MVM_SPESH_INLINE_DISABLE=1 perl6
 BEGIN my $lib = $?FILE.IO.parent.child('lib');
 BEGIN my $SPIT-PRECOMP = $lib.child('Spit').child('PRECOMP.pm6');
 use lib $lib.Str;

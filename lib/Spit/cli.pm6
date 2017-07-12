@@ -6,7 +6,7 @@ use Spit::Docker;
 use Spit::OptsParser;
 need Spit::Repo;
 
-constant @opts = (
+BEGIN my @opts =  (
     opt(
         :name<version>,
         on-use => { say spit-version(); exit 0 },
@@ -16,14 +16,14 @@ constant @opts = (
 
 my constant $helper-image = "spit-helper:{spit-version}";
 
-constant $match-os = anon token {
+BEGIN my $match-os =  anon token {
     :my $os;
     <word>
     <?{ $os = sast-os($<word>.Str, match => $<word>); $os }>
     { $/.make: $os }
 };
 
-constant @compilation-opts =
+BEGIN my @compilation-opts =
 opt(
     name => 'in-docker',
     alias => 'd',
@@ -129,14 +129,14 @@ opt(
 );
 
 
-constant @commands = (
+BEGIN my @commands =  (
     {
         name => 'compile',
-        desc => 'Compile a file as spit code',
+        desc => 'Compile a spook file',
         long-desc => q:to/END/,
-        Compile a file as spit code and print it to stdout.
-        Optionally run the resulting shell script in a docker
-        container or on the machine itself.
+        Compile a file as spook code and print the resulting shell
+        script to stdout. The optional -d, -D, -h and --RUN flags run
+        the resulting script in docker containers or on the machine itself.
         END
         opts => @compilation-opts,
         pos => [pos(
@@ -144,17 +144,17 @@ constant @commands = (
             match => 'existing-file'
         ),],
         example => q:to/END/,
-        spit compile my_program.spt
+        spit my_program.sp
         # compile and run in docker
-        spit compile -d my_program.spt
-        spit compile -d=centos my_program.spt
+        spit compile my_program.sp -d # default: alpine
+        spit compile my_program.sp -d centos
         # compile for alpine
-        spit compile --os=alpine my_program.spt
+        spit compile my_program.sp --os alpine
         END
     },
     {
         name => 'eval',
-        desc => 'Compile a string as spit code',
+        desc => 'Compile a string as spook code',
         opts => @compilation-opts,
         pos => [pos(name => 'src')],
         example => q:to/END/,
@@ -309,7 +309,7 @@ sub compile-src($src, %cli, :$name) {
 }
 
 sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
-             :$docker-socket, :$jobs, :$opts, :$verbose
+             :$docker-socket, :$jobs, :$verbose
             ) {
 
     my @runs = |($in-docker andthen .split(',').map: { "-d=$_" }),
@@ -318,11 +318,10 @@ sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
 
     for @runs {
         my @run =
-        "prove", ("-j$_" with $jobs),('-v' if $verbose),'-r', '-e',
-        "$*EXECUTABLE $*PROGRAM " ~
-                                  ("--opts=$opts " if $opts) ~
-                                  "compile{' -s' if $docker-socket} $_",
-        $path;
+          "prove", ("-j$_" with $jobs),('-v' if $verbose),'-r', '-e',
+          "$*EXECUTABLE $*PROGRAM " ~
+          "compile{' -s' if $docker-socket} $_",
+          $path;
         note "running: ", @run.perl;
         my $run = run @run;
         exit $run.exitcode unless $run.exitcode == 0;
@@ -333,7 +332,7 @@ sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
 sub helper($_) {
     when 'build' {
         my ($helper-builder, $p) = start-docker('alpine', :docker-socket);
-        my $build-helper-src =  %?RESOURCES<tools/spit-helper.spt>.absolute.IO;
+        my $build-helper-src =  %?RESOURCES<tools/spit-helper.sp>.absolute.IO;
         my $compile = compile(
             $build-helper-src.slurp,
             name => $build-helper-src,
