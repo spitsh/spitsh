@@ -215,7 +215,7 @@ augment DockerImg {
             ("-f=label=$_" for @has-labels)
             ("-f=dangling=true" if $dangling)
             ("-f=reference=$_" if $reference)
-            | uniq
+            | uniq # docker images can return duplicates
     }
 }
 
@@ -228,7 +228,9 @@ augment List[Docker] {
 
 augment List[DockerImg] {
     method remove? {
-        debug "Removing images: {$self.join(',')}";
-        ${ $:docker rmi @$self >debug/warn }
+        if $self {
+            debug "Removing images: {$self.join(',')}";
+            ${ $:docker rmi -f @$self >debug/warn };
+        }
     }
 }
