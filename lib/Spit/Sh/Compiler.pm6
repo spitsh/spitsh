@@ -481,7 +481,7 @@ constant @cats = (qqw{
 } xx ∞).flat.Array;
 
 
-constant @cat-names = (%?RESOURCES<cat-names.txt>.slurp.split("\n") xx ∞).flat.Array;
+BEGIN my @cat-names = (%?RESOURCES<cat-names.txt>.slurp.split("\n") xx ∞).flat.Array;
 has $!debian;
 # There are three situations that determine whether we heredoc
 # 1. The string ends in a newline and you want it to stay that way
