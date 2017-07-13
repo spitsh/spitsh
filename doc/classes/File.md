@@ -119,7 +119,7 @@ say "$?PWD";
 ```perl6
 given File("$*HOME/src/spitsh/resources/src") {
     my $loc = 0;
-    for .find(name => /\.spt$/) { # or just *.spt
+    for .find(name => /\.sp$/) { # or just *.sp
         $loc += .lines;
     }
     say "$loc lines of code";

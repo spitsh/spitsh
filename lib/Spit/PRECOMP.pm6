@@ -19,7 +19,7 @@ my constant $SETTING-sha1 is export = sha1-SETTING;
 
 my constant %core-lib is export = {
     Test => compile(
-        %?RESOURCES{"core-lib/Test.spt"}.slurp,
+        %?RESOURCES{"core-lib/Test.sp"}.slurp,
         :target<stage2>,
         :name<Test>,
         :$SETTING,

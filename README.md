@@ -70,7 +70,7 @@ spit eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"' --in-doc
 Unfortunately on Debian the package is named 'netcat'. Let's deal with that:
 
 ``` perl
-# install-nc.spt
+# install-nc.sp
 constant Pkg $nc = on {
     Debian { 'netcat' }
     Any    { 'nc' } # the default
@@ -84,7 +84,7 @@ And now it should work on both the RHEL and Debian families of
 Linux distributions.
 
 ```
-spit --in-docker=debian:latest compile install-nc.spt
+spit --in-docker=debian:latest compile install-nc.sp
 ✔ - nc command exists now
 ```
 
@@ -112,12 +112,13 @@ keep compatibility with rakudo star in the future.
 ## Documentation
 
 Documentation is very much a work in progress but what exists is under: [doc/](doc).
+**DOCUMENTATION**
 
 ## Project Layout
 
 * The Perl 6 Spit compiler module is in `lib`
 * The actual Spit source code is under `resources/src`
-* The core spit modules are under `resouces/core-lib` (right now just `Test.spt`)
+* The core spit modules are under `resouces/core-lib` (right now just `Test.sp`)
 * The spec tests are in `spec`.
 
 ## Contribute

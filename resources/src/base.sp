@@ -16,4 +16,5 @@ class JSON { } # is Str is primitive
 class DateTime { }
 class HTTP {}
 class Host {}
+class Cmd {}
 enum-class OS { }

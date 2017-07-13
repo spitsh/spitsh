@@ -1,2 +1,2 @@
-*.spt linguist-language=Perl6
+*.sp linguist-language=Perl6
 *.t linguist-language=Perl6

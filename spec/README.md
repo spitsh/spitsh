@@ -1,6 +1,6 @@
 # The Spec
 The spec tests define how complete this Spit compiler (or any other) is. They
-all use the TAP based [Test.spt](../resources/core-lib/Test.spt)
+all use the TAP based [Test.sp](../resources/core-lib/Test.sp)
 module. It's split into multiple categories:
 
 1. base: These define the core language. Anything in the core that

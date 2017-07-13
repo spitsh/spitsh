@@ -1,5 +1,5 @@
 #| Cmd represents a name or path of a command in the shell.
-class Cmd {
+augment Cmd {
     #| Returns true if the command can be found in the current shell enironment.
     #|{ my Bool $have-node = Cmd<node>.exists }
     method exists? ${command -v $self >X}
