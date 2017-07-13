@@ -14,5 +14,5 @@ env:
   - PATH="/home/travis/.rakudobrew/moar-nom/install/share/perl6/site/bin:$PATH"
 
 script:
-  - spit -d compile spec/base/sanity.t
+  - spit spec/base/sanity.t -d
   - spit compile resources/tools/harness.spt --RUN
