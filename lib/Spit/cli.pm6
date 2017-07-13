@@ -168,7 +168,7 @@ BEGIN my @commands =  (
     },
     {
         name => 'prove',
-        desc => 'Run prove(1) over spit test files',
+        desc => 'Run prove(1) over spook test files',
         pos => [ pos(name => 'path')],
         opts => [
           opt(
@@ -257,7 +257,7 @@ sub do-main() is export {
             if not %cli<in-docker in-container in-helper>:v {
                 %cli<in-docker> = 'alpine';
             }
-            my %tmp = %cli<in-docker docker-socket in-container in-helper jobs verbose>:p;
+            my %tmp = %cli<in-docker docker-socket in-container in-helper jobs verbose os>:p;
             prove(%cli<path>, |%tmp);
         }
         when 'helper' {
@@ -309,7 +309,7 @@ sub compile-src($src, %cli, :$name) {
 }
 
 sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
-             :$docker-socket, :$jobs, :$verbose
+             :$docker-socket, :$jobs, :$verbose, :$os
             ) {
 
     my @runs = |($in-docker andthen .split(',').map: { "-d=$_" }),
@@ -321,8 +321,13 @@ sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
     for @runs {
         my @run =
           "prove", ("-j$_" with $jobs),('-v' if $verbose),'-r', '-e',
-          "$*EXECUTABLE $*PROGRAM " ~
-          "compile{' -s' if $docker-socket} $_",
+          (
+              "$*EXECUTABLE $*PROGRAM " ~
+              'compile' ~
+              (' -s' if $docker-socket) ~
+              (" --os={$os.class-type.name}" if $os),
+              $_,
+          ),
           $path;
         note "running: ", @run.perl;
         my $run = run @run;
