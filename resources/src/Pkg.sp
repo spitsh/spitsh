@@ -7,7 +7,7 @@ constant File $:pkglist-path = on {
 }
 
 constant Cmd $?pm is logged-as("\c[PACKAGE]") = on {
-    Debian { 'apt' }
+    Debian { 'apt-get' }
     Alpine { 'apk' }
     RHEL   { 'yum' }
 }
@@ -109,7 +109,7 @@ augment List[Pkg] {
         Debian {
             Pkg.check-update;
             ${
-                $?pm install !>debug/warn :DEBIAN_FRONTEND<noninteractive>
+                $?pm install >debug/warn :DEBIAN_FRONTEND<noninteractive>
                 -y -q --no-install-recommends @$self
             }
         }

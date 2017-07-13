@@ -1,6 +1,6 @@
 class Port is Int {
     method serve-file(File $file) {
-        ${exec $:socat !>warn('serve-file') >debug('serve-file') -U
+        ${exec $:socat >debug/warn('serve-file') -U
           "TCP-LISTEN:$self,reuseaddr,fork" "FILE:$file"
         }
     }
