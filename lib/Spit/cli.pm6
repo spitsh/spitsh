@@ -290,8 +290,7 @@ sub compile-src($src, %cli, :$name) {
     orwith %cli<in-container> {
         exec-docker $_;
     }
-
-    try my $shell = compile($src, |%(%cli<target no-inline>:p), :%opts, :$name).gist;
+    try my $shell = compile($src, |%(%cli<target no-inline xtrace>:p), :%opts, :$name).gist;
 
     if $! {
         .kill(SIGTERM) with $docker;
