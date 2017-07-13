@@ -15,10 +15,10 @@ sub note($str)?  ${printf '%s\\n' $str >! }
 #| Prints its argument to `$:OUT` with no newline.
 sub print($str)? ${printf '%s' $str > $:OUT }
 
-constant $:log-die-path = '💀';
+constant $:log-die-path = "\c[SKULL]";
 #| Prints the message to stdout and then exits
 sub die($str)*  {
-    $:log ?? ("$str".log(0, $:log-die-path); ())
+    $:log ?? ("$str".log($:log-fatal-level, $:log-die-path); ())
           !! (note($str) && $?PID.kill; ())
 }
 
