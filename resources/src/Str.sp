@@ -276,7 +276,7 @@ augment Str {
                     ‘use utf8;BEGIN{$/=undef};($t,$r)=(shift,shift);s/$t/$r/see’ ~
                     ($g && "g") ~ ($i && "i")
                 )
-                '--' '-' $target "qq\c[GHOST]$replacement\c[GHOST]"
+                '--' '-' $target "qq§$replacement§"
             }
         }
         Any {
