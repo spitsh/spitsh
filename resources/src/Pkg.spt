@@ -6,6 +6,12 @@ constant File $:pkglist-path = on {
     RHEL   { "/var/cache/yum"  }
 }
 
+constant Cmd $?pm is logged-as("\c[PACKAGE]") = on {
+    Debian { 'apt' }
+    Alpine { 'apk' }
+    RHEL   { 'yum' }
+}
+
 #| a Pkg represents a package installable via the system's package
 #| manager, like `apt-get` or `yum`.
 #|{
@@ -18,14 +24,14 @@ class Pkg {
 
     #| Tells the system specific package manager to update its list of pacakges.
     static method update-pkglist? on {
-        Debian ${ apt-get update >debug:📦 !>warn:📦  }
+        Debian ${$?pm update >debug/warn}
         RHEL   {
-            ${yum clean expire-cache >debug:📦 !>warn:📦 } &&
-              ${ yum check-update >debug:📦 !>warn:📦};
+            ${$?pm clean expire-cache >debug/warn} &&
+              ${$?pm check-update >debug/warn};
             $? != 1
         }
                 # apt is noisy for no reason so send it to debug instead of warn
-        Alpine ${ apk update >debug:📦 !>debug:📦 }
+        Alpine ${ $?pm update *>debug }
     }
 
     static method last-updated-->DateTime on {
@@ -38,7 +44,7 @@ class Pkg {
         RHEL ${
             date -d
             ${
-                yum repolist enabled -v !>warn:📦
+                $?pm repolist enabled -v !>warn
                 | grep -m1 Repo-expire
                 | sed -r 's/.*last: |\)//g'
              }
@@ -99,17 +105,17 @@ augment List[Pkg] {
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
     method install? on {
-        RHEL ${yum install -y @$self >debug:📦 !>warn:📦 }
+        RHEL ${$?pm install -y @$self >debug/warn}
         Debian {
             Pkg.check-update;
             ${
-                apt-get install !>warn:📦 >debug:📦 :DEBIAN_FRONTEND<noninteractive>
+                $?pm install !>debug/warn :DEBIAN_FRONTEND<noninteractive>
                 -y -q --no-install-recommends @$self
             }
         }
         Alpine {
             Pkg.check-update;
-            ${apk add @$self --no-progress >debug:📦 !>warn:📦};
+            ${$?pm add @$self --no-progress >debug/warn};
         }
     }
 }
