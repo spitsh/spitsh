@@ -139,23 +139,38 @@ multi method walk(SAST::Cmd:D $THIS is rw) {
     for $THIS.write -> $, $rhs is rw {
         if $rhs ~~ SAST::OutputToLog {
             my $cmd = $THIS.nodes[0];
-            if ! $rhs.path.defined and (
-               ($cmd andthen .compile-time and my $name = $cmd) or
-               (
-                   $cmd ~~ SAST::Var and
-                   $name = SAST::SVal.new(val => $cmd.bare-name, match => $rhs.match)
-               )
-            )
-            {
-                $rhs.path = $name;
+            my $path = $rhs.path;
+
+            if $THIS.logged-as -> $logged-as {
+                if $path {
+                    $path = $path.stage2-node(
+                        SAST::Concat,
+                        $logged-as,
+                        $path.stage3-node(SAST::SVal, val => ':'),
+                        $path
+                    );
+                    self.walk($path);
+                } else {
+                    $path = $logged-as;
+                }
             }
+
+            if !$path.defined {
+                if $cmd ~~ SAST::Var {
+                    $path = SAST::SVal.new(val => $cmd.bare-name, match => $rhs.match);
+                }
+                elsif $cmd.compile-time {
+                    $path = $cmd;
+                }
+            }
+
             $rhs .= stage2-node(
                 SAST::SubCall,
                 name => 'log-fifo',
                 declaration => $*SETTING.lookup(SUB,'log-fifo'),
                 pos => (
                     $rhs.level,
-                    ($rhs.path // Empty),
+                    ($path // Empty),
                 ),
                 match => $rhs.match
             );

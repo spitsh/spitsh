@@ -398,11 +398,15 @@ class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
     has Spit::Type $.type;
     has Spit::Type $.decl-type;
     has $.dont-depend is rw;
+    has SAST $.logged-as;
 
     method stage2(SAST::VarDecl:D: $ctx) is default {
         figure-out-var-type($.sigil, $!type, $!decl-type, :$.assign, :$.desc);
+        $!logged-as andthen $_ .= do-stage2(tStr);
         self;
     }
+
+    method children { ($.assign // Empty),($!logged-as // Empty) }
 
     method dont-depend is rw { $!dont-depend }
     method depends { Empty }
@@ -623,6 +627,7 @@ class SAST::Cmd is SAST::MutableChildren does SAST::Noisy is rw {
     has SAST @.append;
     has SAST %.set-env;
     has Spit::Type $!type;
+    has SAST $.logged-as;
 
     method stage2($ctx) is default {
         $_ .= do-stage2(tStr) for ($!pipe-in,|@.nodes,|%!set-env.values).grep(*.defined);
@@ -638,12 +643,16 @@ class SAST::Cmd is SAST::MutableChildren does SAST::Noisy is rw {
         if (my $invocant = ($!pipe-in andthen .is-self)) and $*no-pipe {
             $invocant.cancel-pipe-vote;
         }
+
+        if (my $var = @.nodes[0]) ~~ SAST::Var {
+            $var.declaration.logged-as andthen $!logged-as = .deep-clone;
+        }
         $!type = $ctx;
         self;
     }
 
     method children {
-        grep *.defined, $!pipe-in, |@.nodes, |@!in, |@!write, |@!append, |%!set-env.values;
+        grep *.defined, $!logged-as, $!pipe-in, |@.nodes, |@!in, |@!write, |@!append, |%!set-env.values;
     }
 
     method clone(|c) { callwith(|c,:@!write,:@!append,:@!in,:%!set-env) }
@@ -653,7 +662,7 @@ class SAST::Cmd is SAST::MutableChildren does SAST::Noisy is rw {
           && not @.write;
     }
 
-    method type { $!type ||= $.ctx }
+    method type { $!type }
 }
 
 class SAST::Coerce is SAST::MutableChildren {

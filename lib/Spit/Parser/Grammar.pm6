@@ -230,6 +230,9 @@ grammar Spit::Grammar is Spit::Lang {
             |$<rw>='rw'
             |$<return-by-var>='return-by-var'
             |$<impure>='impure'
+            |'logged-as'$<logged-as>=<.wrap:'(', ')', 'logged as', token {
+               <R=.EXPR>
+            }>
             |{} <type>
         ]
     }

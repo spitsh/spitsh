@@ -4,7 +4,7 @@ class DockerImg { }
 constant File $:docker-socket = '/var/run/docker.sock';
 constant File $:docker-install-cli-path = '/usr/local/bin/docker';
 
-constant Cmd $:docker = on {
+constant Cmd $:docker is logged-as("🐳") = on {
     Spit-Helper { 'docker' }
     Linux {
         Cmd<docker> or (
@@ -56,7 +56,7 @@ augment Docker {
     }
 
     static method hello-world? {
-        ${ $:docker run -i --rm hello-world *>debug('🐳:hello-world') };
+        ${ $:docker run -i --rm hello-world *>debug('hello-world') };
     }
 
     method cleanup -->Docker {
@@ -74,7 +74,7 @@ augment Docker {
         Bool :$mount-socket
     ) -->Docker {
         my $id = ${
-            $:docker create -i !>error('🐳-create')
+            $:docker create -i !>error
             ("--name=$_" if $name)
             ("-v=$:docker-socket:$:docker-socket" if $mount-socket)
             --entrypoint ''
@@ -87,12 +87,12 @@ augment Docker {
     method Bool    { $self.exists }
 
     method copy($from, File $to) -->File {
-        ${ $:docker cp $from "$self:$to" !>error('🐳-copy')};
+        ${ $:docker cp $from "$self:$to" !>error};
         $to.add($from);
     }
 
     method copy-from($from,$to) --> File {
-        ${ $:docker cp "$self:$from" $to !>error('🐳-copy-from')};
+        ${ $:docker cp "$self:$from" $to !>error};
         $to;
     }
 
@@ -104,14 +104,14 @@ augment Docker {
 
     method start-sleep {
         debug "Starting docker container $self with sleep";
-        'while true; do sleep 1; done'.${ $:docker start $self >X !>error("🐳-start")};
+        'while true; do sleep 1; done'.${ $:docker start $self >X !>error};
     }
 
     method exec(Str $eval)? {
         if $self.running {
-            $eval.${ $:docker exec -i $self sh >debug/warn("🐳:$self") };
+            $eval.${ $:docker exec -i $self sh >debug/warn($self) };
         } else {
-            $eval.${ $:docker start >debug/warn("🐳:$self") -i $self };
+            $eval.${ $:docker start >debug/warn($self) -i $self };
         }
     }
 
@@ -150,7 +150,7 @@ DockerImg :$name,
         };
 
         debug "docker commit: ‘{@args.join('’, ‘')}’";
-        my $image = ${$:docker commit  !>fatal('🐳-commit') @args |
+        my $image = ${$:docker commit  !>fatal @args |
                       sed -r 's/^sha256:(.{12}).*/\1/'};
         $name || $image;
     }
@@ -171,7 +171,7 @@ augment DockerImg {
     method add-tag ($tag)^ {
         my $tagged-name = $tag.contains(':') ?? $tag !! "{$self.name}:$tag";
         debug "Tagging $self with $tagged-name";
-        ${$:docker tag $self $tagged-name !>fatal('🐳-tag')} ?? $tagged-name !! ()
+        ${$:docker tag $self $tagged-name !>fatal} ?? $tagged-name !! ()
     }
 
     method name~ {
@@ -215,6 +215,7 @@ augment DockerImg {
             ("-f=label=$_" for @has-labels)
             ("-f=dangling=true" if $dangling)
             ("-f=reference=$_" if $reference)
+            | uniq
     }
 }
 
@@ -228,6 +229,6 @@ augment List[Docker] {
 augment List[DockerImg] {
     method remove? {
         debug "Removing images: {$self.join(',')}";
-        ${ $:docker rmi @$self >debug('🐳-rmi') !>warn('🐳-rmi') }
+        ${ $:docker rmi @$self >debug/warn }
     }
 }

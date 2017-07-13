@@ -350,6 +350,8 @@ method trait:sym<is> ($/){
         $*ROUTINE.impure = True;
     } elsif $<no-inline> {
         $*ROUTINE.no-inline = True;
+    } elsif $<logged-as> {
+        $*DECL.logged-as = $<logged-as>.ast;
     } else {
         $*CLASS.class.^add_parent($<type>.ast);
     }
