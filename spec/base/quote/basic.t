@@ -55,10 +55,10 @@ plan 46;
 }
 
 {
-    is "\c[BELL]",'🔔','\c[uniname]';
-    is "\c[TWO HEARTS, BUTTERFLY]",'💕🦋','\c[uniname,uniname]';
-    is "\x[1f514]", "\c[BELL]", '\x[1f514]';
-    is "\x[1F514]", "\c[BELL]", '\x[1F514]';
+    is "\c[BELL]",'🔔 ','\c[uniname]';
+    is "\c[TWO HEARTS, BUTTERFLY]",'💕 🦋 ','\c[uniname,uniname]';
+    is "\x[1f514]", "🔔", '\x[1f514]';
+    is "\x[1F514]", "🔔", '\x[1F514]';
     is "I really \x[2661,2665,2764,1f495] Perl 6!", 'I really ♡♥❤💕 Perl 6!',
       '\x[2661,2665,2764,1f495]';
     is "\f", ${printf '\f'}, '\f';

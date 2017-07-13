@@ -1,6 +1,6 @@
 use Test;
 
-plan 43;
+plan 42;
 
 ok "foo" ~~ /oo$/,'basic re match (true)';
 nok "foo" ~~ /ar$/,'basic re match (false)';
@@ -112,7 +112,6 @@ nok "foo" ~~ /ar$/,'basic re match (false)';
     {
         if '👻👻👻'.match(/👻(👻)👻/) {
             is @/[0], '👻👻👻', 'spooks in match';
-            is @/[1], "\c[GHOST]", 'spook in the capture';
         }
     }
 }

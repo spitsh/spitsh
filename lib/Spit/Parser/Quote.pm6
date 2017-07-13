@@ -133,15 +133,16 @@ grammar Spit::Quote::qq is Spit::Quote {
     }
     token elem:sym<§> { <.sym> }
     token elem:sigily { <spit-sigily> }
-    token elem:emojish { <:So> }
 }
 
 class Spit::Quote::qq-Actions is Spit::Quote::Actions {
     method backslash:sym<a>($/) { make "\a" }
     method backslash:sym<b>($/) { make "\b" }
     method backslash:sym<c>($/) {
-        make parse-names((my $match = $<unicode-name>).Str) ||
+        my $str = parse-names((my $match = $<unicode-name>).Str) ||
             SX.new(message => "Unrecognised unicode name '{$match.Str}'",:$match).throw;
+        my @chars = $str.comb;
+        make $@chars.map({ $_ ~= " " if .uniprops eq 'So'}).join;
     }
     method backslash:sym<f>($/) { make "\f" }
     method backslash:sym<n>($/) { make "\n" }
@@ -154,5 +155,4 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
         make SAST::Var.new(name => ':sed-delimiter', sigil => '$');
     }
     method elem:sigily ($/)  { make $<spit-sigily>.ast }
-    method elem:emojish ($/) { make $/.Str ~ " " }
 }
