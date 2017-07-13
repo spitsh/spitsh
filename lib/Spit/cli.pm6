@@ -316,6 +316,8 @@ sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
     |($in-container andthen .split(',').map({"-D=$_"})),
     |($in-helper andthen '-h');
 
+    %*ENV<MVM_SPESH_INLINE_DISABLE> = "1";
+
     for @runs {
         my @run =
           "prove", ("-j$_" with $jobs),('-v' if $verbose),'-r', '-e',
