@@ -4,7 +4,7 @@ class DockerImg { }
 constant File $:docker-socket = '/var/run/docker.sock';
 constant File $:docker-install-cli-path = '/usr/local/bin/docker';
 
-constant Cmd $:docker is logged-as("🐳") = on {
+constant Cmd $:docker is logged-as("\c[WHALE]") = on {
     Spit-Helper { 'docker' }
     Linux {
         Cmd<docker> or (
