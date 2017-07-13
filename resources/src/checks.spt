@@ -3,8 +3,8 @@
 ##| Returns the text as red.
 # sub red($txt)~   { ${printf '\\33[0;' ~ 31 ~ 'm%s\\33[0m', $txt}  }
 
-constant $:check-log-success-symbol = "✅";
-constant $:check-log-failure-symbol = "❌";
+constant $:check-log-success-symbol = "\c[WHITE HEAVY CHECK MARK]";
+constant $:check-log-failure-symbol = "\c[CROSS MARK]";
 #| If the condition true, ok prints the message with a friendly
 #| '✔'. Otherwise, dies with an angry '✘'.
 #|{
@@ -13,9 +13,9 @@ constant $:check-log-failure-symbol = "❌";
 sub ok (#|[The success condition] Bool $cond,
         #|[The associated message] $msg?) {
     $cond
-        ??  ($:log ?? $msg.log(3, $:check-log-success-symbol)
+        ??  ($:log ?? $msg.log(2, $:check-log-success-symbol)
                    !! say "✔ - $msg")
-        !!  ($:log ?? $msg.log(0, $:check-log-failure-symbol)
+        !!  ($:log ?? $msg.log($:log-fatal-level, $:check-log-failure-symbol)
                    !! die "✘ - $msg")
 }
 

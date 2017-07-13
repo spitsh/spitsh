@@ -1,14 +1,14 @@
 my FD $:LOG = $:ERR;
 constant $:log-level = 1;
 constant $:log = False;
-constant $:log-default-path = "👻";
+constant $:log-default-path = "\c[GHOST]";
 my @:log-levels  = (
     none => '',
-    debug => "❔",
-    info  => "ⓘ",
-    warn => "⚠",
-    error => "❗",
-    fatal => "☠",
+    debug => "\c[WHITE QUESTION MARK ORNAMENT]",
+    info  => "\c[CIRCLED LATIN SMALL LETTER I]",
+    warn => "\c[WARNING SIGN]",
+    error => "\c[HEAVY EXCLAMATION MARK SYMBOL]",
+    fatal => "\c[SKULL AND CROSSBONES]",
 );
 
 constant $:log-fatal-level = 5;
