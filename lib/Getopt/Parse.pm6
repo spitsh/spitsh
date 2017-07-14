@@ -100,7 +100,7 @@ grammar Getopt::Grammar {
                         | '='
                           # Don't try and match the next argument if the opts
                           # are all just bool flags
-                        | <?{ @opt.first(*.<match> ne 'bool') }>
+                        | <?{ @opt.first({ .<match> ~~ Regex or .<match> !~~ 'bool'}) }>
                            <.sep> <!before '-'['-'|<:L>]> || <?before \d>
                        ]
                        <opt-value(@opt, %res)>
