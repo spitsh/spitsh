@@ -87,12 +87,8 @@ opt(
     desc =>  'Puts "set -x" into the script'
 ),
 opt(
-    name => 'log',
-    desc => 'Shortcut to set $*log to true',
-),
-opt(
     name => 'os',
-    desc => 'Shortcut to set $*os',
+    desc => 'Shortcut to set $:os',
     match => $match-os,
     placeholder => 'os name',
     default => sast-os('alpine', match => Match.new),
@@ -162,9 +158,9 @@ BEGIN my @commands =  (
         spit eval 'say "hello world"'
         # compile and run in docker
         spit eval 'say "hello world"' -d
-        spit eval 'say $*os.name' -d=centos
+        spit eval 'say $:os.name' -d=centos
         # compile for alpine
-        spit eval 'say $*os.name' --os=alpine
+        spit eval 'say $:os.name' --os=alpine
         END
     },
     {
