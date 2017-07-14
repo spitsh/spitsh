@@ -1,4 +1,4 @@
-constant $:run = <base packages commands transport json ssh http-client docker helper>;
+constant @:run = <cli base packages commands transport json ssh http-client docker helper>;
 constant @:on       = <alpine centos debian>;
 constant $:verbose = True;
 constant $:spit = Cmd<spit>;
@@ -14,24 +14,27 @@ my $d-on = "-d={@:on.join(',')}";
 my @v = ('-v' if $:verbose);
 my @run = \${$:spit prove @v $d-on ("-j=$_" if $:jobs) };
 
+if @:run.first('cli') {
+    ${ $:spit prove 'spec/cli' --RUN };
+}
 
-if $:run.first('base') {
+if @:run.first('base') {
     ${@run 'spec/base'};
 }
 
-if $:run.first('packages') {
+if @:run.first('packages') {
     ${@run 'spec/packages'};
 }
 
-if $:run.first('transport') {
+if @:run.first('transport') {
     ${@run 'spec/transport'}
 }
 
-if $:run.first('json') {
+if @:run.first('json') {
     ${@run 'spec/json'}
 }
 
-if $:run.first('ssh') {
+if @:run.first('ssh') {
     ${@run 'spec/ssh'}
 }
 
@@ -45,16 +48,16 @@ sub continue-in-container($path, :$mount-socket) {
     }
 }
 
-if $:run.first('http-client') {
+if @:run.first('http-client') {
     continue-in-container('spec/http-client');
 }
 
 
-if $:run.first('docker') {
+if @:run.first('docker') {
     continue-in-container('spec/docker', :mount-socket);
 }
 
-if $:run.first('helper') {
+if @:run.first('helper') {
     ok ${$:spit helper build *>info}, 'helper build';
     ok DockerImg("spit-helper:$?spit-version"), 'helper exists';
 }

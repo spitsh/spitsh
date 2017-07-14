@@ -3,7 +3,6 @@ need Spit::Exceptions;
 need Spit::Constants;
 need Spit::DependencyList;
 use Spit::Metamodel;
-need Spit::OptsParser;
 need Spit::Sh::Method-Optimizer;
 need Spit::Sh::Call-Inliner;
 use Spit::Sastify;

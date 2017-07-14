@@ -13,7 +13,6 @@
         "Spit::Doc::Markdown"  : "lib/Spit/Doc/Markdown.pm6",
         "Spit::Docker"         : "lib/Spit/Docker.pm6",
         "Spit::Metamodel"      : "lib/Spit/Metamodel.pm6",
-        "Spit::OptsParser"     : "lib/Spit/OptsParser.pm6",
         "Spit::Repo"           : "lib/Spit/Repo.pm6",
         "Spit::Stage2-Util"    : "lib/Spit/Stage2-Util.pm6",
         "Spit::SAST"           : "lib/Spit/SAST.pm6",
@@ -39,7 +38,7 @@
         "Spit::Parser::Quote"   : "lib/Spit/Parser/Quote.pm6",
         "Getopt::Parse"         : "lib/Getopt/Parse.pm6"
     },
-    "depends" : ["DispatchMap","JSON5::Tiny", "JSON::Fast"],
+    "depends" : ["DispatchMap","JSON::Tiny"],
     "resources" : [
         "reserved.txt",
         "cat-names.txt",

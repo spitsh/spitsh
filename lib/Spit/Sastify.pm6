@@ -25,3 +25,15 @@ sub sast-os(Str:D $name, :$match = $null) is export {
         Nil;
     }
 }
+
+
+class Spit::LateParse is rw {
+    has Str:D $.val is required;
+    has Match:D $.match is required;
+
+    method gist { "Spit::LateParse($.val)" }
+}
+
+sub late-parse($val, :$match = $null) is export {
+    Spit::LateParse.new(:$match, :$val);
+}

@@ -3,8 +3,8 @@ use Spit::Compile;
 use Spit::Util :spit-version;
 use Spit::Sastify;
 use Spit::Docker;
-use Spit::OptsParser;
 need Spit::Repo;
+need Spit::Parser::JSON;
 
 BEGIN my @opts =  (
     opt(
@@ -63,6 +63,7 @@ opt(
     name => 'opts-file',
     alias => 'f',
     desc => 'JSON file to read options from',
+    match => 'existing-file',
     placeholder => 'opts.json'
 ),
 opt(
@@ -113,7 +114,7 @@ opt(
                 default      {  }
             }
             orwith $<expr> {
-                late-parse(.Str)
+                late-parse(.Str, match => $<expr>)
             }
             else {
                 sastify(True);
@@ -122,7 +123,7 @@ opt(
             $/.make: Pair.new($<key>.Str, $val);
         }
     },
-    desc => 'Options as JSON',
+    desc => 'Option key:value or key=expression',
     on-use => -> $pair, %res {
         %res<opts>{$pair.key}  = $pair.value;
     }
@@ -163,7 +164,7 @@ BEGIN my @commands =  (
         spit eval 'say "hello world"' -d
         spit eval 'say $*os.name' -d=centos
         # compile for alpine
-        spit eval 'say $*os.name' o--os=alpine
+        spit eval 'say $*os.name' --os=alpine
         END
     },
     {
@@ -195,6 +196,19 @@ BEGIN my @commands =  (
               match => 'uint',
           ),
           opt(
+              name => 'opts-file',
+              alias => 'f',
+              match => 'existing-file',
+              desc => 'Options file to pass to tests',
+          ),
+          opt(
+              name => 'opts',
+              alias => 'o',
+              match => 'str',
+              on-use => -> $pair, %res { %res<opts>.push($pair) },
+              desc => 'Options to pass to tests',
+          ),
+          opt(
               name => 'docker-socket',
               alias => 's',
               desc => 'Mount /var/run/docker.sock in containers specified by --in-docker',
@@ -203,6 +217,10 @@ BEGIN my @commands =  (
               name => 'os',
               match => $match-os,
               desc => 'Compile the tests for particular OS',
+          ),
+          opt(
+              name => 'RUN',
+              desc => ‘Runs the tests on this computer's /bin/sh’,
           )
         ]
     },
@@ -254,11 +272,8 @@ sub do-main() is export {
             )
         }
         when 'prove' {
-            if not %cli<in-docker in-container in-helper>:v {
-                %cli<in-docker> = 'alpine';
-            }
-            my %tmp = %cli<in-docker docker-socket in-container in-helper jobs verbose os>:p;
-            prove(%cli<path>, |%tmp);
+            prove(%cli<path>, |%(%cli<in-docker docker-socket in-container opts-file
+                                      opts in-helper jobs verbose os RUN>:p));
         }
         when 'helper' {
             helper(%cli<commands>[1]);
@@ -276,7 +291,9 @@ sub compile-src($src, %cli, :$name) {
         Spit::Repo::Core.new
     ];
 
-    my %opts.append(%cli<opts>.pairs);
+    my %opts;
+    %opts.append(%cli<opts>.pairs);
+    %opts.append(.&parse-opts.data.pairs) with %cli<opts-file>;
 
     %opts<os> //= %cli<os>;
 
@@ -308,13 +325,16 @@ sub compile-src($src, %cli, :$name) {
 }
 
 sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
-             :$docker-socket, :$jobs, :$verbose, :$os
-            ) {
+          :$docker-socket, :$jobs, :$verbose, :$os, :$RUN, :@opts,
+          :$opts-file
+         ) {
 
     my @runs = |($in-docker andthen .split(',').map: { "-d=$_" }),
-    |($in-container andthen .split(',').map({"-D=$_"})),
-    |($in-helper andthen '-h');
+               |($in-container andthen .split(',').map({"-D=$_"})),
+               |($in-helper andthen '-h'),
+               |($RUN andthen '--RUN');
 
+    @runs.push('-d=alpine') unless @runs;
     %*ENV<MVM_SPESH_INLINE_DISABLE> = "1";
 
     for @runs {
@@ -324,8 +344,10 @@ sub prove(Str:D $path, :$in-docker, :$in-container, :$in-helper,
               "$*EXECUTABLE $*PROGRAM " ~
               'compile' ~
               (' -s' if $docker-socket) ~
-              (" --os={$os.class-type.name}" if $os),
-              $_,
+              (" --os={$os.class-type.name}" if $os) ~
+              (@opts.map: { " -o=$_" }).join ~
+              (" -f=$opts-file" if $opts-file) ~
+              " $_"
           ),
           $path;
         note "running: ", @run.perl;
@@ -359,4 +381,13 @@ sub helper($_) {
             say 'No spit-helper images';
         }
     }
+}
+
+multi parse-opts(Str:D $json) is export  {
+    my $res = Spit::JSON::Grammar.parse($json, actions => Spit::JSON::Actions);
+    return ($res andthen .made);
+}
+
+multi parse-opts(IO::Path:D $json-file) {
+    parse-opts($json-file.slurp) || die "$json-file doesn't contain valid JSON";
 }

@@ -1,4 +1,5 @@
 need Spit::SAST;
+use JSON::Tiny;
 # A place to put optimizations for specific methods.
 # Speeds up optimization by having the type as the first argument
 # to method-optimize (so it only checks for optimizable methods on types
@@ -57,7 +58,6 @@ sub sval(Str $str) {
     );
 }
 
-use JSON::Fast;
 sub jq-arg($arg is raw, @pos is raw) {
     my $name = (97 + ((@pos.elems - 1)/3).Int).chr;
     @pos.append: sval('--arg'), sval($name), $arg;
