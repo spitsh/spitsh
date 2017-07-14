@@ -96,7 +96,14 @@ grammar Getopt::Grammar {
                     };
                 }
                 [
-                    || ['=' || <.sep> <!before '-'['-'|<:L>]> || <?before \d>] <opt-value(@opt, %res)>
+                    || [
+                        | '='
+                          # Don't try and match the next argument if the opts
+                          # are all just bool flags
+                        | <?{ @opt.first(*.<match> ne 'bool') }>
+                           <.sep> <!before '-'['-'|<:L>]> || <?before \d>
+                       ]
+                       <opt-value(@opt, %res)>
                     || <no-value(@opt, %res)>
                 ]
             ]
