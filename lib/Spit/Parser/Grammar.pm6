@@ -740,7 +740,7 @@ grammar Spit::Grammar is Spit::Lang {
         :my @tweaks;
         [
             | $<opener>=($<bracket>=<.opener> [ $<repeat>=. <?{ $<repeat> eq $<bracket> }>]*)
-            |<!{$bracket-only}> $<open-and-close>=[<!before <.hyphen>|<.identifier>> .]
+            |<!{$bracket-only}> $<open-and-close>=[<!before <.hyphen>|<.identifier>|\s> .]
         ]
         {
             @tweaks = .Slip with $tweaks;
