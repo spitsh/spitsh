@@ -2,7 +2,7 @@
     "name" : "Spit",
     "license" : "Artistic-2.0",
     "perl" : "6.c",
-    "version" : "0.0.30",
+    "version" : "0.0.31",
     "description" : "The Spook in the Shell (Spit-sh) compiler",
     "authors" : ["Lloyd Fournier lloyd.fourn@gmail.com"],
     "provides" : {
@@ -36,6 +36,7 @@
         "Spit::Parser::Lang"    : "lib/Spit/Parser/Lang.pm6",
         "Spit::Parser::Regex" : "lib/Spit/Parser/Regex.pm6",
         "Spit::Parser::Quote"   : "lib/Spit/Parser/Quote.pm6",
+        "Spit::Parser::JSON"    : "lib/Spit/Parser/JSON.pm6",
         "Getopt::Parse"         : "lib/Getopt/Parse.pm6"
     },
     "depends" : ["DispatchMap","JSON::Tiny"],

@@ -1,13 +1,14 @@
 # 👻 Spook in the Shell 👻 (Spit-sh) [![Build Status](https://travis-ci.org/spitsh/spitsh.svg?branch=master)](https://travis-ci.org/spitsh/spitsh)
 
 **Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh), is Perl-6-like
-language and compiler for producing modular, dynamic and testable
-shell scripts. Its purpose is to specify and test configurations for
-modern UNIX-like systems. **It's very new and experimental and doesn't
-do a lot yet**.
+language that compiles into modular, dynamic and testable shell
+scripts. Its purpose is to specify and test configurations for modern
+UNIX-like systems. **It's currently pre-Alpha software - use it at
+your own risk**
 
 
-## Where it fits
+## Configuration as a Shell Script
+
 Here are a few of the goals of Spit-sh as a configurtion utility:
 
 - It shouldn't require any software on the target system other than

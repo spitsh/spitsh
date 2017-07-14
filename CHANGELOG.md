@@ -1,3 +1,30 @@
+## 0.0.31
+
+- **NOTICE** Option declaration syntax changed from `$*foo` to `$:foo`
+- Implemented List index accessors
+  ```perl6
+  my @a = <zero one two three>;
+  say @a[1,2] # one, two
+  my $json = ["zero","one", "two","three"];
+  say $json[1,2] # ["one","two"]
+  ```
+- Completely Re-implemented cli with Getopt::Parse (included in lib
+  for now)
+- `"\c[...]"` now pads emojis (So) with a space so they display properly
+- Add new shorthand `>info/warn` syntax which is short for `>info !>warn`
+- Add new `is logged-as` trait for declaring that a command should be
+  logged with a certain path e.g.
+  `constant Cmd $:docker is logged-as("\c[WHALE]")`
+- Update Docker for new "docker community edition" release method
+- Add JSON setting methods
+  ```
+  my $json = {};
+  $json[0] = "foo";
+  $json<foo> = "bar"
+  $json<bar> = { "some" : "object" };
+  ```
+- Add `JSON.merge` and `JSON.ACCEPTS`
+
 ## 0.0.30
 
 - Move return type sigils from back to front of routine declaration:
@@ -131,7 +158,7 @@ sub foo($a, $b, *@c) {
 - Make `lt`, `gt`, `ge` and `le` work
 - Add `File.ctime` to get the last changed time from a file
 - Add `DateTime.epoch-start` (1970-01-01T00:00:00.000)
-- Add resources/tools/spit-helper.spt which builds an image with a few
+- Add resources/tools/spit-helper.sp which builds an image with a few
   useful default things installed. I hope to use it to deploy scripts.
   - Add `spit helper build` to build the helper
   - Add `-h` and `--in-helper` to `spit compile` to run the script in
@@ -139,7 +166,7 @@ sub foo($a, $b, *@c) {
 - Add `Str.extract` which treats the content as a tgz and extracts it
 - Add `Cmd.path` to get the path to a command
 - .call: args syntax works with topic calls
-- Add `$?spit-version` to give you the version of spit as a variable
+- Add `$!spit-version` to give you the version of spit as a variable
 
 ## 0.0.26
 
@@ -216,7 +243,7 @@ No docs for the above because it's all WIP
 - Linux OS has been added
 - `("foo:$_" if $foo)` now reduces down to `${foo:+"foo:$foo"}`
 - `$*interactive` now defaults to False
-  - -i cli switch to set `$*interactive` to `$?IN.tty`
+  - -i cli switch to set `$*interactive` to `$!IN.tty`
   - -I cli switch to force `$*interactive` to `True`
 
 ## 0.0.22
@@ -232,7 +259,7 @@ No docs for the above because it's all WIP
 - Add a :dir option to File.tmp to create a tmp directory.
 - Add spit-dev command in root of src to be used instead of ./bin/spit
   for development.
-- Renamed $$ to $?PID
+- Renamed $$ to $!PID
 - Renamed File.create to File.touch
 - Renamed File.child to File.add
 - Routines that just do concatenation can now be inlined
@@ -254,7 +281,7 @@ No docs for the above because it's all WIP
   `GitURL<https://github.com/spitsh/spitsh.git/>`
 - Add $*git, which gives you the git command
 - Add &prompt which prompts the user with a string and returns their answer as a Bool
-- Add $?IN, basically just FD(0)
+- Add $!IN, basically just FD(0)
 - Add File.find which is an interface to find(1)
 - Add PID.kill which sends a signal to a process
 - Add &sleep, a wrapper around sleep(1)
@@ -272,7 +299,7 @@ No docs for the above because it's all WIP
     interpolations into the regex pattern that is eventually chosen
 
 - Add PID class which is a blessed int representing a process ID
-- Add $?PID which holds the PID for the main script
+- Add $!PID which holds the PID for the main script
 - Add $$ which gives access to the shell's $$
 - spit eval now reads from STDIN if it doesn' have an argument
 
