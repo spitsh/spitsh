@@ -1,4 +1,4 @@
-use Test;
+use Test; plan 1;
 
 constant $:spit = 'spit';
 
