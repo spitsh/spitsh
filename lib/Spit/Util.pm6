@@ -60,7 +60,7 @@ sub force-recompile($module) is export(:force-recompile) {
 }
 sub spit-version is export(:spit-version) {
     once do {
-        use JSON5::Tiny;
+        use JSON::Tiny;
         (try $*REPO.resolve(CompUnit::DependencySpecification.new(:short-name<Spit::Compile>)).distribution.meta<ver>)
         or
         Version.new('META6.json'.IO.slurp.&from-json<version>);

@@ -9,7 +9,7 @@ need Spit::Parser::JSON;
 BEGIN my @opts =  (
     opt(
         :name<version>,
-        on-use => { say spit-version(); exit 0 },
+        on-use => -> | { say spit-version(); exit 0 },
         desc => 'Print version',
     ),
 );
