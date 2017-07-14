@@ -141,12 +141,10 @@ BEGIN my @commands =  (
             match => 'existing-file'
         ),],
         example => q:to/END/,
-        spit my_program.sp
-        # compile and run in docker
-        spit compile my_program.sp -d # default: alpine
-        spit compile my_program.sp -d centos
-        # compile for alpine
-        spit compile my_program.sp --os alpine
+        spit my_program.sp # compile and run in docker
+        spit compile my_program.sp --os debian # compile for debian
+        spit compile my_program.sp -d centos # compile and run in centos
+        spit compile my_program.sp -o log # compile with $:log set to True
         END
     },
     {

@@ -424,7 +424,7 @@ method get-opt-value(Str:D $name, SAST::Block:D :$outer!) is raw {
                 $val.val,
                 :target<stage1>,
                 :$outer,
-                name => $val.name
+                name => "opt:$name",
             );
             my $block = $cu.block;
             $val = $block;
