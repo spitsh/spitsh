@@ -42,6 +42,10 @@ opt(
     name => 'in-helper',
     alias => 'h',
     desc => 'Run in a container derived from the spit-helper image',
+    on-use => -> $, %res {
+        %res<in-helper> = True;
+        %res<os> //= sast-os 'Spit-Helper';
+    }
 ),
 opt(
     name => 'in-container',
@@ -91,7 +95,7 @@ opt(
     desc => 'Shortcut to set $:os',
     match => $match-os,
     placeholder => 'os name',
-    default => sast-os('alpine', match => Match.new),
+    default => sast-os('alpine'),
 ),
 opt(
     name => 'opts',
@@ -295,7 +299,6 @@ sub compile-src($src, %cli, :$name) {
         start-docker $_, |(%cli<docker-socket>:p);
     }
     orwith %cli<in-helper> {
-        %opts<os> = sast-os 'Spit-Helper', match => Match.new;
         start-docker $helper-image, :docker-socket;
     }
     orwith %cli<in-container> {
