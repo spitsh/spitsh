@@ -84,12 +84,12 @@ grammar Getopt::Grammar {
                 {
                     @opt = do given $<opt> {
                         with .<name> {
-                            @opts.first(*.<name>.&[eq](.Str)) //
+                            @opts.first(*.<name> eq .Str) //
                               self.exception("Unknown option: ‘{$<opt>.Str}’", match => $_);
                         }
                         orwith .<alias> {
                             .map: {
-                                @opts.grep(*.<alias>.defined).first(*.<alias>.&[eq](.Str)) //
+                                @opts.grep(*.<alias>.defined).first(*.<alias> eq .Str) //
                                 self.exception("Unknown flag: ‘{.Str}’", match => $_);
                             }
                         }
@@ -118,7 +118,7 @@ grammar Getopt::Grammar {
             || [
                 $<command>=<.identifier>
                 <?{
-                    if @commands.first(*.<name>.&[eq]($<command>)) -> $command {
+                    if @commands.first(*.<name> eq $<command>) -> $command {
                         switch-command(@opts, @pos, @commands, %res, $command);
                         True;
                     }
@@ -129,7 +129,7 @@ grammar Getopt::Grammar {
                 <pos-value(@pos[0], %res)>
                 {
                     with @pos[0]<implicit-command> {
-                        if @commands.first(*.<name>.&[eq]($_)) -> $command {
+                        if @commands.first(*.<name> eq $_) -> $command {
                             switch-command(@opts, @pos, @commands, %res, $command);
                         }
                     }
@@ -386,7 +386,7 @@ class Getopt::Parse {
         %!command<name> //= $*PROGRAM-NAME;
         (%!command<opts> //= []);
 
-        if not %!command<opts>.first(*.<name>.&[eq]('help')) {
+        if not %!command<opts>.first(*.<name> eq 'help') {
             %!command<opts> = |%!command<opts>, $help;
         }
     }
