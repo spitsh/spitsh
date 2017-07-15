@@ -290,8 +290,15 @@ sub compile-src($src, %cli, :$name) {
     ];
 
     my %opts;
-    %opts.append(%cli<opts>.pairs);
-    %opts.append(.&parse-opts.data.pairs) with %cli<opts-file>;
+
+    with %cli<opts-file> {
+        %opts.append: .&parse-opts.data.pairs;
+    }
+    elsif '.spit.json'.IO.e {
+        %opts.append: '.spit.json'.IO.&parse-opts.data.pairs;
+    }
+
+    %opts.append(.pairs) with %cli<opts>;
 
     %opts<os> //= %cli<os>;
 
