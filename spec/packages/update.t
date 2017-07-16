@@ -11,8 +11,8 @@ ok Pkg.last-updated.valid, '.last-updated is valid';
 
 sleep 1;
 
-ok Pkg.last-updated lt now, '.last-updated is older than now()';
-ok Pkg.last-updated.posix < now.posix, '.last-updated is older than now()';
+ok Pkg.last-updated lt now, '.last-updated lt than now()';
+ok Pkg.last-updated.posix < now.posix, '.last-updated.posix than now.poisx';
 
 nok Pkg.check-update, 'check-update returns False second time';
 
