@@ -36,9 +36,8 @@ class Pkg {
 
     static method last-updated-->DateTime on {
         Debian {
-            $:pkglist-path
-              .add("deb.debian.org_debian_dists_{Debian.release-name}_Release")
-              .ctime;
+            # "partial" seems to get touched whenever apt-get update is run
+            $:pkglist-path.add("partial").ctime;
         }
         Alpine { $:pkglist-path.find(name => '*.gz')[0].ctime }
         RHEL ${
@@ -58,7 +57,7 @@ class Pkg {
             info "Updating package list because it " ~ (
                 $last-updated
                   ?? "was last updated at $last-updated"
-                  !! "doesn't exist at $:pkglist-path"
+                  !! "doesn't exist"
             );
             Pkg.update-pkglist;
         }
