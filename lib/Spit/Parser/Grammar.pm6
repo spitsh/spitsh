@@ -327,8 +327,8 @@ grammar Spit::Grammar is Spit::Lang {
 
     token param {
         [
-            | $<pos>=[ <type>? <.ws> $<slurpy>='*'?<var> ]
-            | $<named>=[ <type>? <.ws> ':'<var> ]
+            | $<pos>=[ <type>? <.ws> $<slurpy>='*'? <sigil> $<name>=<.identifier> ]
+            | $<named>=[ <type>? <.ws> ':' <sigil> $<name>=<.identifier> ]
         ]
         [$<optional>='?'| <.ws> '=' <.ws> $<default>=<.EXPR($gt-comma)>]?
     }

@@ -446,8 +446,8 @@ method paramlist ($/) {
 method param ($/) {
     make $*CURPAD.declare: do if $<pos> {
         SAST::PosParam.new(
-            name => $<var><name>.Str,
-            sigil => $<var><sigil>.Str,
+            name => $<name>.Str,
+            sigil => $<sigil>.Str,
             |(decl-type => .ast with $<type>),
             |(default => .ast with $<default>),
             optional => ?$<optional>,
@@ -455,8 +455,8 @@ method param ($/) {
         )
     } else {
         SAST::NamedParam.new(
-            name => $<var><name>.Str,
-            sigil => $<var><sigil>.Str,
+            name => $<name>.Str,
+            sigil => $<sigil>.Str,
             |(decl-type => .ast with $<type>),
             |(default => .ast with $<default>),
             optional => $<optional>,
@@ -724,12 +724,14 @@ method term:pair ($/) { make SAST::Pair.new(|$<pair>.ast) }
 method pair ($/) { make $<pair>.ast }
 
 method colon-pair ($/) {
-    my ($key,$value);
-    if $<var> {
-        $key = $<var><name><identifier>;
-        $value = $<var>.ast;
+    my ($key,$value,$match);
+    with $<var-ref> {
+        $key = .ast.bare-name;
+        $match = $_;
+        $value = .ast;
     } else {
-        $key = $<key>;
+        $key = $<key>.Str;
+        $match = $<key>;
         if $<neg> {
             $value = SAST::BVal.new(val => False);
         }
@@ -740,7 +742,7 @@ method colon-pair ($/) {
             $value = SAST::BVal.new(val => True);
         }
     }
-    $key = SAST::SVal.new(val => $key.Str,match => $key);
+    $key = SAST::SVal.new(val => $key.Str, :$match);
     make ($key,$value);
 }
 
