@@ -1,6 +1,6 @@
 use Test;
 
-plan 9;
+plan 10;
 
 {
     my $foo = "foo";
@@ -45,6 +45,11 @@ plan 9;
         say "$:one$:two$:three$:four$:five";
     }.${sh},
     '12345', 'many eval options';
+
+    is eval(:$one, :$two, :$three, :$four,:$five) {
+        say "$:<one>$:<two>$:<three>$:<four>$:<five>";
+    }.${sh},
+    '12345', 'many eval options using indirect lookup';
 }
 
 

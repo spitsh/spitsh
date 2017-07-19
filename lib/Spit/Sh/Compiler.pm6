@@ -626,7 +626,10 @@ multi method arg(SAST::Pair:D $_) {
 
 #!EvalArg
 multi method arg(SAST::EvalArg:D $_) {
-    "'{.placeholder}'"
+    # Don't quote had to be invented just for this
+    # It means it breaks out of "" quotes if it's put in one like:
+    # "foo"'dontquote'"bar"
+    DontQuote.new(str => "'{.placeholder}'");
 }
 #!Doom
 # If we try and compile Doom we're doomed

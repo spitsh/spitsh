@@ -143,6 +143,13 @@ class DollarAT does DynamicShellElement {
     method as-flat { '"$@"' }
 }
 
+class DontQuote does DynamicShellElement {
+    has $.str;
+    method in-DQ { '"' ~ $!str ~ '"' }
+    method as-item { $!str }
+    method as-flat { $!str }
+}
+
 
 sub nnq    is export { NoNeedQuote.new: bits => @_ }
 sub dq     is export { DoubleQuote.new: bits => @_ }
