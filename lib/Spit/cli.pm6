@@ -320,7 +320,8 @@ sub compile-src($src, %cli, :$name) {
     }
 
     if $docker {
-        write-docker $docker, $promise, $shell;
+        my $proc = write-docker $docker, $promise, $shell;
+        exit($proc.exitcode);
     } elsif %cli<RUN> {
         exit (run 'sh', '-c', $shell).exitcode;
     } else {
