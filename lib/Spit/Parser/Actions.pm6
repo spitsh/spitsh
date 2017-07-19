@@ -562,7 +562,8 @@ method int ($/) { make SAST::IVal.new: val => $/.Int }
 method term:var-ref ($/) { make $<var-ref>.ast }
 
 method var-ref ($/) {
-    make ($<var> // $<package-opt>).ast;
+    my $var = ($<var> // $<package-opt>);
+    make $<accessor> ?? reduce-term($var, (), $<accessor>) !! $var.ast;
 }
 
 method var ($/)   {
@@ -873,8 +874,8 @@ method postfix:sym<[ ]> ($/) { make $<index-accessor>.ast }
 method index-accessor($/) {
     make SAST::Elem.new(index => $<EXPR>.ast, index-type => tInt);
 }
-method postfix:sym<{ }>($/) { make $<key-accessor>.ast }
-method key-accessor($/) { make SAST::Elem.new(index => $<EXPR>.ast, index-type => tStr) }
+method postfix:sym<{ }>($/) { make $<curly-key-accessor>.ast }
+method curly-key-accessor($/) { make SAST::Elem.new(index => $<EXPR>.ast, index-type => tStr) }
 
 method postfix:sym«< >»($/) { make $<angle-key-accessor>.ast }
 method angle-key-accessor($/) {

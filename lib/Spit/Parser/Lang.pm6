@@ -39,14 +39,8 @@ grammar Spit::Lang {
             |$<sigily>=<.LANG('MAIN','var-ref')>
             |$<sigily>=<.LANG('MAIN','cmd')>
         ]
-        <index-accessor=.LANG('MAIN','index-accessor')>?
         {
-            make do with $<index-accessor>.ast {
-                .push($<sigily>.ast);
-                $_;
-            } else {
-                $<sigily>.ast;
-            }
+            $/.make: $<sigily>.ast;
         }
     }
 }

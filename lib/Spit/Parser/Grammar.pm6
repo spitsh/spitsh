@@ -375,7 +375,14 @@ grammar Spit::Grammar is Spit::Lang {
     token int { \d+ }
 
     token term:var-ref { <var-ref> }
-    token var-ref { <var> || <package-opt> }
+    token var-ref {
+        [<var> || <package-opt>]
+        [
+            |$<accessor>=<index-accessor>
+            |$<accessor>=<angle-key-accessor>
+            |$<accessor>=<curly-key-accessor>
+        ]*
+    }
 
     token package-opt {
         <sigil> $<package-name>=<.identifier> ':' $<opt-name>=<.identifier>
@@ -555,9 +562,9 @@ grammar Spit::Grammar is Spit::Lang {
         $<EXPR>=<.wrap: '[',']','index accessor', rule { '' <R=.EXPR> }>
     }
 
-    token postfix:sym<{ }> { <!after \s> <key-accessor> }
+    token postfix:sym<{ }> { <!after \s> <curly-key-accessor> }
 
-    token key-accessor {
+    token curly-key-accessor {
         $<EXPR>=<.wrap: '{','}', 'key accessor', token { <R=.EXPR> }>
     }
     token postfix:sym«< >» { <!after \s> <angle-key-accessor> }

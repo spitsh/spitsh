@@ -1,6 +1,6 @@
-use Test;
+use Test; plan 34;
 
-plan 46;
+# Many of these tests groups should be moved into their own file;
 
 {
     is '\'', "'",'single quotes can be escaped';
@@ -69,21 +69,4 @@ plan 46;
     is "\x[08]", "\b", '\x[08]';
     is "\a", ${printf '\a'}, '\a';
     is "\x[07]", "\a", '\x[07]';
-}
-
-{
-    my $b = "foo bar";
-    my @b = "foo bar";
-    is "$b baz", "foo bar baz",'$ variable interpolation';
-    is "@b baz", "foo bar baz", '@ variable interpolation';
-    is “"$b" baz”, '"foo bar" baz','$ variable interpolation “”';
-    is “"@b" baz”, '"foo bar" baz','@ variable interpolation “”';
-    is ‘$b baz’, '$b baz', 'no $ variable interpolation ‘’';
-    is '@b baz', "\@b baz", ‘no @ variable interpolatoin ''’;
-    is ‘@b baz’, '@b baz', 'no @ variable interpolatoin ‘’';
-    is "\$b baz", '$b baz', 'escape variable interpolation';
-    is "\\$b baz", '\\foo bar baz','escape backslash before variable interpolation';
-    is qq|$b baz|,"foo bar baz",'qq variable interpolation';
-    is "${printf 'foo bar'} baz", 'foo bar baz', 'cmd interpolation';
-    is qq|${printf 'foo bar'} baz|, 'foo bar baz', 'qq cmd interpolation';
 }
