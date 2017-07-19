@@ -82,7 +82,7 @@ augment HTTP {
                    JSON :$json) -->HTTP-response {
         my $headers = File.tmp;
         my $req-headers = File.tmp;
-        debug "HTTP⟹$method $self";
+        debug "HTTP ==> $method $self", "\c[GLOBE WITH MERIDIANS]";
         my $response = ${
             # ✨ save all stderr output to $req-headers to be parsed later
             $:curl -svL !> $req-headers
@@ -128,7 +128,7 @@ augment HTTP {
         # Put the req-headers as an attribute of the response
         $response.push((:$req-headers));
 
-        debug "HTTP⟸{$response.code} {$response.message} $self ";
+        debug "HTTP <== {$response.code} {$response.message} $self", "\c[GLOBE WITH MERIDIANS]";
         $response;
     }
 }
