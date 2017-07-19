@@ -84,10 +84,10 @@ augment HTTP {
         my $req-headers = File.tmp;
         debug "HTTP⟹$method $self";
         my $response = ${
-            $:curl -svL
+            # ✨ save all stderr output to $req-headers to be parsed later
+            $:curl -svL !> $req-headers
             -X $method
             --max-redir ($max-redirects || 0)
-            !> $req-headers
             -D $headers
             -o ($to || File.tmp)
             ("-H$_" for ('Content-Type: application/json' if ~$json), @headers)
@@ -111,6 +111,7 @@ augment HTTP {
             )
             $self
         }-->HTTP-response;
+
         $headers.line-subst(/\r/,'',:g);
         $response.push: $headers.shift.${
             sed -r 's§HTTP/([^ ]+) [0-9]+ (.*)§http-version\t\1\nmessage\t\2\n§'
