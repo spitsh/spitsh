@@ -1119,5 +1119,3 @@ method wrap ($/) {
         make $<wrapped>;
     }
 }
-
-method r-wrap ($/) { self.wrap($/)}

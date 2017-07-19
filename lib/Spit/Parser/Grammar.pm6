@@ -180,8 +180,8 @@ grammar Spit::Grammar is Spit::Lang {
 
     rule new-class {
         <type-name>
-        $<params>=<.r-wrap: '[',']', 'class parameter list', rule {
-            <type-name>* % ','
+        $<params>=<.wrap: '[',']', 'class parameter list', rule {
+            '' <type-name>* % ','
         }>?
     }
     token declare-class-params { <?> }
@@ -265,8 +265,8 @@ grammar Spit::Grammar is Spit::Lang {
         { $*DECL = $*ACTIONS.make-routine($/,|c) }
         <.attach-pre-doc>
         [
-            $<param-def>=<.r-wrap:'(',')', 'parameter list', rule {
-                <paramlist>
+            $<param-def>=<.wrap:'(',')', 'parameter list', rule {
+                '' <paramlist>
                 (<.longarrow> <.panic("Return type inside signature. Put it outside (...)⟶Type.")>)?
             }>
         ]?
@@ -427,14 +427,14 @@ grammar Spit::Grammar is Spit::Lang {
             <type-params>?
             $<object>=(
                 |<angle-quote>
-                | $<EXPR>=<.r-wrap: '(',')','object definition', token {
-                      <R=.EXPR>
+                | $<EXPR>=<.wrap: '(',')','object definition', token {
+                      <.ws><R=.EXPR>
                   }>
             )?
             ||
             $<call-args>=(
-                | $<args>=<.r-wrap: '(',')',"call to {$<name>.Str}'s arguments", token {
-                      <R=.args>
+                | $<args>=<.wrap: '(',')',"call to {$<name>.Str}'s arguments", token {
+                      <.ws><R=.args>
                   }>
                 | \s+ <args>
             )?
@@ -623,7 +623,7 @@ grammar Spit::Grammar is Spit::Lang {
     }
 
     token type-params {
-        $<params>=<.r-wrap: '[',']', 'type parameter list', rule {
+        $<params>=<.wrap: '[',']', 'type parameter list', rule {
             <type>* % ','
         }>
     }
@@ -826,10 +826,6 @@ grammar Spit::Grammar is Spit::Lang {
         {} <closer($<o>,$c,:$desc)>
     }
 
-    rule r-wrap($o,$c,$desc,$wrapped) {
-        $<o>=$o [ $<wrapped>=$wrapped || <.invalid($desc)> ]
-        {} <closer($<o>,$c,:$desc)>
-    }
     token closer($opener,$closer,:$desc) {
         [$closer || { SX::Unbalanced.new(:$closer,:$opener,:$desc).throw } ]
     }
