@@ -464,6 +464,7 @@ grammar Spit::Grammar is Spit::Lang {
     token colon-pair {
         ':'
         [
+            |'!' $<neg>=<?> $<key>=<.identifier>
             |$<key>=<.identifier> [
                 | $<value>=<.wrap: '(',')', 'pair value', token {<R=.EXPR>}>
                 | $<value>=<.angle-quote>

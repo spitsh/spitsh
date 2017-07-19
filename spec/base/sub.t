@@ -1,6 +1,6 @@
-use Test;
+use Test; plan 35;
 
-plan 44;
+#XXX: This file is in the process of being split up and moved to spec/sub/
 
 {
     sub foo() {
@@ -42,34 +42,6 @@ plan 44;
     }
 
     foo("foo2","bar2","baz");
-}
-
-{
-    my $syntax;
-    sub foo(:$a,:$b) {
-        is $a,"foo3","named $a has correct value ($syntax)";
-        is $b,"bar3","named $b has correct value ($syntax)";
-    }
-
-    $syntax = ':<..>';
-    foo(:a<foo3>,:b("bar3"));
-    $syntax = '=>';
-    foo(a => "foo3",b => "bar3");
-    $syntax = '=> A ~ B';
-    my $foo = "foo";
-    my $bar = "bar";
-    foo(a => $foo ~ 3,b => $bar ~ 3 );
-
-}
-
-{
-    sub foo(:$a,:$b,$c) {
-        is $a,"foo4","named $a with pos";
-        is $b,"bar4","named $b with pos";
-        is $c,"baz1","pos $c with named works";
-    }
-
-    foo :a<foo4>,"baz1",:b<bar4>;
 }
 
 {

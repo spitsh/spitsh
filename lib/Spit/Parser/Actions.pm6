@@ -730,9 +730,13 @@ method colon-pair ($/) {
         $value = $<var>.ast;
     } else {
         $key = $<key>;
-        if $<value> {
+        if $<neg> {
+            $value = SAST::BVal.new(val => False);
+        }
+        elsif $<value> {
             $value = $<value>.ast;
-        } else {
+        }
+        else {
             $value = SAST::BVal.new(val => True);
         }
     }
