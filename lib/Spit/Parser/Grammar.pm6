@@ -392,7 +392,7 @@ grammar Spit::Grammar is Spit::Lang {
         <sigil>
         [
             | [                     # TODO: do less backtracking to package-opt
-                |$<name>=(<twigil>?<identifier>) <!before ':'>
+                |$<name>=(<twigil>?<identifier>) <!before ':'\w>
                 |$<name>='/' <?{ $<sigil>.Str eq '@' }>
                 |$<name>='~' <?{ $<sigil>.Str eq '$' }>
               ]
