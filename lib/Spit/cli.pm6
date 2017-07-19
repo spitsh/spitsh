@@ -183,6 +183,11 @@ BEGIN my @commands =  (
               desc => 'Run tests in a comma separated list of existing docker containers',
           ),
           opt(
+              name => 'in-helper',
+              alias => 'h',
+              desc => 'Run tests in container derived from spit-helper',
+          ),
+          opt(
               name => 'verbose',
               alias => 'v',
               desc => 'Run prove with -v'
