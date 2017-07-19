@@ -1113,9 +1113,23 @@ method angle-quote ($/) {
         SAST::Empty.new;
     }
 }
+
 method quote:sym<eval> ($/) {
     my $src = $<balanced-quote>.ast;
     my %opts = $<args>.ast.<named> || Empty;
+    for |($<args> andthen .ast<pos>) {
+        when SAST::Pair {
+            with .key.compile-time -> $key {
+                %opts{$key} = .value;
+            } else {
+                SX.new(message => 'eval key must be known at compile time',
+                       match => .key.match).throw;
+            }
+        }
+        default {
+            SX.new(message => ‘eval doesn't take positional arguments’, match => .match).throw;
+        }
+    }
     make SAST::Eval.new(:%opts,:$src,outer => $*CURPAD);
 }
 

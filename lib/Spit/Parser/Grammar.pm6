@@ -778,8 +778,10 @@ grammar Spit::Grammar is Spit::Lang {
 
     token quote:sym<eval> {
         <sym>
-        [$<args>=<.r-wrap:'(',')', 'eval arguemnts', token { <R=.args> }>]?
-        <balanced-quote('Quote-q')>
+        [$<args>=<.wrap:'(',')', 'eval arguemnts', rule { '' <R=.args> }>]?
+        <.ws>
+        <?before '{'>
+        <balanced-quote('Quote-Q')>
     }
 
     token quote:regex {
