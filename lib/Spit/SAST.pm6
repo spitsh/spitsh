@@ -342,6 +342,7 @@ class SAST::CompUnit is SAST::Children {
 class SAST::Var is SAST::Children does SAST::Assignable {
     has $.name is required;
     has Sigil:D $.sigil is required;
+    has $.package; # for when this is a package option ($Foo:option)
     has $.declaration;
 
     method symbol-type {
@@ -369,7 +370,10 @@ class SAST::Var is SAST::Children does SAST::Assignable {
     method spit-gist { "$!sigil$!name" }
 
     method declaration is rw {
-        $!declaration //= $*CURPAD.lookup(self.symbol-type,$!name,:$.match);
+        $!declaration //= $!package ??
+          $*CURPAD.lookup(CLASS, $!package, :$.match)\
+            .class.^get-package-option(self.symbol-type, $!name, :$.match) !!
+          $*CURPAD.lookup(self.symbol-type,$!name,:$.match);
     }
 
     method is-self {
@@ -392,6 +396,10 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 
     method itemize { itemize-from-sigil($!sigil) }
     method bare-name  { $.name.subst(/^<[:?]>/,'') }
+}
+
+role SAST::Option {
+    has $.package;
 }
 
 class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {
@@ -1075,6 +1083,10 @@ class SAST::ClassDeclaration does SAST::Declarable is SAST::Children {
     method children { ($!block // Empty),  }
     method stage2 ($) {
         $_ .= do-stage2(tAny,:!auto-inline) for self.children;
+        my @class-options :=  $!class.^package-options;
+        for $!block.symbols[SCALAR,ARRAY].map(*.values.Slip).flat -> $vardecl {
+            @class-options[$vardecl.symbol-type]{$vardecl.bare-name} = $vardecl;
+        }
         self;
     }
 }

@@ -1,4 +1,4 @@
-use Test; plan 5;
+use Test; plan 3;
 
 {
     my $:foo = "foo";
@@ -16,12 +16,4 @@ use Test; plan 5;
         is $arg,'named',q<:$:named as an arg>;
     }
     test-opt :$:arg;
-}
-{
-    is eval(fun => "and games"){ print $:<fun> }.${sh}, 'and games',
-      'Indirect option lookup where value given';
-
-    is eval(){ print $:<fun> }.${sh}, '',
-      'Indirect option lookup with no value';
-
 }

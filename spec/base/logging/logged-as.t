@@ -13,5 +13,5 @@ is @logs[0].path, $logged-as, '.path (info)';
 is @logs[0].level-name, 'info', '.level-name (info)';
 is @logs[1].path, $logged-as, '.path (warn)';
 is @logs[1].level-name, 'warn', '.level-name (warn)';
-is @logs[2].path, "$logged-as:information", ‘.path >info('information')’;
-is @logs[3].path, "$logged-as:warning", ‘.path >warn('warning')’;
+is @logs[2].path, "{$logged-as}:information", ‘.path >info('information')’;
+is @logs[3].path, "{$logged-as}:warning", ‘.path >warn('warning')’;

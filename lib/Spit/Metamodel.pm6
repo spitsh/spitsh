@@ -55,6 +55,8 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
     has $!dispatcher = DispatchMap.new;
     has $!declaration;
     has Mu $!whatever-invocant;
+    # array indexed by SymbolType then name to SAST::VarDecl for package options ($Foo:bar)
+    has @!options;
 
     method new_type(|) {
         my \type = callsame;
@@ -141,6 +143,14 @@ class Spit::Metamodel::Type is Metamodel::ClassHOW {
             .^params[param.^param-pos];
     }
     method needs-reification(Mu $) { False }
+
+    method package-options(Mu $) { @!options }
+
+    method get-package-option(Mu \type, SymbolType $symbol-type, Str:D $name, :$match) {
+        @!options[$symbol-type]{$name} //
+          $match && SX.new(message => "No such variable for class {type.^name}", :$match).throw;
+    }
+
 }
 
 class Spit::Metamodel::Parameterizable is Spit::Metamodel::Type {

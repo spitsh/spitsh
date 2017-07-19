@@ -533,24 +533,37 @@ method term:my ($/) {
 }
 
 method var-create($/,$decl-type) {
-    my \ast-type = do given $decl-type {
+    my $ast-type = do given $decl-type {
         when 'constant'  { SAST::ConstantDecl }
         when 'my'        { SAST::VarDecl }
         when 'topic'     { SAST::MaybeReplace }
         when 'env'       { SAST::EnvDecl }
     };
-    make ast-type.new(
-        name => $<var><name>.Str,
+    my $name = $<var><name>.Str;
+    my $package;
+    if $name.starts-with(':') {
+        $ast-type = $ast-type but SAST::Option;
+        $package = ($*CLASS andthen .class);
+    }
+
+    make $ast-type.new(
+        :$name,
         sigil => $<var><sigil>.Str,
         |(decl-type => .ast with $<type>),
         match => $/,
+        :$package,
     );
 }
 
 method term:quote ($/)   { make $<quote>.ast  }
 method term:int ($/)   { make $<int>.ast    }
 method int ($/) { make SAST::IVal.new: val => $/.Int }
-method term:var ($/)   { make $<var>.ast }
+
+method term:var-ref ($/) { make $<var-ref>.ast }
+
+method var-ref ($/) {
+    make ($<var> // $<package-opt>).ast;
+}
 
 method var ($/)   {
     with $<special-var> {
@@ -575,6 +588,14 @@ method var ($/)   {
             );
         }
     }
+}
+
+method package-opt ($/) {
+    make SAST::Var.new(
+        name => $<opt-name>.Str,
+        sigil => $<sigil>.Str,
+        package => $<package-name>.Str,
+    );
 }
 
 method term:circumfix ($/) {

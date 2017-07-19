@@ -373,12 +373,19 @@ grammar Spit::Grammar is Spit::Lang {
     token term:quote { <quote> }
     token term:int { <int> }
     token int { \d+ }
-    token term:var { <var> }
+
+    token term:var-ref { <var-ref> }
+    token var-ref { <var> || <package-opt> }
+
+    token package-opt {
+        <sigil> $<package-name>=<.identifier> ':' $<opt-name>=<.identifier>
+    }
+
     token var {
         <sigil>
         [
-            | [
-                |$<name>=(<twigil>?<identifier>)
+            | [                     # TODO: do less backtracking to package-opt
+                |$<name>=(<twigil>?<identifier>) <!before ':'>
                 |$<name>='/' <?{ $<sigil>.Str eq '@' }>
                 |$<name>='~' <?{ $<sigil>.Str eq '$' }>
               ]
@@ -461,7 +468,7 @@ grammar Spit::Grammar is Spit::Lang {
                 | $<value>=<.wrap: '(',')', 'pair value', token {<R=.EXPR>}>
                 | $<value>=<.angle-quote>
             ]?
-            |<var>
+            |<var-ref>
         ]
     }
 
@@ -651,7 +658,7 @@ grammar Spit::Grammar is Spit::Lang {
 
     token cmd-term {
         $<i-sigil>=<::('prefix:i-sigil')>*
-        (<var> | $<parens>=<::("circumfix:sym<( )>")> <![<>›‹]> | <quote> | <cmd> )
+        (<var-ref> | $<parens>=<::("circumfix:sym<( )>")> <![<>›‹]> | <quote> | <cmd> )
         <postfix>*
     }
 

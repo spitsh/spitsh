@@ -36,7 +36,7 @@ grammar Spit::Lang {
     token spit-sigily {
         <?before '$'|'@'>
         [
-            |$<sigily>=<.LANG('MAIN','var')>
+            |$<sigily>=<.LANG('MAIN','var-ref')>
             |$<sigily>=<.LANG('MAIN','cmd')>
         ]
         <index-accessor=.LANG('MAIN','index-accessor')>?

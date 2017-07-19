@@ -416,8 +416,8 @@ multi method walk(SAST::Given:D $THIS is rw) {
     }
 }
 
-method get-opt-value(Str:D $name, SAST::Block:D :$outer!) is raw {
-    if %!opts{$name} -> $val is copy {
+method get-opt-value(Str:D $name, SAST::Block:D :$outer!, :$package) is raw {
+    if ($package && %!opts{"{$package.name}:$name"}) or %!opts{$name} -> $val is copy {
         if $val ~~ Spit::LateParse {
             $ = ?(require Spit::Compile <&compile>);
             my $cu = compile(
@@ -436,8 +436,10 @@ method get-opt-value(Str:D $name, SAST::Block:D :$outer!) is raw {
         Nil
     }
 }
-multi method walk(SAST::VarDecl:D $THIS is rw where *.is-option ) {
-    if self.get-opt-value($THIS.bare-name, outer => $THIS.declared-in) -> $val is raw
+multi method walk(SAST::Option:D $THIS is rw) {
+    if self.get-opt-value($THIS.bare-name,
+                          package => $THIS.package,
+                          outer => $THIS.declared-in) -> $val is raw
     {
         my $*CURPAD = $THIS.declared-in;
         $val .= do-stage2($THIS.type);
