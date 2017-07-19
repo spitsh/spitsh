@@ -64,12 +64,20 @@ augment HTTP {
         $self.starts-with('https');
     }
 
+    method https^ {
+        $self.${ sed -r 's§^(.*://)?§https://§' }
+    }
+
     method query(Pair *@query) -->HTTP {
-        my $query = (.key ~ '=' ~ .value for @query).join('&');
-        if $self.contains('?') {
-            $self ~ '&' ~ $query;
+        if @query {
+            my $query = (.key ~ '=' ~ .value for @query).join('&');
+            if $self.contains('?') {
+                $self ~ '&' ~ $query;
+            } else {
+                $self ~ '?' ~ $query
+            }
         } else {
-            $self ~ '?' ~ $query;
+            $self;
         }
     }
 
