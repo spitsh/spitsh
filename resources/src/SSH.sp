@@ -1,4 +1,4 @@
-constant Cmd $:sshd is export = {
+constant Cmd $:sshd is logged-as("\c[BLOWFISH]") = {
     on {
         Alpine { Pkg<openssh>.ensure-install }
         Any    { Pkg<openssh-server>.ensure-install }
@@ -6,7 +6,7 @@ constant Cmd $:sshd is export = {
     Cmd<sshd>.path;
 }
 
-constant Cmd $:ssh = on {
+constant Cmd $:ssh is logged-as("\c[BLOWFISH]") = on {
     Any {
         Cmd<ssh> or
         $:Pkg-openssh-client.install && 'ssh';
@@ -15,7 +15,7 @@ constant Cmd $:ssh = on {
 }
 
 constant Cmd $:ssh-keygen = ($:ssh; 'ssh-keygen');
-constant Cmd $:ssh-keyscan = ($:ssh; 'ssh-keyscan');
+constant Cmd $:ssh-keyscan is logged-as("\c[BLOWFISH, KEY, RIGHT-POINTING MAGNIFYING GLASS]") = ($:ssh; 'ssh-keyscan');
 constant $:ssh-known-hosts is export = $:HOME.add('.ssh').mkdir.add('known_hosts');
 constant $:ssh-conf-dir = File</etc/ssh>;
 constant $:authorized_keys is export = $:HOME.add('.ssh').mkdir.add('authorized_keys');
@@ -79,7 +79,7 @@ class SSH-keypair is Pair[File,File] {
              "-f$path"
              ("-t$_" if $type)
              ("-b$_" if ~$bits)
-             !>error:🐡
+             !>error
          }
          ?? ($path => "$path.pub")
          !! die "Unable to produce a ssh key pair at $path";
@@ -99,10 +99,10 @@ class SSHd {
         # I don't even...https://github.com/moby/moby/issues/19351
         if $:os ~~ Debian { File</var/run/sshd>.mkdir }
 
-        ${$:sshd >debug:🐡 !>warn:🐡 ('-ddd' if $debug) -p $port}
+        ${$:sshd >debug/warn ('-ddd' if $debug) -p $port}
     }
 
-    static method generate-missing-keys ${ $:ssh-keygen -A >debug:🐡 !>warn:🐡 }
+    static method generate-missing-keys ${ $:ssh-keygen -A >debug/warn }
 
     static method get-keypair($type) -->SSH-keypair {
         $:ssh-conf-dir.add("ssh_host_{$type}_key") => $:ssh-conf-dir.add("ssh_host_{$type}_key.pub")

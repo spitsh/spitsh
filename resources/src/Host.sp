@@ -29,7 +29,7 @@ augment Host {
         $message.${ $:socat !>warn - "TCP:$self:$port"}
     }
 
-    method ssh-exec($src,
+    method ssh-exec($shell,
                     :$user = 'root',
                     :$port = 22,
                     :$identity,
@@ -39,8 +39,8 @@ augment Host {
         my $ssh-host = "$user@$self";
         # XXX: Until we figure out how to make the ssh connection wait
         # for logging to finish
-        “trap 'sleep 1; exit 1' TERM; $src”.${
-            $:ssh !>warn("🐡:$ssh-host")
+        “trap 'sleep 1; exit 1' TERM; $shell”.${
+            $:ssh !>warn($ssh-host)
             ("-i$_" if $identity)
             ('-vvv' if $debug)
             -p $port
@@ -52,7 +52,7 @@ augment Host {
 
     method ssh-keyscan(:$port = 22, :$type = 'rsa,ecdsa,ed25519', Bool :$debug) -->List[SSH-known-host]
     ${
-        $:ssh-keyscan !>debug('🐡🔑🔎')
+        $:ssh-keyscan !>debug
         ('-v' if $debug)
         -p $port
         -t $type
