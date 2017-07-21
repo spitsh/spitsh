@@ -599,8 +599,8 @@ multi method walk(SAST::CondReturn:D $THIS is rw) {
 }
 
 multi method walk(SAST::OnBlock:D $THIS is rw) {
-    with $THIS.chosen-block {
-        $THIS = $_
+    if $THIS.chosen-block -> $chosen {
+        $THIS = $chosen;
     } else {
         $THIS .= stage3-node(
             SAST::Doom,

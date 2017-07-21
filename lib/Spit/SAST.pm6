@@ -1809,7 +1809,7 @@ class SAST::OnBlock is SAST::Children does SAST::OSMutant {
     }
 
     method mutate-for-os(Spit::Type $os) {
-        $!chosen-block = $.dispatcher.get('anon', $os);
+        $!chosen-block = $.dispatcher.get('anon', $os) // False;
     }
 
     method dispatcher {
