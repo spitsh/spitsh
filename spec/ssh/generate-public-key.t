@@ -1,13 +1,12 @@
-use Test; plan 1;
+use Test; plan 2;
 {
     my $keypair = SSH-keypair.tmp;
-    my $before = $keypair.public-key.fingerprint;
+    my $before = $keypair.public-key.key;
+
     $keypair.public-key-file.remove;
     $keypair.generate-public-key;
-    is $keypair.public-key.fingerprint, $before,
+
+    ok $before, ‘public-key isn't empty’;
+    is $keypair.public-key.key, $before,
       '.generate-public-key generated the right public key';
-}
-
-{
-
 }
