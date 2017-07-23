@@ -12,6 +12,7 @@ augment Host {
     static method local^ { 'localhost' }
 
     method wait-connectable(Port $port, Int :$timeout = 60)? {
+        debug "Waiting for $self to open port $port (timeout:$timeout)";
         my $start = now.posix;
         my $connected = False;
         while now.posix < ($start + $timeout) and !$connected {
@@ -32,11 +33,12 @@ augment Host {
     method ssh-exec($shell,
                     :$user = 'root',
                     :$port = 22,
-                    :$identity,
+                    :$identity = $:ssh-identity-file,
                     :@options,
                     :@host-key-algorithms,
                     Bool :$debug)~ {
         my $ssh-host = "$user@$self";
+        debug "Attempting ssh to $ssh-host:$port";
         # XXX: Until we figure out how to make the ssh connection wait
         # for logging to finish
         “trap 'sleep 1; exit 1' TERM; $shell”.${
