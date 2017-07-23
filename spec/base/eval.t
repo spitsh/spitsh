@@ -1,6 +1,6 @@
 use Test;
 
-plan 10;
+plan 11;
 
 {
     my $foo = "foo";
@@ -57,4 +57,13 @@ plan 10;
     my $foo = "bar";
     is eval(:$foo){ my $:foo; print $:foo }.${sh}, eval(:$foo){ my $:foo; print $:foo }.${sh},
       'two evals in the same statement';
+}
+
+{
+    my $thing = Str.random;
+
+    is eval(:$thing){
+        say $:<thing>;
+        eval(){ say $:<thing> }.${sh};
+    }.${sh}, ($thing,$thing), 'nested eval with option';
 }

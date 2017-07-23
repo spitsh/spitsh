@@ -76,7 +76,7 @@ augment Str {
     }
 
     method subst-eval($placeholder,$value)~ {
-        $self.subst($placeholder,$value.subst("'","'\\''"));
+        $self.subst($placeholder,$value.subst("'","'\\''", :g), :g);
     }
     #| Returns true if the string contains `$needle`.
     #|{

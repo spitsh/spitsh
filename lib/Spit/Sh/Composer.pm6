@@ -476,9 +476,9 @@ heart decoration, wilted flower,love letter,rosette, white flower
 
 
 multi method walk(SAST::Eval:D $THIS is rw) {
-    my %opts = $THIS.opts;
-
-    for %opts.kv -> $name, $opt is rw {
+    my %eval-opts = $THIS.opts;
+    my @eval-args;
+    for %eval-opts.kv -> $name, $opt is rw {
         my $ct = $opt.compile-time;
         if  $ct or $ct.defined {
             # copy the old constant values into fresh SAST objects for use in the new
@@ -492,12 +492,12 @@ multi method walk(SAST::Eval:D $THIS is rw) {
                 match => $opt.match,
                 placeholder => @placeholders.shift,
                 value => $opt,
-            )
+            );
+            @eval-args.push($name);
         }
     }
-
     # let locally defined options override the outer definitions
-    %opts = |%.opts, |%opts;
+    my %opts = |%.opts, |%eval-opts;
 
     $ = (require Spit::Compile <&compile>);
     my $compiled = $THIS.stage3-node(
@@ -505,29 +505,30 @@ multi method walk(SAST::Eval:D $THIS is rw) {
         val => compile(
             name => "eval_{$++}",
             $THIS.src.val,
-            :%opts,
+            opts => %opts,
             outer => $THIS.outer,
             :one-block,
         ),
         :!preserve-end
     );
 
-    if list %opts.values.grep(SAST::EvalArg) -> @runtime-args {
-        for @runtime-args -> $rt-arg {
-           $compiled = $rt-arg.stage2-node(
-                SAST::MethodCall,
-                name => 'subst-eval',
-                declaration => self.STR-SUBST-EVAL,
-                match => $rt-arg.match,
-                $compiled,
-                pos => (
-                    $rt-arg.stage2-node(SAST::SVal, val => $rt-arg.placeholder),
-                    $rt-arg.value,
-                )
-            );
-        }
+    # Replace each runtime arg with a placeholder
+    for @eval-args -> $name {
+        my $rt-arg = %opts{$name};
+        $compiled = $rt-arg.stage2-node(
+            SAST::MethodCall,
+            name => 'subst-eval',
+            declaration => self.STR-SUBST-EVAL,
+            match => $rt-arg.match,
+            $compiled,
+            pos => (
+                $rt-arg.stage2-node(SAST::SVal, val => $rt-arg.placeholder),
+                $rt-arg.value,
+            )
+        );
         self.walk($compiled);
     }
+
     $THIS = $compiled;
 }
 
