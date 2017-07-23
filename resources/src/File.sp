@@ -77,7 +77,7 @@ augment File {
     #| Calls chmod(1) with the file as the last argument.
     #|{ .chmod(400) if File<foo.txt>.writeable }
     method chmod(#|[The argument passed to chmod(1)]$mode)^ {
-        ${chmod $mode $self} ?? $self !! ()
+        ${chmod $mode $self !>error} ?? $self !! die "Failed to run ‘chmod $mode’ on $self";
     }
     #| Returns the name of the user that owns the file.
     method owner~ on {
