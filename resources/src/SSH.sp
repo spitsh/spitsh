@@ -1,3 +1,9 @@
+constant Pkg $:Pkg-openssh-client = on {
+    Alpine { 'openssh-client'  }
+    Debian { 'openssh-client'  }
+    RHEL   { 'openssh-clients' }
+}
+
 constant Cmd $:sshd is logged-as("\c[BLOWFISH]") = {
     on {
         Alpine { Pkg<openssh>.ensure-install }

@@ -25,13 +25,6 @@ constant Cmd $:gcc-make = on {
     Alpine { Pkg<gcc make libc-dev>.install;    'make' }
 }
 
-
-constant Pkg $:Pkg-openssh-client = on {
-    Alpine { 'openssh-client'  }
-    Debian { 'openssh-client'  }
-    RHEL   { 'openssh-clients' }
-}
-
 constant $:jq-repo = GitHubRepo<stedolan/jq>;
 
 my HTTP $?jq-download-url  = 'https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32-no-oniguruma';
