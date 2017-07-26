@@ -53,9 +53,9 @@ class Pkg {
 
     static method check-update? {
         my $last-updated = Pkg.last-updated;
-        if !$last-updated || now().posix - $last-updated.posix > $:pkglist-stale {
+        if ! ~$last-updated || now().posix - $last-updated.posix > $:pkglist-stale {
             info "Updating package list because it " ~ (
-                $last-updated
+                ~$last-updated
                   ?? "was last updated at $last-updated"
                   !! "doesn't exist"
             );
