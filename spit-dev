@@ -3,14 +3,27 @@ BEGIN my $lib = $?FILE.IO.parent.child('lib');
 BEGIN my $SPIT-PRECOMP = $lib.child('Spit').child('PRECOMP.pm6');
 use lib $lib.Str;
 use Spit::PRECOMP::SETTING;
+use Spit::PRECOMP::core-lib;
 use Spit::Util :force-recompile;
-use Spit::SETTING;
+use Spit::Src;
 use Spit::cli;
 
+my $restart;
 if sha1-SETTING() ne $SETTING-sha1 {
-    note "SETTING has changed. Touching Spit::PRECOMP so it recompiles.";
+    note "SETTING has changed. Force re-precompilation of Spit::PRECOMP::SETTING";
     force-recompile('Spit::PRECOMP::SETTING');
+    $restart = True;
+}
+
+if sha1-core-lib() ne $core-lib-sha1 {
+    note "core-lib has changed. Forcing re-precompilation of Spit::PRECOMP::core-lib";
+    force-recompile('Spit::PRECOMP::core-lib');
+    $restart = True;
+}
+
+if $restart {
     exit (run $?FILE, |@*ARGS).exitcode;
-} else {
+}
+else {
     do-main();
 }

@@ -18,7 +18,7 @@
         "Spit::SAST"           : "lib/Spit/SAST.pm6",
         "Spit::Sastify"        : "lib/Spit/Sastify.pm6",
         "Spit::Exceptions"     : "lib/Spit/Exceptions.pm6",
-        "Spit::SETTING"        : "lib/Spit/SETTING.pm6",
+        "Spit::Src"            : "lib/Spit/Src.pm6",
         "Spit::cli"            : "lib/Spit/cli.pm6",
         "Spit::PRECOMP::SETTING" : "lib/Spit/PRECOMP/SETTING.pm6",
         "Spit::PRECOMP::core-lib" : "lib/Spit/PRECOMP/core-lib.pm6",

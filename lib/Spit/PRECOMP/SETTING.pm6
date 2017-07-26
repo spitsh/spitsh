@@ -1,6 +1,6 @@
 use Spit::Compile;
 use Spit::Util :sha1;
-use Spit::SETTING;
+use Spit::Src;
 
 my constant $src = slurp-SETTING();
 
