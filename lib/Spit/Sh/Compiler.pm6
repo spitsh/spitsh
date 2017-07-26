@@ -120,7 +120,12 @@ method compile(SAST::CompUnit:D $CU, :$one-block, :$xtrace --> Str:D) {
     }
 
     if @END {
-        @compiled.append('END()',|self.maybe-oneline-block(@END),"\n","trap END EXIT; trap 'exit 1' TERM\n",);
+        @compiled.append:
+        'END()',
+        |self.maybe-oneline-block(@END),"\n",
+        "trap END EXIT;" ~
+        # Do nothing on after TERM is recieved a second time
+        "trap 'trap : TERM; exit 1' TERM\n";
     }
 
     @compiled.push(“set -x\n”) if $xtrace;
