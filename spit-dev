@@ -9,7 +9,7 @@ use Spit::cli;
 
 if sha1-SETTING() ne $SETTING-sha1 {
     note "SETTING has changed. Touching Spit::PRECOMP so it recompiles.";
-    force-recompile('Spit::PRECOMP');
+    force-recompile('Spit::PRECOMP::SETTING');
     exit (run $?FILE, |@*ARGS).exitcode;
 } else {
     do-main();
