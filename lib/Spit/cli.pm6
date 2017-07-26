@@ -108,7 +108,7 @@ opt(
         ]?
         {
             my $val := do with $<value> {
-                when .<int>  { sastify .<int>.Str }
+                when .<int>  { sastify .<int>.Str.Int }
                 when .<str>  { sastify .<str>.Str }
                 when ''      { sastify False }
                 default      {  }
