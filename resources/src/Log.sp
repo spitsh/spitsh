@@ -91,6 +91,11 @@ augment Str {
                 }
             }
         }
+        else {
+            #XXX: hack to stop broken pipe errors when .log is piped to when $:log
+            # is False
+            ${ cat >X };
+        }
     }
 }
 
