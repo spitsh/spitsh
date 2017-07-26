@@ -172,7 +172,7 @@ augment DO {
             :$name,
         );
 
-        debug " {$droplet.name}: Wating 30 seconds for to boot", "\c[DROPLET]";
+        debug "{$droplet.name}: Wating 30 seconds for to boot", "\c[DROPLET]";
 
         sleep 30;
         $droplet .= wait-till-active;
