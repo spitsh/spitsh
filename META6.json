@@ -73,7 +73,9 @@
         "src/Log.sp",
         "src/env.sp",
         "src/SSH.sp",
+        "src/Service.sp",
         "core-lib/Test.sp",
+        "core-lib/DigitalOcean.sp",
         "tools/harness.sp",
         "tools/spit-helper.sp"
     ],
