@@ -103,18 +103,22 @@ augment List[Pkg] {
 
     #| Installs the package via the builtin package manager.
     #| Returns true if the package was successfully installed.
-    method install? on {
-        RHEL ${$?pm install -y @$self >debug/warn}
-        Debian {
-            Pkg.check-update;
-            ${
-                $?pm install >debug/warn :DEBIAN_FRONTEND<noninteractive>
-                -y -q --no-install-recommends @$self
+    method install? {
+        info "Installing pacakges: {$self.join(', ')}";
+        on {
+            RHEL ${$?pm install -y @$self >debug/warn}
+            Debian {
+                Pkg.check-update;
+                ${
+                    $?pm install >debug/warn :DEBIAN_FRONTEND<noninteractive>
+                    -y -q --no-install-recommends @$self
+                }
+            }
+            Alpine {
+                Pkg.check-update;
+                ${$?pm add @$self --no-progress >debug/warn};
             }
         }
-        Alpine {
-            Pkg.check-update;
-            ${$?pm add @$self --no-progress >debug/warn};
-        }
     }
+
 }
