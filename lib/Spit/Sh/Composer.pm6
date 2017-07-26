@@ -634,7 +634,8 @@ multi method walk(SAST::Stmts:D $THIS is rw) {
                                         # RAKUDOBUG: I have to put :$accept here
 multi method walk(SAST::MethodCall:D $THIS is rw, :$accept = True) {
     self.walk($THIS.declaration);
-    self.method-optimize($THIS.invocant.type, $THIS, $THIS.declaration.identity)
+    # FIXME: method-optimize returns True if it FAILS (?!)
+    self.method-optimize($THIS.declaration.class-type, $THIS, $THIS.declaration.identity)
       and callsame;
 }
 

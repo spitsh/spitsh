@@ -1,6 +1,6 @@
 use Test;
 
-plan 13;
+plan 14;
 
 {
     is 'foo'.JSON, '"foo"', '"foo".json';
@@ -35,6 +35,10 @@ plan 13;
 
     is $json, '{"one":"two","three":["four","five","six"],"four":{"seven":"eight"}}',
       'nested json objects and array';
+}
+
+{
+    is eval{ { :foo<bar> }.print }.${sh}, '{"foo":"bar"}', '.print';
 }
 
 
