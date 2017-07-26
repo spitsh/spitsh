@@ -54,7 +54,7 @@ sub compile  ($input is copy,
         }
 
         my \SPIT_COMPILER = (once light-load 'Spit::Sh::Compiler');
-        my $compiler = SPIT_COMPILER.new(:%opts);
+        my $compiler = SPIT_COMPILER.new(:%opts, :$*SETTING);
 
         if not $input.stage3-done {
             note "$name composing.." if $debug;
@@ -64,6 +64,7 @@ sub compile  ($input is copy,
                 :%opts,
                 scaffolding => $compiler.scaffolding,
                 :$no-inline,
+                :$*SETTING,
             ).walk($input);
             note "$name composing ✔ {now - before}" if $debug;
             return $input if $target eq 'stage3'

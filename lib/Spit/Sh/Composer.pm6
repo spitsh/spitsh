@@ -32,10 +32,11 @@ has $!ERR;
 has $!OUT;
 has %.clone-cache;
 has $.no-inline;
+has $.SETTING is required;
 
 # Figures out what an option is assigned to at compile time
 method compile-time-option($name) {
-    my $declaration = $*SETTING.lookup(SCALAR,":$name");
+    my $declaration = $!SETTING.lookup(SCALAR,":$name");
     self.walk($declaration);
     if # if it has been tucked
        (my $match = $declaration.match and  $declaration ~~ SAST::Stmts)
@@ -57,7 +58,7 @@ method log {
 
 method NULL(:$match!) {
     $!NULL //= do {
-        my $null = $*SETTING.lookup(SCALAR,':NULL').gen-reference(:stage2-done, :$match);
+        my $null = $!SETTING.lookup(SCALAR,':NULL').gen-reference(:stage2-done, :$match);
         self.walk($null);
         $null;
     };
@@ -65,7 +66,7 @@ method NULL(:$match!) {
 
 method ERR(:$match!) {
     $!ERR //= do {
-        my $err = $*SETTING.lookup(SCALAR,':ERR').gen-reference(:stage2-done, :$match);
+        my $err = $!SETTING.lookup(SCALAR,':ERR').gen-reference(:stage2-done, :$match);
         self.walk($err);
         $err;
     };
@@ -74,7 +75,7 @@ method ERR(:$match!) {
 
 method OUT(:$match!) {
     $!OUT //= do {
-        my $out = $*SETTING.lookup(SCALAR,':OUT').gen-reference(:stage2-done, :$match);
+        my $out = $!SETTING.lookup(SCALAR,':OUT').gen-reference(:stage2-done, :$match);
         self.walk($out);
         $out;
     };
@@ -166,7 +167,7 @@ multi method walk(SAST::Cmd:D $THIS is rw) {
             $rhs .= stage2-node(
                 SAST::SubCall,
                 name => 'log-fifo',
-                declaration => $*SETTING.lookup(SUB,'log-fifo'),
+                declaration => $!SETTING.lookup(SUB,'log-fifo'),
                 pos => (
                     $rhs.level,
                     ($path // Empty),
@@ -193,7 +194,6 @@ multi method walk(SAST::OutputToLog:D $THIS is rw) {
 }
 
 multi method walk(SAST::While:D $THIS is rw) {
-    my $*no-pipe = True;
     self.walk($THIS);
     with $THIS.cond.compile-time -> $cond {
         if not $cond {

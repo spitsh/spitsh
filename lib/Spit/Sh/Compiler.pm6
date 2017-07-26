@@ -19,10 +19,6 @@ my %native = (
     )),
 );
 
-sub lookup-method($class,$name) {
-    $*SETTING.lookup(CLASS,$class).class.^find-spit-method($name);
-}
-
 my subset ShellStatus of SAST where {
     # 'or' and 'and' don't work here for some reason
     ($_ ~~ SAST::Neg|SAST::Cmp) ||
@@ -33,14 +29,14 @@ my subset ShellStatus of SAST where {
 
 unit class Spit::Sh::Compiler;
 
+has $.SETTING is required;
+
 also does Name-Generator;
 also does Compile-Junction;
 also does Compile-Cmd-And-Call;
 also does Compile-Statement-Control;
 
 constant @reserved-cmds = %?RESOURCES<reserved.txt>.slurp.split("\n");
-
-has tOS $.compile-for;
 
 method BUILDALL(|) {
     @!names[SCALAR]<_> = '_';
@@ -59,7 +55,7 @@ method scaffolding {
     (SUB,'ef'),
     (SUB,'e')
          {
-        my $sast = $*SETTING.lookup(|$_) || die "scaffolding {$_.gist} doesn't exist";
+        my $sast = $!SETTING.lookup(|$_) || die "scaffolding {$_.gist} doesn't exist";
         @a.push: $sast;
     }
     @a;
@@ -501,7 +497,7 @@ method try-heredoc($sast, :$preserve-end) {
        and ($sast.val.ends-with("\n") or not ($preserve-end // $sast.preserve-end))
        and (my @lines = $sast.val.split("\n")) > 2
        {
-        $!debian ||= $*SETTING.lookup(CLASS,'Debian').class;
+        $!debian ||= $!SETTING.lookup(CLASS,'Debian').class;
         # Debian's /bin/sh (dash) doesn't do nested multi-byte character heredocs 😿
         my @nekos := ($!composed-for ~~ $!debian ?? @cat-names !! @cats);
         my $cat;
