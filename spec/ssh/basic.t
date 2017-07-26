@@ -24,7 +24,7 @@ sleep 1;
 ok Host.local.wait-connectable($:port, :timeout(1)), '.run started the ssh server';
 
 
-my $res = Host.local.ssh-exec(
+my $res = Host.local.ssh(
     :$:port,
     identity => $client-pair.private-key-file,
     # need to force the server to use the public key we added

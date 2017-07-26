@@ -18,7 +18,7 @@ sleep 1;
 Host.local.ssh-keyscan(:$:port).add;
 
 eval(ssh-private-key => $private-key){
-    my $res = Host.local.ssh-exec(
+    my $res = Host.local.ssh(
         :$:port,
         eval{ print "success" },
     );

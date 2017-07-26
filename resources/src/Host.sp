@@ -30,13 +30,16 @@ augment Host {
         $message.${ $:socat !>warn - "TCP:$self:$port"}
     }
 
-    method ssh-exec($shell,
-                    :$user = 'root',
-                    :$port = 22,
-                    :$identity = $:ssh-identity-file,
-                    :@options,
-                    :@host-key-algorithms,
-                    Bool :$debug)~ {
+    method ssh(
+        $shell,
+        :$user = 'root',
+        :$port = 22,
+        :$identity = $:ssh-identity-file,
+        :@options,
+        :@host-key-algorithms,
+        Bool :$debug
+    )~
+    {
         my $ssh-host = "$user@$self";
         debug "Attempting ssh to $ssh-host:$port";
         # XXX: Until we figure out how to make the ssh connection wait

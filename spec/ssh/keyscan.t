@@ -32,7 +32,7 @@ ok $:ssh-known-hosts.contains($ed25519.public-key.key),
 ok $:ssh-known-hosts.contains($ecdsa.public-key.key),
   '.ssh-keyscan.add added ecdsa key';
 
-my $res = Host.local.ssh-exec(
+my $res = Host.local.ssh(
     :$:port,
     identity => $client-pair.private-key-file,
     # need to force the server to use one of the public key we added
