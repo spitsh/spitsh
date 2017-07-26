@@ -40,7 +40,7 @@ class Droplet is JSON {
         $refresh.status eq 'active' or
           fatal "{$self.name}: Status wasn't active, got '{$refresh.status}' instead", "\c[DROPLET]";
 
-        info "{$self.name}: Active at {$self.ipv4}", "\c[DROPLET]";
+        info "{$self.name}: Active at {$refresh.ipv4}", "\c[DROPLET]";
         $refresh;
     }
     method ipv4 --> Host {
