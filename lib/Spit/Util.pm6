@@ -69,7 +69,7 @@ sub spit-version is export(:spit-version) {
 
 
 sub SETTING-lookup(SymbolType \symbol-type, $name) is export(:SETTING-lookup) {
-    require Spit::PRECOMP <$SETTING>;
+    require Spit::PRECOMP::SETTING <$SETTING>;
     $SETTING.lookup(symbol-type, $name);
 }
 

@@ -1,5 +1,5 @@
 use lib 'lib';
-use Spit::PRECOMP;
+use Spit::PRECOMP::SETTING;
 use Spit::Constants;
 need Spit::Doc::Markdown;
 

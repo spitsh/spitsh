@@ -2,7 +2,7 @@
 BEGIN my $lib = $?FILE.IO.parent.child('lib');
 BEGIN my $SPIT-PRECOMP = $lib.child('Spit').child('PRECOMP.pm6');
 use lib $lib.Str;
-use Spit::PRECOMP;
+use Spit::PRECOMP::SETTING;
 use Spit::Util :force-recompile;
 use Spit::SETTING;
 use Spit::cli;

@@ -17,7 +17,7 @@ sub sastify($_, :$match = $null) is export {
 
 # Takes a string and gives back the associated OS as a SAST::Type
 sub sast-os(Str:D $name, :$match = $null) is export {
-    my $SETTING = once light-load 'Spit::PRECOMP', export-target => '$SETTING';
+    my $SETTING = once light-load 'Spit::PRECOMP::SETTING', export-target => '$SETTING';
     my $OS  = once $SETTING.lookup(CLASS, 'OS').class;
     if $OS.^lookup-by-str($name) -> $os {
         SAST::Type.new(class-type => $os, :$match);
