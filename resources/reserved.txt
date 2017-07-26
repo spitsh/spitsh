@@ -585,6 +585,8 @@ split
 sprof
 sqlite3
 ss
+ssh
+ssh-keygen
 ssltap
 start-stop-daemon
 stat
