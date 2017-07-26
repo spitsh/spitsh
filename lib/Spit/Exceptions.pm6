@@ -96,11 +96,11 @@ class SX is Exception is rw {
     }
 
     method gist {
-        my $snippet := gen-ctx :before(GRAY), :after(RESET),
+        try my $snippet := gen-ctx :before(GRAY), :after(RESET),
         ${ :before(RESET ~ $.mark-before), :after($.mark-after ~ RESET ~ GRAY), :$.match },
         |self.extra-marks;
 
-        self.ERROR ~ " $.message\n$!cu-name:$!line\n$snippet";
+        self.ERROR ~ " $.message\n$!cu-name:$!line\n{$snippet // ''}";
     }
 
     method mark-before { ON_RED }
