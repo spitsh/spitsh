@@ -1,5 +1,5 @@
-# GitHubRepo
- GitHubRepo represents a github repo name like `nodejs/node`.
+# GitHub
+ GitHub represents a github repo name like `nodejs/node`.
 ## GitURL
 >method GitURL( ⟶ [GitURL](./GitURL.md))
 
@@ -7,9 +7,9 @@
 ## clone
 >method clone([Str](./Str.md) **:$to** ⟶ [File](./File.md))
 
- Clones the GitHubRepo.
+ Clones the GitHub.
 ```perl6
-GitHubRepo<spitsh/spitsh>.clone.cd;
+GitHub<spitsh/spitsh>.clone.cd;
 say ${ $*git status };
 ```
 
@@ -19,21 +19,21 @@ say ${ $*git status };
 ## name
 >method name( ⟶ [Str](./Str.md))
 
- Returns the name part of the GitHubRepo.
+ Returns the name part of the GitHub.
 ```perl6
- say GitHubRepo<nodejs/node>.name #-> node
+ say GitHub<nodejs/node>.name #-> node
 ```
 ## owner
 >method owner( ⟶ [Str](./Str.md))
 
- Returns the owner part of the GitHubRepo.
+ Returns the owner part of the GitHub.
 ```perl6
- say GitHubRepo<nodejs/node>.owner #-> nodejs
+ say GitHub<nodejs/node>.owner #-> nodejs
 ```
 ## url
 >method url( ⟶ [GitURL](./GitURL.md))
 
  Returns the https url for the repo
 ```perl6
- GitHubRepo<nodejs/node>.url #-> https://github.com/nodejs/node.git
+ GitHub<nodejs/node>.url #-> https://github.com/nodejs/node.git
 ```

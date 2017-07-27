@@ -20,7 +20,7 @@ constant Cmd $:docker is logged-as("\c[WHALE]") = on {
     }
 }
 
-constant $:moby-github = GitHubRepo<moby/moby>;
+constant $:moby-github = GitHub<moby/moby>;
 
 constant File $?docker-cleanup = ${mktemp};
 constant File $?docker-img-cleanup = ${mktemp};

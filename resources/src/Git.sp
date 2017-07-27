@@ -30,26 +30,26 @@ class GitURL {
     }
 }
 
-#| GitHubRepo represents a github repo name like `nodejs/node`.
-class GitHubRepo {
+#| GitHub represents a github repo name like `nodejs/node`.
+class GitHub {
 
-    #| Clones the GitHubRepo.
+    #| Clones the GitHub.
     #|{
-        GitHubRepo<spitsh/spitsh>.clone.cd;
+        GitHub<spitsh/spitsh>.clone.cd;
         say ${ $:git status };
     }
     method clone(#|[Path to clone the repo to] :$to)-->File {
         $self.url.clone(:$to);
     }
 
-    #| Returns the owner part of the GitHubRepo.
-    #|{ say GitHubRepo<nodejs/node>.owner #-> nodejs }
+    #| Returns the owner part of the GitHub.
+    #|{ say GitHub<nodejs/node>.owner #-> nodejs }
     method owner~ {
         $self.${sed 's/\/.*//'}
     }
 
-    #| Returns the name part of the GitHubRepo.
-    #|{ say GitHubRepo<nodejs/node>.name #-> node }
+    #| Returns the name part of the GitHub.
+    #|{ say GitHub<nodejs/node>.name #-> node }
     method name~ {
         $self.${sed 's/.*\///'}
     }
@@ -58,7 +58,7 @@ class GitHubRepo {
     method GitURL { $self.url }
 
     #| Returns the https url for the repo
-    #|{ GitHubRepo<nodejs/node>.url #-> https://github.com/nodejs/node.git }
+    #|{ GitHub<nodejs/node>.url #-> https://github.com/nodejs/node.git }
     method url-->GitURL { "https://github.com/$self.git" }
 
     method release-url($tag)-->HTTP {

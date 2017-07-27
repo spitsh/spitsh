@@ -25,7 +25,7 @@ constant Cmd $:gcc-make = on {
     Alpine { Pkg<gcc make libc-dev>.install;    'make' }
 }
 
-constant $:jq-repo = GitHubRepo<stedolan/jq>;
+constant $:jq-repo = GitHub<stedolan/jq>;
 
 my HTTP $?jq-download-url  = 'https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32-no-oniguruma';
 my $?jq-sha256sum = '264118228c08abf4db8d9e907b9638914f3eadb5cd50dc1471a84463f7991be0';

@@ -1,7 +1,7 @@
 use Test;
 plan 4;
 
-my $repo = GitHubRepo<llfourn/rakudo>;
+my $repo = GitHub<llfourn/rakudo>;
 is $repo.owner, 'llfourn', '.owner';
 is $repo.name,  'rakudo',  'rakudo';
 
