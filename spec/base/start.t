@@ -5,7 +5,7 @@ plan 8;
 my $pid = start sleep 1000;
 ok $pid,'pid exists after starting it';
 kill $pid;
-sleep 1;
+wait $pid;
 nok $pid, 'pid is gone after killing it';
 
 is eval{

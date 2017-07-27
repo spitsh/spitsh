@@ -37,10 +37,12 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
 
     ok $pid, '.Bool is .exists (True)';
     ok $pid.children == 3, '.children';
-    ok $pid.descendants == 9, '.descendants';
+    my @descendants = $pid.descendants;
+    ok @descendants == 9, '.descendants';
 
     # Kill all the descendant processes which should allow the parent to exit
-    kill $pid.descendants;
+    kill @descendants;
+    wait @descendants;
     sleep 1;
 
     nok $pid, '.Bool is .exists (False) after the parent should have exited';
@@ -66,7 +68,9 @@ ok "{$?PID}foo".matches(/^\d+foo$/), 'can use $?PID in ""';
         ${exec sleep 100};
     };
 
-    $pid.descendants.kill;
+    my @descendants = $pid.descendants;
+    kill @descendants;
+    wait @descendants;
     sleep 1;
     ok $pid, 'pid still exists after .descendants.kill';
     is $pid.descendants, "", '.descendants is empty after .descendants.kill';
