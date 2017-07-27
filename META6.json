@@ -38,9 +38,10 @@
         "Spit::Parser::Regex" : "lib/Spit/Parser/Regex.pm6",
         "Spit::Parser::Quote"   : "lib/Spit/Parser/Quote.pm6",
         "Spit::Parser::JSON"    : "lib/Spit/Parser/JSON.pm6",
+        "Spit::Parser::YAML"    : "lib/Spit/Parser/YAML.pm6",
         "Getopt::Parse"         : "lib/Getopt/Parse.pm6"
     },
-    "depends" : ["DispatchMap","JSON::Tiny"],
+    "depends" : ["DispatchMap","JSON::Tiny", "YAMLish"],
     "resources" : [
         "reserved.txt",
         "cat-names.txt",

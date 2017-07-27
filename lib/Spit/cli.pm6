@@ -4,7 +4,7 @@ use Spit::Util :spit-version;
 use Spit::Sastify;
 use Spit::Docker;
 need Spit::Repo;
-need Spit::Parser::JSON;
+need Spit::Parser::YAML;
 
 BEGIN my @opts =  (
     opt(
@@ -297,10 +297,10 @@ sub compile-src($src, %cli, :$name) {
     my %opts;
 
     with %cli<opts-file> {
-        %opts.append: .&parse-opts.data.pairs;
+        %opts.append: .&parse-opts().pairs;
     }
-    elsif '.spit.json'.IO.e {
-        %opts.append: '.spit.json'.IO.&parse-opts.data.pairs;
+    elsif '.spit.yml'.IO.e {
+        %opts.append: '.spit.yml'.IO.&parse-opts().pairs;
     }
 
     %opts.append(.pairs) with %cli<opts>;
@@ -393,11 +393,14 @@ sub helper($_) {
     }
 }
 
-multi parse-opts(Str:D $json) is export  {
-    my $res = Spit::JSON::Grammar.parse($json, actions => Spit::JSON::Actions);
-    return ($res andthen .made);
+multi parse-opts(Str:D $yaml) {
+    my $res = Spit::YAML::Grammar.parse($yaml, actions => Spit::YAML::Actions);
+    return Nil without $res;
+    my %opts = $res.made[0].pairs.map: { .key => sastify(.value) }
+    %opts;
 }
 
-multi parse-opts(IO::Path:D $json-file) {
-    parse-opts($json-file.slurp) || die "$json-file doesn't contain valid JSON";
+multi parse-opts(IO::Path:D $yaml-file) {
+    parse-opts($yaml-file.slurp)
+      or die "Failed to parse $yaml-file as YAML -- sorry I can't tell you more!";
 }
