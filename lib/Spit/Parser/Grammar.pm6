@@ -229,6 +229,7 @@ grammar Spit::Grammar is Spit::Lang {
             |$<no-inline>='no-inline'
             |$<rw>='rw'
             |$<return-by-var>='return-by-var'
+            |$<required>='required'
             |$<impure>='impure'
             |'logged-as'$<logged-as>=<.wrap:'(', ')', 'logged as', token {
                <R=.EXPR>

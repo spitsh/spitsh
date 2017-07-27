@@ -3,7 +3,7 @@ use Test;
 use Spit::Exceptions;
 use Spit::Util :colorstrip;
 
-plan 13;
+plan 14;
 
 my $name = 'syntax-tests';
 throws-like { compile( '"', :$name) },
@@ -34,9 +34,8 @@ throws-like { compile('say $:foo',:$name) },
             SX::Undeclared,'undeclared option',
             message => "Option 'foo' hasn't been declared.";
 
-# throws-like { compile('my $:foo; say $:foo', :$name) },
-#             SX::RequiredOption,"required option not set",
-#             message => "Option foo used but no value provided for it and it doesn't have default.";
+throws-like { compile('my $:foo is required; say $:foo', :$name) },
+            SX::RequiredOption,"required option not set";
 
 throws-like { compile('sub foo($a,$b) { }; foo("bar")',:$name)},
               SX::BadCall,"too few arguments",

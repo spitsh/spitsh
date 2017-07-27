@@ -400,6 +400,7 @@ class SAST::Var is SAST::Children does SAST::Assignable {
 
 role SAST::Option {
     has $.package;
+    has Bool:D $.required is rw = False;
 }
 
 class SAST::VarDecl is SAST::Var does SAST::Declarable is rw {

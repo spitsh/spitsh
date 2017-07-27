@@ -91,7 +91,7 @@ constant File $droplet-cleanup = ${mktemp};
 
 augment DO {
 
-    constant $:api-token;
+    constant $:api-token is required;
     constant $:api-version = 'v2';
     constant HTTP $:api-url = "https://api.digitalocean.com/$:api-version";
     constant HTTP $:metadata-url = 'http://169.254.169.254/metadata/v1';

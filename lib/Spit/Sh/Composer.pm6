@@ -354,6 +354,10 @@ multi method walk(SAST::Var:D $THIS is rw where { $_ !~~ SAST::VarDecl }) {
         $decl .= last-stmt;
     }
 
+    if $decl ~~ SAST::Option and $decl.required and not $decl.assign {
+        SX::RequiredOption.new(name => $decl.bare-name, package => $decl.package, match => $THIS.match).throw;
+    }
+
     if $decl ~~ SAST::ConstantDecl {
         if $decl.assign {
             with $decl.inline-value -> $inline {

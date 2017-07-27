@@ -344,6 +344,11 @@ method trait:sym<is> ($/){
         $*CU.export($*DECL);
     } elsif $<rw> {
         $*ROUTINE.rw  = True;
+    } elsif $<required> {
+        $*DECL ~~ SAST::Option or
+          SX.new(message => 'You can only put ‘is required’ on options').throw;
+
+        $*DECL.required = True;
     } elsif $<return-by-var> {
         $*ROUTINE.return-by-var = True;
     } elsif $<impure> {

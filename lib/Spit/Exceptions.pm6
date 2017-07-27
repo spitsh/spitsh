@@ -319,7 +319,11 @@ class SX::Assignment-Readonly is SX {
 
 class SX::RequiredOption is SX {
     has $.name is required;
-    method message { "Option $!name used but no value provided for it and it doesn't have default." }
+    has $.package;
+    method message {
+        "Required option '$!name' " ~
+        ("from package '{$.package.name}' " if $.package) ~
+        "used but no value provided for it." }
 }
 
 role SX::Module {
