@@ -1866,8 +1866,8 @@ class SAST::OptionVal is SAST::Children {
     method children { $!name, }
 }
 
-class SAST::JSON {
-    has SAST::SVal:D $.src is required;
+# NYI
+class SAST::JSON does SAST {
     has $.data is required;
 
     method type { tJSON }

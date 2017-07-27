@@ -12,6 +12,14 @@ sub sastify($_, :$match = $null) is export {
     when Int         { SAST::IVal.new(val => $_,:$match) }
     when Str         { SAST::SVal.new(val => $_,:$match) }
     when Bool        { SAST::BVal.new(val => $_,:$match) }
+    when Map         {
+        die 'Conversion of Map to Spit construct NYI. Did you put hash in your yaml?';
+        #SAST::JSON.new(data => to-json($_), src => $_, :$match);
+    }
+    when Positional  {
+        die 'Conversion of Positional to Spit construct NYI. Did you put an array in your yaml?';
+        #SAST::JSON.new(data => to-json($_), src => $match.Str, :$match)
+    }
     default          { Nil }
 }
 
