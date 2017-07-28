@@ -93,14 +93,18 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
 
     my $*char-count = 0;
     my $max = 10; #TODO: allow customization of this
+    my @switch-list;
     for $replacement.children -> $try-switch is raw {
         if self.inline-value($outer,$try-switch) -> $switch {
             return if $*char-count > $max;
-            $try-switch.switch: $switch;
+            @switch-list.push: ($try-switch, $switch);
         } else {
             return
         }
     }
+    # If we got to here do the inline replacement
+    $_[0].switch: $_[1] for @switch-list;
+
     # Re-walk replacement. It's possible after inlining further optimizations
     # can be done.
     $replacement.stage3-done = False;
