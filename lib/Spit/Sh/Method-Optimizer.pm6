@@ -25,6 +25,7 @@ has $!JSON-VALUES;
 has $!JSON-SET-POS;
 has $!JSON-SET-KEY;
 has $!JSON-SET-PATH;
+has $!JSON-BOOL-PATH;
 has $!JSON-MERGE;
 has $!JSON-ACCEPTS;
 has $!JSON-AT-LIST-POS;
@@ -45,6 +46,7 @@ method JSON-VALUES    { $!JSON-VALUES    //= tJSON.^find-spit-method:      'valu
 method JSON-SET-POS   { $!JSON-SET-POS   //= tJSON.^find-spit-method:      'set-pos' }
 method JSON-SET-KEY   { $!JSON-SET-KEY   //= tJSON.^find-spit-method:      'set-key' }
 method JSON-SET-PATH  { $!JSON-SET-PATH  //= tJSON.^find-spit-method:      'set-path'}
+method JSON-BOOL-PATH { $!JSON-BOOL-PATH  //= tJSON.^find-spit-method:      'bool-path' }
 method JSON-MERGE     { $!JSON-MERGE     //= tJSON.^find-spit-method:      'merge'   }
 method JSON-ACCEPTS   { $!JSON-ACCEPTS   //= tJSON.^find-spit-method:      'ACCEPTS' }
 method JSON-AT-LIST-POS { $!JSON-AT-LIST-POS //= tJSON.^find-spit-method: 'at-list-pos'  }
@@ -102,7 +104,7 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
     my @pos;
     # path is the jq path like jq '.foo.bar[0]'
     my $path := @pos[0];
-    my $set;
+    my $end-call = 'at';
     while $decl and $decl.class-type ~~ tJSON {
         my $arg := $cur.pos[0];
         self.walk($arg) if $arg;
@@ -135,7 +137,7 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
             $path.unshift(sval('|values[]'));
         }
         elsif $decl === self.JSON-SET-POS {
-            $set = True;
+            $end-call = 'set';
             my $value := $cur.pos[1];
             self.walk($value);
             # note unshift vs is irrelevant here because set-*
@@ -144,7 +146,7 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
             json-value($value,$path,@pos);
         }
         elsif $decl === self.JSON-SET-KEY {
-            $set = True;
+            $end-call = 'set';
             my $value := $cur.pos[1];
             self.walk($value);
             json-key($arg, $path, @pos);
@@ -155,6 +157,7 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
             $path.unshift: sval(' * '), $arg, (sval('|') if $path.elems)
         }
         elsif $decl === self.JSON-ACCEPTS {
+            $end-call = 'bool';
             $path.unshift: sval(' == '), $arg;
         } else {
             $decl = Nil;
@@ -170,9 +173,16 @@ multi method method-optimize(tJSON, $THIS is rw, $decl is copy) {
     }
 
     if $path.elems {
+        # The first thing should always be '.', but not every
+        # start with it so we just add it at the beggining if
+        # it's not there.
         $path.unshift(sval('.')) unless $path[0].val eq '.';
         self.walk($path);
-        my $method = $set ?? self.JSON-SET-PATH !! self.JSON-AT-PATH;
+        my $method = do given $end-call {
+            when 'at'   { self.JSON-AT-PATH }
+            when 'set'  { self.JSON-SET-PATH }
+            when 'bool' { self.JSON-BOOL-PATH }
+        };
         $THIS .= stage2-node(
             SAST::MethodCall,
             name => $method.name,

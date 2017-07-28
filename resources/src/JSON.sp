@@ -21,6 +21,9 @@ augment JSON { # is Str is primitive
     method set-path(*@args)* is rw {
         $self.${ $:jq -c @args }
     }
+    method bool-path(*@args)? {
+        $self.${ $:jq -e @args *>X}
+    }
 
     method defined? { $self.${$:jq -e '.' *>X} }
     method Bool?    { $self.defined && $self.${$:jq '.'}-->Str.Bool }

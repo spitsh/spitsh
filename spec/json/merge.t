@@ -1,4 +1,4 @@
-use Test; plan 4;
+use Test; plan 5;
 
 {
     my $a = { k => {a =>  1, b => 2} };
@@ -13,4 +13,5 @@ use Test; plan 4;
     nok $merged ~~ $answer<wrong>, '$merged !~~ $answer<wrong>';
     ok $answer<right> ~~ $merged, '$answer<right> ~~ $merged';
     nok $answer<wrong> ~~ $merged, '$answer<wrong> !~~ $merged';
+    is $answer<wrong> ~~ $merged, '', ‘.ACCEPTS doesn't leak to stdout’;
 }
