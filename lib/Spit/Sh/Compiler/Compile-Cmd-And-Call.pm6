@@ -157,6 +157,6 @@ method compile-redirection(@cmd-body, $cmd) {
 
 
 multi method cap-stdout(SAST::Cmd:D $_) {
-    nextsame if .type ~~ tBool;
+    nextsame if .original-type ~~ tBool;
     self.node($_);
 }
