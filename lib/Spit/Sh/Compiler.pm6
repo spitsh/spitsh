@@ -22,7 +22,7 @@ my %native = (
 my subset ShellStatus of SAST where {
     # 'or' and 'and' don't work here for some reason
     ($_ ~~ SAST::Neg|SAST::Cmp) ||
-    ((.type ~~ tBool) && $_ ~~
+    ((.original-type ~~ tBool) && $_ ~~
       SAST::Stmts|SAST::Cmd|SAST::Call|SAST::If|SAST::Case|SAST::Quietly|SAST::LastExitStatus
     )
 }

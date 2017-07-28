@@ -101,7 +101,7 @@ multi method arg(SAST::Call:D $_) is default {
 }
 
 multi method cap-stdout(SAST::Call:D $_,|c) is default {
-    nextsame if .type ~~ tBool;
+    nextsame if .original-type ~~ tBool;
     self.node($_,|c)
 }
 
