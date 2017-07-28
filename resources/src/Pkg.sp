@@ -77,7 +77,7 @@ class Pkg {
     method installed? on {
         Debian ${dpkg -s $self *>X}
         RHEL   ${yum list installed $self *>X}
-        Alpine ${apk info -e $self}
+        Alpine ${apk info -e $self *>X}
     }
 
     #| Gets the version of the currently installed package

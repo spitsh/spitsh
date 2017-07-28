@@ -1,4 +1,4 @@
-use Test; plan 4;
+use Test; plan 6;
 
 my $pkg1 = $:Pkg-openssh-client;
 my $pkg2 = Pkg<socat>;
@@ -16,5 +16,9 @@ if ! $pkg2 {
 } else {
     pass ".install $pkg2 (already exists)";
 }
+
+ok $pkg1.installed, '.installed';
+is $pkg1.installed, 1, '.installed str context';
+
 
 ok $pkg2-->Cmd, "$pkg2 command installed";
