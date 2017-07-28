@@ -4,7 +4,7 @@ use Spit::Metamodel;
 
 unit role Call-Inliner;
 
-method inline-value($inner,$outer,$_ is raw) {
+method inline-value($outer,$_ is raw) {
 
     # if arg inside inner is a param use the corresponding arg from the original call
     when SAST::Var {
@@ -32,7 +32,7 @@ method inline-value($inner,$outer,$_ is raw) {
     }
     # if arg inside inner is a blessed value, try inlining the value
     when SAST::Neg {
-        if self.inline-value($inner,$outer,.children[0]) -> $val {
+        if self.inline-value($outer,.children[0]) -> $val {
             # clone because we don't want to mutate a node from the inner call
             my $clone = .clone;
             $clone.children[0] = $val;
@@ -55,7 +55,7 @@ method inline-value($inner,$outer,$_ is raw) {
         my int $char-count = 0;
         my @inlined = .children.map: {
             .compile-time andthen $char-count += ($_ ~~ Bool ?? (.so ?? 1 !! 0) !! .Str.chars);
-            self.inline-value($inner,$outer,$_);
+            self.inline-value($outer,$_);
         };
         if @inlined.all.defined {
             $*char-count += $char-count;
@@ -94,7 +94,7 @@ multi method inline-call(SAST::Call:D $outer,ChildSwapInline $inner) {
     my $*char-count = 0;
     my $max = 10; #TODO: allow customization of this
     for $replacement.children -> $try-switch is raw {
-        if self.inline-value($replacement,$outer,$try-switch) -> $switch {
+        if self.inline-value($outer,$try-switch) -> $switch {
             return if $*char-count > $max;
             $try-switch.switch: $switch;
         } else {
