@@ -1,6 +1,6 @@
 use Test;
 
-plan 26;
+plan 21;
 
 {
     class Foo {
@@ -47,23 +47,6 @@ plan 26;
     is Foo('bar'),'bar','Foo{ }';
     is Foo( 'bar' ),'bar','Foo{ "bar" }';
     ok Foo<bar>.chars == 3,'classes inherit from Str';
-}
-
-{
-    class Foo {
-        method second($a)~ { $self ~ $a ~ "baz"}
-        method first($a)~  { $self.second($a) }
-        method return-self^ { $self.uc }
-    }
-
-    is Foo<foo>.first("bar"),"foobarbaz","methods can call other methods";
-    is (Foo<foo>.first: "bar"), "foobarbaz", '.method: syntax';
-    is Foo<foo>.return-self.WHAT, 'Foo', '* return on instance';
-
-    given Foo<foo> {
-        is .first("bar"), "foobarbaz", 'topic method-call($a)';
-        is (.first: "bar"), "foobarbaz", 'topic method-call: $a';
-    }
 }
 
 {
