@@ -1100,7 +1100,7 @@ class SAST::IntExpr is SAST::MutableChildren {
     method type { tInt }
 
     method stage2($) {
-        $_ .= do-stage2(tInt,:desc("arguments to $!sym operation must be Ints")) for @.children;
+        $_ .= do-stage2(tInt,:desc("arguments to $!sym operation")) for @.children;
         self;
     }
 
