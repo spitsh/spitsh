@@ -149,7 +149,7 @@ class SX::TypeCheck is SX {
     has $.desc;
 
     method message {
-        "Type check failed{ $!desc andthen " for $_" }. Expected $!expected but got $!got.";
+        "Type check failed{ $!desc andthen " for $_" }.\nExpected $!expected but got $!got.";
     }
 }
 
