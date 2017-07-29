@@ -319,11 +319,14 @@ grammar Spit::Grammar is Spit::Lang {
     }
     rule paramlist {
         :my $*DECL;
-        $<params>=(
-            <param>
-            { $*DECL = $<param>.ast }
-            <.attach-pre-doc>
-        )* % ','
+        [
+            $<params>=(
+                <param>
+                { $*DECL = $<param>.ast }
+                <.attach-pre-doc>
+            )+ % ','
+            ','?
+        ]?
     }
 
     token param {

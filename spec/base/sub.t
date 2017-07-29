@@ -1,4 +1,4 @@
-use Test; plan 35;
+use Test; plan 36;
 
 #XXX: This file is in the process of being split up and moved to spec/sub/
 
@@ -17,6 +17,15 @@ use Test; plan 35;
     }
     foo("foo");
 }
+
+{
+    sub foo($a,){
+        is $a, 'foo','trailing , in parameter list';
+    }
+    foo('foo');
+}
+
+
 
 {
     sub echo($a)~ { $a }
