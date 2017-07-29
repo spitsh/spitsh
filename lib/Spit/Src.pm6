@@ -9,9 +9,10 @@ sub slurp-SETTING is export {
     .join("\n");
 }
 
+constant @core-modules = <Test DigitalOcean Rakudo>;
+
 sub slurp-core-lib is export {
-    <Test DigitalOcean>.map({ %?RESOURCES{"core-lib/$_.sp"}.slurp })
-    .join("\n");
+    @core-modules.map({ %?RESOURCES{"core-lib/$_.sp"}.slurp }).join("\n");
 }
 
 sub sha1-SETTING is export { sha1 slurp-SETTING() }
