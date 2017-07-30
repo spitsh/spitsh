@@ -67,8 +67,12 @@ augment Str {
                 r=ENVIRON["R"]; t=ENVIRON["T"]
                 while((g || !i) && (i = index(substr($0,w + 1),t))){
                     $0 = substr($0,1,i + w - 1) r substr($0,w + i + length(t));
-                    w += length(r) - length(t) + i
-                    if(w < 0){ w = 0 }
+                    if(length(t) > length(r)){
+                        w += length(r) + i
+                    }
+                    else {
+                        w += length(r) - length(t) + i;
+                    }
                 }
                 print;
             }⟫
