@@ -55,7 +55,8 @@ augment PID {
     }
 
     method cleanup^ {
-        $?pid-cleanup.push($self)-->PID;
+        $?pid-cleanup.push($self);
+        $self;
         FILE-CLEAN {
             ${kill @($?pid-cleanup.slurp) !>X};
             $?pid-cleanup.remove;

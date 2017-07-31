@@ -59,8 +59,9 @@ augment Docker {
         ${ $:docker run -i --rm hello-world *>debug('hello-world') };
     }
 
-    method cleanup -->Docker {
+    method cleanup^ {
         $?docker-cleanup.push($self);
+        $self;
         END {
             $?docker-cleanup.slurp-->List[Docker].remove;
             $?docker-cleanup.remove;
@@ -163,6 +164,7 @@ augment DockerImg {
 
     method cleanup^ {
         $?docker-img-cleanup.push: $self;
+        $self;
         END {
             $?docker-img-cleanup.slurp-->List[DockerImg].remove;
             $?docker-cleanup.remove;

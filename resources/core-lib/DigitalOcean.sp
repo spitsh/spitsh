@@ -147,20 +147,20 @@ augment DO {
         :$image  = $:image,
         :@ssh-keys = @:ssh-keys
     ) -->Droplet {
-        my $server-keys = SSH-keypair.tmp;
+        my $seed-keys = SSH-keypair.tmp;
+        my $seed-public-key = $seed-keys.public-key;
+        my $seed-private-key = $seed-keys.private-key;
 
         my $set-ssh-keys = eval(
             os => UNIXish,
             :!log,
-            ssh-public => $server-keys.public-key,
-            ssh-private => $server-keys.private-key,
             sshd => '/usr/sbin/sshd', # DO always has ssh installed
         ){
             my $keydir = File</tmp/spit-seed>.mkdir.cleanup;
-            $keydir.add('seed_ssh.pub').write("$:<ssh-public>\n");
-            my SSH-keypair $server-keys = $keydir.add('seed_ssh').write("$:<ssh-private>\n");
-            $server-keys.fix-perms;
-            SSHd.run(port => $:seed-port, :$server-keys);
+            $keydir.add('seed_ssh.pub').push: $seed-public-key;
+            my SSH-keypair $seed-keys = $keydir.add('seed_ssh').push: $seed-private-key;
+            $seed-keys.fix-perms;
+            SSHd.run(port => $:seed-port, server-keys => $seed-keys);
         };
 
         my $droplet = DO.create(
@@ -177,7 +177,7 @@ augment DO {
         sleep 30;
         $droplet .= wait-till-active;
         my $ip = $droplet.ipv4;
-        $server-keys.public-key.known-host($ip).add;
+        $seed-keys.public-key.known-host($ip).add;
 
         $ip.wait-connectable($:seed-port, :timeout(40))
           or fatal " {$droplet.name}: ssh seeding failed: seed port $:seed-port never opened for", "\c[DROPLET]";
