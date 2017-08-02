@@ -625,8 +625,8 @@ multi method arg(SAST::Pair:D $_) {
     concat [self.arg(.key),"\t",self.arg(.value)]
 }
 
-#!EvalArg
-multi method arg(SAST::EvalArg:D $_) {
+#!EvalBridgeVal
+multi method arg(SAST::EvalBridgeVal:D $_) {
     # Don't quote had to be invented just for this
     # It means it breaks out of "" quotes if it's put in one like:
     # "foo"'dontquote'"bar"

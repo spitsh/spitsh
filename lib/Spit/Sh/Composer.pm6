@@ -481,7 +481,7 @@ heart decoration, wilted flower,love letter,rosette, white flower
 
 multi method walk(SAST::Eval:D $THIS is rw) {
     my %eval-opts = $THIS.opts;
-    my @eval-args;
+    my @bridge-vals;
     for %eval-opts.kv -> $name, $opt is rw {
         my $ct = $opt.compile-time;
         if  $ct or $ct.defined {
@@ -491,43 +491,57 @@ multi method walk(SAST::Eval:D $THIS is rw) {
         } else {
             # Runtime value. We we compile an emoji placeholder characer which will
             # be replaced with the runtime value later.
-            $opt = SAST::EvalArg.new(
+            $opt = SAST::EvalBridgeVal.new(
                 type => $opt.type,
                 match => $opt.match,
                 placeholder => @placeholders.shift,
                 value => $opt,
             );
-            @eval-args.push($name);
+            @bridge-vals.push($opt);
         }
     }
     # let locally defined options override the outer definitions
     my %opts = |%.opts, |%eval-opts;
+
+    # Bridge values of lexical references to "my" declared variables.
+    for $THIS.compunit.block.bridge-vars {
+        my $outer = .key;
+        my $inner = .value;
+
+        $inner.assign = SAST::EvalBridgeVal.new(
+            type => $inner.assign.type,
+            match => $inner.assign.match,
+            placeholder => @placeholders.shift,
+            value => $outer.gen-reference(:stage2-done, match => $THIS.match),
+            :stage2-done,
+        );
+
+        @bridge-vals.push: $inner.assign;
+    }
 
     $ = (require Spit::Compile <&compile>);
     my $compiled = $THIS.stage3-node(
         SAST::SVal,
         val => compile(
             name => "eval_{$++}",
-            $THIS.src.val,
             opts => %opts,
-            outer => $THIS.outer,
             :one-block,
+            $THIS.compunit,
         ),
         :!preserve-end
     );
 
     # Replace each runtime arg with a placeholder
-    for @eval-args -> $name {
-        my $rt-arg = %opts{$name};
-        $compiled = $rt-arg.stage2-node(
+    for @bridge-vals -> $bridge-val {
+        $compiled = $bridge-val.stage2-node(
             SAST::MethodCall,
             name => 'subst-eval',
             declaration => self.STR-SUBST-EVAL,
-            match => $rt-arg.match,
+            match => $bridge-val.match,
             $compiled,
             pos => (
-                $rt-arg.stage2-node(SAST::SVal, val => $rt-arg.placeholder),
-                $rt-arg.value,
+                $bridge-val.stage2-node(SAST::SVal, val => $bridge-val.placeholder),
+                $bridge-val.value,
             )
         );
         self.walk($compiled);

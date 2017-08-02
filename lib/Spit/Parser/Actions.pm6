@@ -4,7 +4,6 @@ use Spit::Constants;
 use Spit::Exceptions;
 need Spit::Metamodel;
 
-has $.outer;
 has $.debug;
 has $.use-bootstrap-types;
 
@@ -28,8 +27,9 @@ method finishpad($/){
 
 method newCU($/) {
     if $*SETTING {
-        $*CURPAD.outer = $!outer || $*SETTING;
-    } else {
+        $*CURPAD.outer = $*SETTING;
+    }
+    else {
         $*SETTING = $*CURPAD;
     }
     $*CU = SAST::CompUnit.new(block => $*CURPAD,name => $*CU-name);
@@ -1135,7 +1135,14 @@ method quote:sym<eval> ($/) {
             SX.new(message => ‘eval doesn't take positional arguments’, match => .match).throw;
         }
     }
-    make SAST::Eval.new(:%opts,:$src,outer => $*CURPAD);
+    make SAST::Eval.new(:%opts, compunit => $*CU);
+}
+
+method new-eval-pad($/) {
+    my $new = SAST::EvalBlock.new;
+    $new.outer = $_ with CALLERS::<$*CURPAD>;
+    $*CURPAD = $new;
+    $*CU = SAST::CompUnit.new(name => "eval_{$++}", block => $new);
 }
 
 method wrap ($/) {

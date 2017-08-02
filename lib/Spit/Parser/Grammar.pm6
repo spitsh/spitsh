@@ -785,8 +785,13 @@ grammar Spit::Grammar is Spit::Lang {
         [$<args>=<.wrap:'(',')', 'eval arguemnts', rule { '' <R=.args> }>]?
         <.ws>
         <?before '{'>
-        <balanced-quote('Quote-Q')>
+        :my $*CU;
+        <.new-eval-pad>
+        <blockoid>
+        <.finishpad>
     }
+
+    token new-eval-pad { <?> }
 
     token quote:regex {
         |$<str>=<.wrap: '/','/','regex', token { <R=.LANG('Regex',:closer</>)> }>

@@ -1666,32 +1666,61 @@ class SAST::NAME is SAST::MutableChildren {
     }
 }
 
-# For runtime args to eval
-class SAST::EvalArg does SAST {
+# For bridging outer variables/options whose values must be embedded
+# within an inner shell script.
+class SAST::EvalBridgeVal does SAST {
     has $.type is required;
     has Str $.placeholder is required;
     has SAST:D $.value is required;
 }
 
+# A block that keeps track of lookups to lexcical variables that go
+# beyond the eval's compunit.
+class SAST::EvalBlock is SAST::Block {
+    has Hash $.bridge-vars = :{};
+
+    multi method lookup(SymbolType $type,Str:D $name,Match :$match) {
+        @.symbols[$type]{$name} andthen .return;
+
+        my $outer = $.outer.lookup($type, $name, :$match) or return Nil;
+
+        if $type ~~ SCALAR|ARRAY and
+           $outer !~~ SAST::ConstantDecl and
+           $outer !~~ SAST::Option
+           {
+               with $!bridge-vars{$outer} {
+                   $_
+               }
+               else {
+                   $_ = $outer.clone;
+               }
+           }
+        else {
+            $outer;
+        }
+    }
+
+}
+
 class SAST::Eval is SAST::Children   {
     has %.opts;
-    has SAST:D $.src is required;
-    has SAST::Block:D $.outer is required;
+    has SAST::CompUnit:D $.compunit is required;
+
 
     method stage2($) {
-        $!src .= do-stage2(tStr);
         for %!opts.values {
             $_ .= do-stage2: do {
                 when $_.WHAT === SAST::Type { tAny }
                 default { tStr }
             }
         }
+        $!compunit .= do-stage2;
         self
     }
 
     method type { tStr }
 
-    method children { $!src, |%!opts.values }
+    method children { |%!opts.values }
 }
 
 class SAST::Regex is SAST::Children is rw {

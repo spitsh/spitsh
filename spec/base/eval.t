@@ -1,6 +1,6 @@
 use Test;
 
-plan 11;
+plan 14;
 
 {
     my $foo = "foo";
@@ -39,17 +39,23 @@ plan 11;
 }
 
 {
-    my $one = 1; my $two = 2; my $three = 3; my $four = 4; my $five = 5;
+    my $one = Str.random(1); my $two = Str.random(1);
+    my $three = Str.random(1); my $four = Str.random(1);
+    my $five = Str.random(1);
     is eval(:$one, :$two, :$three, :$four,:$five) {
         my $:one; my $:two; my $:three; my $:four; my $:five;
         say "$:one$:two$:three$:four$:five";
     }.${sh},
-    '12345', 'many eval options';
+    "$one$two$three$four$five", 'many eval options';
 
     is eval(:$one, :$two, :$three, :$four,:$five) {
         say "$:<one>$:<two>$:<three>$:<four>$:<five>";
     }.${sh},
-    '12345', 'many eval options using indirect lookup';
+    "$one$two$three$four$five", 'many eval options using indirect lookup';
+
+    is eval{ say "$one$two$three$four$five" }.${sh}, "$one$two$three$four$five",
+    'many outer lexical references';
+
 }
 
 
@@ -66,4 +72,15 @@ plan 11;
         say $:<thing>;
         eval(){ say $:<thing> }.${sh};
     }.${sh}, ($thing,$thing), 'nested eval with option';
+
+
+    is eval{
+        say $thing;
+        eval{ say $thing; }.${sh};
+    }.${sh}, ($thing,$thing), 'nested eval with outer reference';
+}
+
+{
+    my $crazy  = Str.random(5) ~ "'" ~ Str.random(4);
+    is eval{ say $crazy }.${sh}, $crazy, ‘single ' in outer reference’;
 }
