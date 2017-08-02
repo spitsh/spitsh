@@ -462,13 +462,15 @@ class SAST::Stmts is SAST::MutableChildren does SAST::Dependable {
     method stage2($ctx,:$desc,:$loop,:$!auto-inline = True) is default {
         my $last-stmt := self.last-stmt;
         for @.children {
-            $_ .= do-stage2(tAny) unless $_ =:= $last-stmt;
-        }
-        if $last-stmt {
-            if $ctx !=== tAny {
-                $last-stmt = SAST::Return.new(val => $last-stmt,match => $last-stmt.match,:$loop)
+            if $_ =:= $last-stmt {
+                if $ctx !=== tAny {
+                    $last-stmt = SAST::Return.new(val => $last-stmt,match => $last-stmt.match,:$loop)
+                }
+                $last-stmt .= do-stage2($ctx,:desc<return value of block>);
             }
-            $last-stmt .= do-stage2($ctx,:desc<return value of block>);
+            else {
+                $_ .= do-stage2(tAny) unless $_ =:= $last-stmt;
+            }
         }
 
         $!type = (self.returns andthen .type or tAny);
