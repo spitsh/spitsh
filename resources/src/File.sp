@@ -95,7 +95,7 @@ augment File {
     method push(#|[string to push] $str)^ {
         $self.try-slurp.${
             awk :l($str) -v "f=$self"
-             '{print>f}END{l=ENVIRON["l"];print l>f; printf "%s", l}'
+             '{print>f}END{l=ENVIRON["l"];print l>f}'
         };
         $self;
     }

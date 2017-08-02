@@ -1,4 +1,4 @@
-use Test; plan 2;
+use Test; plan 3;
 
 {
     my File $file .= tmp;
@@ -12,7 +12,7 @@ use Test; plan 2;
 {
     given File.tmp {
         .remove;
-        .push('foo');
+        is .push('foo'), $_, '.push returns the invocant file';
         is .slurp, 'foo', '.push onto non-existing file';
     }
 }
