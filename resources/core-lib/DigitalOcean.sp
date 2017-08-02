@@ -180,7 +180,7 @@ augment DO {
         $seed-keys.public-key.known-host($ip).add;
 
         $ip.wait-connectable($:seed-port, :timeout(40))
-          or fatal " {$droplet.name}: ssh seeding failed: seed port $:seed-port never opened for", "\c[DROPLET]";
+          or fatal "{$droplet.name}: ssh seeding failed: seed port $:seed-port never opened for", "\c[DROPLET]";
 
         $droplet;
     }
