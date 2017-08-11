@@ -1,7 +1,7 @@
 augment List[File] {
     method remove? { $self.${xargs rm -rf !>X} }
 
-    method cat@ { ${cat @$self} }
+    method cat@ { $self.${xargs cat} }
 }
 
 my File $?file-cleanup = ${mktemp};

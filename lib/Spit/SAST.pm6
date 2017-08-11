@@ -1025,7 +1025,8 @@ class SAST::Signature is SAST::Children {
         for @!pos.kv -> $i,$p is rw {
             if $optional-found and not $p.optional {
                 SX.new(message =>
-                  “Can't put required parameter {$p.spit-gist} after optional parameters”
+                       “Can't put required parameter {$p.spit-gist} after optional parameters”,
+                       match => $p.match,
                 ).throw;
             }
             if $p.optional {

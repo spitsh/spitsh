@@ -228,7 +228,7 @@ augment DO {
          $:api-url.add($resource).query(@query).request(
             $method,
             :$json,
-            headers => ("Authorization: Bearer $:api-token", 'Expect:'),
+            headers => ("Authorization: Bearer $:api-token"),
         );
     }
 

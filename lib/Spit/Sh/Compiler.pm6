@@ -466,6 +466,7 @@ multi method cond(SAST::BVal:D $_) { .val ?? 'true' !! 'false' }
 multi method int-expr(SAST::BVal $ where { .val === False } ) { '0' }
 
 constant @cats = (qqw{
+    \c[cat]
     \c[smiling cat face with open mouth]
     \c[cat face with tears of joy]
     \c[smiling cat face with heart-shaped eyes]
@@ -475,7 +476,6 @@ constant @cats = (qqw{
     \c[grinning cat face with smiling eyes]
     \c[crying cat face]
     \c[pouting cat face]
-    \c[cat]
     \c[cat face]
     \c[tiger face]
     \c[lion face]

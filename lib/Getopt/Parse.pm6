@@ -116,7 +116,7 @@ grammar Getopt::Grammar {
                 ]
             ]
             || [
-                $<command>=<.identifier>
+                $<command>=<.identifier> <?before <.sep> || $>
                 <?{
                     if @commands.first(*.<name> eq $<command>) -> $command {
                         switch-command(@opts, @pos, @commands, %res, $command);

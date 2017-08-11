@@ -1,5 +1,5 @@
 use DigitalOcean;
-use file<examples/lib/squid.sp>;
+use file<examples/lib/Squid.sp>;
 
 constant $test-host = HTTP<http://httpbin.org>;
 constant $:droplet-os = Debian;

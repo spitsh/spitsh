@@ -100,11 +100,11 @@ opt(
 opt(
     name => 'opts',
     alias => 'o',
-    placeholder => 'key:value',
+    placeholder => 'key=value',
     match => token {
-        $<key>=<.identifier> [
-            | ':' $<value>=(<int>|| <str> || '')
-            | '=' $<expr>=<.str>
+        $<key>=[[<.identifier> ':']? <.identifier>] [
+            | '=' $<value>=(<int>|| <str> || '')
+            | '==' $<expr>=<.str>
         ]?
         {
             my $val := do with $<value> {

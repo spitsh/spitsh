@@ -7,6 +7,7 @@ class HTTP-headers is List[Pair] {
 }
 
 class HTTP-response is List[Pair] {
+    constant $:error-max-length = 100;
 
     method headers -->HTTP-headers { $self<headers>-->File.slurp-->HTTP-headers }
     method req-method~ { $self<req-method> }
@@ -35,7 +36,7 @@ class HTTP-response is List[Pair] {
             $self;
         } else {
             die "{$self.req-method} {$self.remote-url} {$self.code} {$self.message}\n" ~
-              ($self.body-size > 100 ?? $self.body.substr(0,100) ~ '...' !! $self.body)
+              ($self.body-size > $:error-max-length ?? $self.body.substr(0,$:error-max-length) ~ '...' !! $self.body)
         }
     }
 }
@@ -99,6 +100,8 @@ augment HTTP {
             -D $headers
             -o ($to || File.tmp)
             ("-H$_" for ('Content-Type: application/json' if ~$json), @headers)
+            # curl sends Expect 100-continue which is super annoying otherwise
+            -H 'Expect:'
             ('--data-binary', $_ if ~$json)
             ("-x$_" if $proxy)
             ('--form-string', .key ~ '=' ~ .value for @form)
