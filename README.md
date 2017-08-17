@@ -1,31 +1,20 @@
 # 👻 Spook in the Shell 👻 (Spit-sh) [![Build Status](https://travis-ci.org/spitsh/spitsh.svg?branch=master)](https://travis-ci.org/spitsh/spitsh)
 
-**Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh), is Perl-6-like
-language that compiles into modular, dynamic and testable shell
-scripts. Its purpose is to specify and test configurations for modern
-UNIX-like systems. **It's currently pre-Alpha software - use it at
-your own risk**
+**Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh) is a shell
+script compiler. It compiles a Perl 6 like language called "Spook"
+into `/bin/sh`. Current features include:
 
+- Basic libraries/modules
+- Compile time type checking
+- Test module for outputting TAP
+- Useful builtin classes and functions
+- Plain text logging to standard out.
 
-## Configuration as a Shell Script
-
-Here are a few of the goals of Spit-sh as a configurtion utility:
-
-- It shouldn't require any software on the target system other than
-  `/bin/sh`, the POSIX shell utilities and a package manager.
-- It shouldn't try and handle delivery of the scripts to the target
-  system. (Other tools can do this).
-- It should be appropriate for specifying container images.
-- It must be easy to write, document, test and distribute modules.
-- Like Perl 6:
-  - It must be test-centric and have
-    a [specification test suite](spec) written in the language itself.
-  - The core classes, symbols and routines should be defined in the
-    language itself.
-  - It must be -Ofun 👻🐚💕🦋
+Everything about the language and compiler is still experimental. It
+is still under heavy development.
 
 ## Example
-To get a picture of where Spit is going take a look at this code:
+To get a picture of where Spit is going take a look at this code.
 
 ``` perl6
 .install unless Pkg<nc>; # install nc unless it's already there
@@ -63,7 +52,6 @@ BEGIN && MAIN
 If you have docker installed you can test this with:
 
 ``` shell
-# --in-docker --rm's the container
 spit eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"' --in-docker=centos
 ✔ - nc command exists now
 ```
@@ -105,15 +93,10 @@ spit eval 'say "hello world"'
 ```
 To check it's working.
 
-**note** [rakudo star](http://rakudo.org/how-to-get-rakudo/) is too
-far behind at the moment. You need to build from rakudo/nom because
-Spit uses some features recently added to rakudo. Hopefully it will
-keep compatibility with rakudo star in the future.
-
 ## Documentation
 
-Documentation is very much a work in progress but what exists is under: [doc/](doc).
-**DOCUMENTATION**
+The documentation is pretty useless at the moment because the tooling has
+fallen far behind the language. What exists is under: [doc/](doc).
 
 ## Project Layout
 
@@ -121,15 +104,3 @@ Documentation is very much a work in progress but what exists is under: [doc/](d
 * The actual Spit source code is under `resources/src`
 * The core spit modules are under `resouces/core-lib` (right now just `Test.sp`)
 * The spec tests are in `spec`.
-
-## Contribute
-
-There's a lot to do before Spit becomes a genuinely useful tool.
-
-* If you like grammars and abstract syntax trees you can
-  help develop the compiler
-* You can add support for an operating system/userland by writing Spit
-  code that passes the [spec tests](spec)
-* Try it out, provide bug reports, useful criticism and feature ideas under the
-  issues github tab
-* Figure out how it works and write documentation
