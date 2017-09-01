@@ -24,7 +24,7 @@ ok Cmd<nc>,"nc command exists now"; # test the nc command is there
 You can compile this for CentOS with:
 
 ``` shell
-spit --os=centos eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"'
+spit eval --os=centos  '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"'
 ```
 Which ouputs the following shell at the time of writing:
 
@@ -52,7 +52,7 @@ BEGIN && MAIN
 If you have docker installed you can test this with:
 
 ``` shell
-spit eval '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"' --in-docker=centos
+spit eval --in-docker=centos '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"'
 ✔ - nc command exists now
 ```
 
@@ -73,7 +73,7 @@ And now it should work on both the RHEL and Debian families of
 Linux distributions.
 
 ```
-spit --in-docker=debian:latest compile install-nc.sp
+spit  compile install-nc.sp --in-docker=debian:latest
 ✔ - nc command exists now
 ```
 
