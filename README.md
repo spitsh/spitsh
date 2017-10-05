@@ -1,5 +1,7 @@
 # 👻 Spook in the Shell 👻 (Spit-sh) [![Build Status](https://travis-ci.org/spitsh/spitsh.svg?branch=master)](https://travis-ci.org/spitsh/spitsh)
 
+**THIS PROJECT IS ON HOLD UNTIL I'M NOT BROKE 💔🤑🔫💸💸💸**
+
 **Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh) is a shell
 script compiler. It compiles a Perl 6 like language called "Spook"
 into `/bin/sh`. Current features include:
