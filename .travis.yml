@@ -11,7 +11,7 @@ install:
   - zef install . && spit eval 'say "hello world"'
 
 env:
-  - PATH="/home/travis/.rakudobrew/moar-nom/install/share/perl6/site/bin:$PATH"
+  - PATH="/home/travis/.rakudobrew/moar-master/install/share/perl6/site/bin:$PATH"
 
 script:
   - spit spec/base/sanity.t -d
