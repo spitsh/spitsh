@@ -152,7 +152,7 @@ role SAST is rw {
     # forces a node to return this type and itemization in the future
     method force($type, $itemize) {
         my $original-type = $.type;
-        self does SAST::Force unless self ~~ SAST::Force;
+        self.^mixin(SAST::Force) unless self ~~ SAST::Force;
         $.type = $type;
         $.original-type = $original-type;
         $.itemize = $itemize;
