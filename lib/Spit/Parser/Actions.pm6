@@ -7,6 +7,12 @@ need Spit::Metamodel;
 has $.debug;
 has $.use-bootstrap-types;
 
+# work around RT #132512
+sub _ast($match is raw) {
+    use nqp;
+    return nqp::getattr(nqp::decont($match), Match,'$!made');
+}
+
 method e ($/) { make $<wrapped>.ast }
 
 method TOP($/){
@@ -316,7 +322,7 @@ method declaration:sym<augment> ($/) {
 }
 
 method old-class ($/) {
-    my $class = $<type>.ast;
+    my $class = $<type>.&_ast;
     my $decl = $*CLASS = SAST::ClassDeclaration.new(:$class);
     make $decl;
 }
@@ -358,7 +364,7 @@ method trait:sym<is> ($/){
     } elsif $<logged-as> {
         $*DECL.logged-as = $<logged-as>.ast;
     } else {
-        $*CLASS.class.^add_parent($<type>.ast);
+        $*CLASS.class.^add_parent($<type>.&_ast);
     }
 }
 
@@ -386,7 +392,7 @@ method new-routine($/) {
     my (:@pos,:%named) := $<param-def>.ast<paramlist>.ast;
     my $r = $*ROUTINE;
     $r.signature = SAST::Signature.new(:@pos,:%named);
-    $r.return-type = .ast with $<return-type> || $<return-type-sigil>;
+    $r.return-type = .&_ast with $<return-type> || $<return-type-sigil>;
     make $r;
 }
 
@@ -453,7 +459,7 @@ method param ($/) {
         SAST::PosParam.new(
             name => $<name>.Str,
             sigil => $<sigil>.Str,
-            |(decl-type => .ast with $<type>),
+            |(decl-type => .&_ast with $<type>),
             |(default => .ast with $<default>),
             optional => ?$<optional>,
             slurpy => ?$<slurpy>.Str
@@ -462,7 +468,7 @@ method param ($/) {
         SAST::NamedParam.new(
             name => $<name>.Str,
             sigil => $<sigil>.Str,
-            |(decl-type => .ast with $<type>),
+            |(decl-type => .&_ast with $<type>),
             |(default => .ast with $<default>),
             optional => $<optional>,
         )
@@ -554,7 +560,7 @@ method var-create($/,$decl-type) {
     make $ast-type.new(
         :$name,
         sigil => $<var><sigil>.Str,
-        |(decl-type => .ast with $<type>),
+        |(decl-type => .&_ast with $<type>),
         match => $/,
         :$package,
     );
@@ -716,7 +722,7 @@ method term:topic-call ($/) {
 }
 
 method term:topic-cast ($/) {
-    make SAST::Cast.new(to => $<type>.ast,SAST::Var.new(name => '_',sigil => '$'));
+    make SAST::Cast.new(to => $<type>.&_ast,SAST::Var.new(name => '_',sigil => '$'));
 }
 
 method term:statement-prefix ($/) { make $<statement-prefix>.ast }
@@ -887,7 +893,7 @@ method angle-key-accessor($/) {
     make SAST::Elem.new(index => $<angle-quote>.ast, index-type => tStr)
 }
 
-method postfix:sym<⟶> ($/) { make SAST::Cast.new(to => $<type>.ast) }
+method postfix:sym<⟶> ($/) { make SAST::Cast.new(to => $<type>.&_ast) }
 method prefix:sym<~> ($/) { make SAST::Coerce.new(to => tStr) }
 method prefix:sym<+> ($/) { make SAST::Coerce.new(to => tInt) }
 method prefix:sym<-> ($/) { make SAST::Negative.new() }
@@ -973,7 +979,7 @@ method type ($/) {
 }
 
 method type-params ($/) {
-    make ($<params> andthen .<wrapped><type>.map(*.ast));
+    make ($<params> andthen .<wrapped><type>.map(*.&_ast));
 }
 
 method os   ($/) { make $*CURPAD.lookup(CLASS,$/.Str,match => $/).class }
