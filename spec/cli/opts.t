@@ -10,7 +10,7 @@ constant $:spit = 'spit';
 
 {
     ok ${ $:spit eval
-          -o 'log-level:2' -o 'log' --os $:os.name
+          -o 'log-level=2' -o 'log' --os $:os.name
          'info "foo"; debug "bar"'
         }.${sh !>~}.ends-with("foo"),
     '-o log-level=2';
