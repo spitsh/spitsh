@@ -96,9 +96,12 @@ class SX is Exception is rw {
     }
 
     method gist {
-        try my $snippet := gen-ctx :before(GRAY), :after(RESET),
-        ${ :before(RESET ~ $.mark-before), :after($.mark-after ~ RESET ~ GRAY), :$.match },
-        |self.extra-marks;
+        my $snippet := try quietly gen-ctx(
+            ${ :before(RESET ~ $.mark-before), :after($.mark-after ~ RESET ~ GRAY), :$.match },
+            |self.extra-marks,
+            :before(GRAY),
+            :after(RESET),
+        );
 
         self.ERROR ~ " $.message\n$!cu-name:$!line\n{$snippet // ''}";
     }
