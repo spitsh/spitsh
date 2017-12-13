@@ -1692,7 +1692,8 @@ class SAST::EvalBlock is SAST::Block {
 
         if $type ~~ SCALAR|ARRAY and
            $outer !~~ SAST::ConstantDecl and
-           $outer !~~ SAST::Option
+           $outer !~~ SAST::Option and
+           $outer.name ne '~' # HACK: to get $~ to work for time being
            {
                with $!bridge-vars{$outer} {
                    $_
