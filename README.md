@@ -13,7 +13,9 @@ tasks. Current features include:
 - Running and testing scripts in Docker
 - Logging to standard output
 
-Everything about the language and compiler is still experimental.
+Everything about the language and compiler is still experimental. I am
+thinking about pivoting a bit into compiling golang to create
+standalone binaries instead of shell scripts. 🤔
 
 ## Example
 To get an idea of what Spit is consider the following basic program:
