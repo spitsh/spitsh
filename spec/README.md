@@ -15,10 +15,10 @@ module. It's split into multiple categories:
 
 ## Running the spec with docker
 
-1. clone the repo
-2. run using prove and `--in-docker`.
-```
-prove -j 4 -r -e 'perl6 -Ilib bin/spit --in-docker=centos compile' spec/
+From the repo directory run:
+
+``` shell
+perl6 -Ilib bin/spit prove spec/base
 ```
 
 ## Compatability

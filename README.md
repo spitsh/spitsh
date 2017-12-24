@@ -1,33 +1,35 @@
 # 👻 Spook in the Shell 👻 (Spit-sh) [![Build Status](https://travis-ci.org/spitsh/spitsh.svg?branch=master)](https://travis-ci.org/spitsh/spitsh)
 
-**THIS PROJECT IS ON HOLD UNTIL I'M NOT BROKE 💔🤑🔫💸💸💸**
+**Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh) is a
+language/compiler that outputs shell scripts. It compiles a strongly
+typed Perl 6 like language called "Spook" into `/bin/sh` compatible
+scripts. It's main purpose is devops/infrastructure related
+tasks. Current features include:
 
-**Sp**ook **i**n **t**he **Sh**ell (Spit or Spit-sh) is a shell
-script compiler. It compiles a Perl 6 like language called "Spook"
-into `/bin/sh`. Current features include:
-
-- Basic libraries/modules
 - Compile time type checking
+- Basic libraries/modules
 - Test module for outputting TAP
 - Useful builtin classes and functions
-- Plain text logging to standard out.
+- Running and testing scripts in Docker
+- Logging to standard output
 
-Everything about the language and compiler is still experimental. It
-is still under heavy development.
+Everything about the language and compiler is still experimental.
 
 ## Example
-To get a picture of where Spit is going take a look at this code.
+To get an idea of what Spit is consider the following basic program:
 
 ``` perl6
 .install unless Pkg<nc>; # install nc unless it's already there
 ok Cmd<nc>,"nc command exists now"; # test the nc command is there
 
 ```
-You can compile this for CentOS with:
+
+You can compile this for CentOS from the command line like:
 
 ``` shell
 spit eval --os=centos  '.install unless Pkg<nc>; ok Cmd<nc>,"nc command exists now"'
 ```
+
 Which ouputs the following shell at the time of writing:
 
 ``` shell
@@ -60,7 +62,7 @@ spit eval --in-docker=centos '.install unless Pkg<nc>; ok Cmd<nc>,"nc command ex
 
 Unfortunately on Debian the package is named 'netcat'. Let's deal with that:
 
-``` perl
+``` perl6
 # install-nc.sp
 constant Pkg $nc = on {
     Debian { 'netcat' }
@@ -104,5 +106,5 @@ fallen far behind the language. What exists is under: [doc/](doc).
 
 * The Perl 6 Spit compiler module is in `lib`
 * The actual Spit source code is under `resources/src`
-* The core spit modules are under `resouces/core-lib` (right now just `Test.sp`)
+* The core spit modules are under `resouces/core-lib`
 * The spec tests are in `spec`.
