@@ -139,7 +139,7 @@ class Spit::Quote::qq-Actions is Spit::Quote::Actions {
     method backslash:sym<a>($/) { make "\a" }
     method backslash:sym<b>($/) { make "\b" }
     method backslash:sym<c>($/) {
-        my $str = parse-names((my $match = $<unicode-name>).Str) ||
+        my $str = uniparse((my $match = $<unicode-name>).Str) ||
             SX.new(message => "Unrecognised unicode name '{$match.Str}'",:$match).throw;
         my @chars = $str.comb;
         make $@chars.map({ $_ ~= " " if .uniprops eq 'So'; $_ }).join;
