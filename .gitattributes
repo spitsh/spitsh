@@ -1,2 +1,3 @@
-*.sp linguist-language="Perl 6"
-*.t linguist-language="Perl 6"
+*.sp linguist-language=Perl6
+*.t linguist-language=Perl6
+
