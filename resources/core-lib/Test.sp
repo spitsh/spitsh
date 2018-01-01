@@ -1,3 +1,4 @@
+# basic assertions to be used outside of test files
 my $TEST_COUNT = 0;
 my $TEST_PLAN = 0;
 sub plan(Int $n) is export  {
