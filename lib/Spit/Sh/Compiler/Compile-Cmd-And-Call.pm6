@@ -118,7 +118,7 @@ multi method node(SAST::Cmd:D $cmd, :$tight) {
         my $pipe := self.pipe-input($cmd.pipe-in);
         |$pipe,
         # Make a newline if the pipe looks too long
-        ("\\\n$*pad  " if $pipe.substr($pipe.rindex("\n") // 0).chars > $!max-chars-per-line),
+        ("\\\n$*pad  " if $pipe.join(" ").substr($pipe.join(" ").rindex("\n") // 0).chars > $!max-chars-per-line),
         |$cmd.set-env.map({"{.key.subst('-','_',:g)}=",|self.arg(.value)," "}).flat,
         |$full-cmd;
     }
