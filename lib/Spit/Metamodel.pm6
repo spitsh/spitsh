@@ -158,7 +158,7 @@ class Spit::Metamodel::Parameterizable is Spit::Metamodel::Type {
 
     method new_type(|) {
         my \type = callsame;
-        nqp::setparameterizer(type, -> $, $params is raw {
+        Metamodel::Primitives.set_parameterizer(type, -> $, $params is raw {
             type.^produce-parameterization($params);
         });
         type;
